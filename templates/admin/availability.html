@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Availability - Admin - Gatherly</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 class="admin-title">📆 Availability Records</h1>
+            <div class="breadcrumb">
+                <a href="/admin">Dashboard</a> / <span>Availability</span>
+            </div>
+        </div>
+
+        <div class="admin-nav">
+            <a href="/admin" class="nav-link">Dashboard</a>
+            <a href="/admin/users" class="nav-link">Users</a>
+            <a href="/admin/plans" class="nav-link">Plans</a>
+            <a href="/admin/availability" class="nav-link active">Availability</a>
+        </div>
+
+        <div class="content-card">
+            <h2 class="card-title">All Availability Submissions</h2>
+            <div id="availabilityTable">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading availability...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/admin-availability.js') }}"></script>
+</body>
+</html>
+

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gatherly - Share Your Availability</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="app-name">
+                <div class="app-logo"></div>
+                <span>Gatherly</span>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingState" class="loading">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+
+        <!-- Main Content -->
+        <div id="mainContent" style="display: none;">
+            <!-- Guest Info -->
+            <div class="guest-info">
+                <h1 id="guestTitle">Share your availability</h1>
+                <p id="guestMessage"></p>
+            </div>
+
+            <!-- Status Message -->
+            <div id="statusMessage" style="display: none;"></div>
+
+            <!-- Calendar Section -->
+            <div class="calendar-section">
+                <div class="section-header">PICK YOUR TIMES</div>
+                <div class="calendar">
+                    <div class="calendar-header" id="calendarHeader">
+                        <!-- Dynamically generated -->
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Dynamically generated -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button class="btn-primary" id="submitButton" onclick="submitAvailability()">
+                Submit Availability
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const guestToken = "{{ token }}";
+    </script>
+    <script src="{{ url_for('static', filename='js/guest.js') }}"></script>
+</body>
+</html>
+

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Gatherly</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 class="admin-title">📊 Admin Dashboard</h1>
+            <div class="breadcrumb">
+                <a href="/">← Back to App</a>
+            </div>
+        </div>
+
+        <div class="admin-nav">
+            <a href="/admin" class="nav-link active">Dashboard</a>
+            <a href="/admin/users" class="nav-link">Users</a>
+            <a href="/admin/plans" class="nav-link">Plans</a>
+            <a href="/admin/availability" class="nav-link">Availability</a>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value" id="totalUsers">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Plans</div>
+                <div class="stat-value" id="totalPlans">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active Plans</div>
+                <div class="stat-value" id="activePlans">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Response Rate</div>
+                <div class="stat-value" id="responseRate">-</div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2 class="card-title">Recent Plans</h2>
+            <div id="recentPlans">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/admin-dashboard.js') }}"></script>
+</body>
+</html>
+

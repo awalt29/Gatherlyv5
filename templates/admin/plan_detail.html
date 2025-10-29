@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan Details - Admin - Gatherly</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 class="admin-title">📋 Plan Details</h1>
+            <div class="breadcrumb">
+                <a href="/admin">Dashboard</a> / <a href="/admin/plans">Plans</a> / <span>Details</span>
+            </div>
+        </div>
+
+        <div class="admin-nav">
+            <a href="/admin" class="nav-link">Dashboard</a>
+            <a href="/admin/users" class="nav-link">Users</a>
+            <a href="/admin/plans" class="nav-link active">Plans</a>
+            <a href="/admin/availability" class="nav-link">Availability</a>
+        </div>
+
+        <div id="planContent">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading plan details...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const planId = {{ plan_id }};
+    </script>
+    <script src="{{ url_for('static', filename='js/admin-plan-detail.js') }}"></script>
+</body>
+</html>
+

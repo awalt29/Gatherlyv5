@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gatherly - Plan Your Week</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="app-name">
+                <div class="app-logo"></div>
+                <span>Gatherly</span>
+            </div>
+            <div class="header-icons">
+                <button class="icon-btn" onclick="openSettings()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+                <button class="icon-btn notification-btn" onclick="openNotifications()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Title -->
+        <h1 id="pageTitle">Let's plan your week!</h1>
+
+        <!-- Status Message -->
+        <div id="statusMessage" style="display: none;"></div>
+
+        <!-- Friends Section -->
+        <div class="friends-section">
+            <div class="section-header-with-menu">
+                <div class="section-header">ADD FRIENDS</div>
+                <button class="menu-btn" onclick="openManageFriendsModal()">⋯</button>
+            </div>
+            <div class="friends-list" id="friendsList">
+                <div class="friend-avatar add-btn" onclick="openAddFriendModal()">+</div>
+            </div>
+        </div>
+
+        <!-- Calendar Section -->
+        <div class="calendar-section">
+            <div class="section-header">PICK TIMES</div>
+            <div class="calendar">
+                <div class="calendar-header" id="calendarHeader">
+                    <!-- Dynamically generated -->
+                </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Dynamically generated -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <button class="btn-primary inactive" id="planButton" onclick="handlePlanAction()">
+            SEND INVITES
+        </button>
+    </div>
+
+    <!-- Add Friend Modal -->
+    <div class="modal" id="addFriendModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Friend</h2>
+                <button class="close-btn" onclick="closeAddFriendModal()">×</button>
+            </div>
+            <form onsubmit="addFriend(event)">
+                <div class="form-group">
+                    <label class="form-label">First Name</label>
+                    <input type="text" class="form-input" id="friendFirstName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" class="form-input" id="friendLastName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" class="form-input" id="friendPhone" placeholder="+1234567890" required>
+                </div>
+                <button type="submit" class="btn-primary">Add Friend</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Setup Modal -->
+    <div class="modal active" id="setupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Welcome to Gatherly!</h2>
+            </div>
+            <form onsubmit="setupPlanner(event)">
+                <div class="form-group">
+                    <label class="form-label">First Name</label>
+                    <input type="text" class="form-input" id="plannerFirstName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" class="form-input" id="plannerLastName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Your Phone Number</label>
+                    <input type="tel" class="form-input" id="plannerPhone" placeholder="+1234567890" required>
+                </div>
+                <button type="submit" class="btn-primary">Get Started</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Manage Friends Modal -->
+    <div class="modal" id="manageFriendsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Manage Friends</h2>
+                <button class="close-btn" onclick="closeManageFriendsModal()">×</button>
+            </div>
+            <div class="friends-manage-list" id="friendsManageList">
+                <!-- Friends will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div class="modal" id="notificationsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Notifications</h2>
+                <button class="close-btn" onclick="closeNotifications()">×</button>
+            </div>
+            <div class="notifications-list" id="notificationsList">
+                <!-- Notifications will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Account Settings</h2>
+                <button class="close-btn" onclick="closeSettings()">×</button>
+            </div>
+            <div class="settings-content">
+                <div class="settings-section">
+                    <h3 class="settings-section-title">Account Information</h3>
+                    <div class="account-info" id="accountInfo">
+                        <!-- Account details will be populated here -->
+                    </div>
+                    <button class="btn-secondary" onclick="editAccount()">Edit Account</button>
+                </div>
+                <div class="settings-section danger-zone">
+                    <h3 class="settings-section-title">Danger Zone</h3>
+                    <p class="settings-warning">Deleting your account will permanently remove all your data, including plans and contacts.</p>
+                    <button class="btn-danger" onclick="confirmDeleteAccount()">Delete Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Account Modal -->
+    <div class="modal" id="editAccountModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Edit Account</h2>
+                <button class="close-btn" onclick="closeEditAccount()">×</button>
+            </div>
+            <form onsubmit="updateAccount(event)">
+                <div class="form-group">
+                    <label class="form-label">First Name</label>
+                    <input type="text" class="form-input" id="editFirstName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" class="form-input" id="editLastName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" class="form-input" id="editPhone" placeholder="+1234567890" required>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="btn-secondary" onclick="closeEditAccount()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
+
