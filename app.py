@@ -482,7 +482,14 @@ def init_db():
     print("Database initialized!")
 
 
-if __name__ == '__main__':
-    with app.app_context():
+# Create tables on startup (works with both gunicorn and direct execution)
+with app.app_context():
+    try:
         db.create_all()
+        print("✅ Database tables created successfully!")
+    except Exception as e:
+        print(f"⚠️ Error creating database tables: {e}")
+
+
+if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
