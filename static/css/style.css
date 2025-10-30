@@ -721,7 +721,7 @@ h1 {
     display: flex;
     justify-content: center;
     gap: 20px;
-    margin-top: 8px;
+    margin-top: 0;
 }
 
 .legend-item {
