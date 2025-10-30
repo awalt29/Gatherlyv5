@@ -467,7 +467,7 @@ h1 {
 
 .time-slot {
     width: 43px;
-    height: 105px;
+    height: 85px;
     background: #3A4D6B;
     border-radius: 0;
     cursor: pointer;
@@ -715,6 +715,37 @@ h1 {
 .guest-info p {
     color: var(--text-muted);
     margin-top: 10px;
+}
+
+.legend {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+.legend-color.planner-color {
+    background: rgba(127, 231, 220, 0.3);
+    border: 2px solid rgba(127, 231, 220, 0.5);
+}
+
+.legend-color.your-color {
+    background: var(--accent-mint);
+    border: 2px solid var(--accent-mint);
 }
 
 /* Manage Friends List */
