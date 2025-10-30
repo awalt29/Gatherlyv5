@@ -99,6 +99,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadAvailability();
             loadNotifications();
             
+            // Auto-refresh availability every 15 seconds
+            setInterval(loadAvailability, 15000);
+            
             // Load notifications every 30 seconds
             setInterval(loadNotifications, 30000);
         } else {
@@ -449,6 +452,11 @@ function getMondayOfWeek() {
 async function loadAvailability() {
     if (!plannerInfo || !plannerInfo.id) {
         console.log('No planner info with ID');
+        return;
+    }
+    
+    // Don't auto-refresh while user is actively selecting slots
+    if (planningMode === 'selecting') {
         return;
     }
     
