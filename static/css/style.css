@@ -320,13 +320,12 @@ h1 {
     background: transparent;
     border: none;
     color: var(--text-light);
-    font-size: 24px;
+    font-size: 20px;
     cursor: pointer;
     padding: 0;
-    width: 30px;
-    height: 30px;
+    margin: 0;
     line-height: 1;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     transition: color 0.2s;
@@ -398,7 +397,6 @@ h1 {
     background: transparent;
     border-radius: 15px;
     padding: 0;
-    margin-left: -20px;
 }
 
 .calendar-header {
