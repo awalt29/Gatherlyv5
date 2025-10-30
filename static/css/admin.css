@@ -195,6 +195,29 @@ body {
     color: #FF6464;
 }
 
+/* Delete Button */
+.btn-delete {
+    padding: 6px 16px;
+    background: rgba(255, 100, 100, 0.1);
+    color: #FF6464;
+    border: 1px solid rgba(255, 100, 100, 0.3);
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-delete:hover {
+    background: rgba(255, 100, 100, 0.2);
+    border-color: rgba(255, 100, 100, 0.5);
+    transform: translateY(-1px);
+}
+
+.btn-delete:active {
+    transform: translateY(0);
+}
+
 .badge.yes {
     background: rgba(127, 231, 220, 0.2);
     color: var(--accent-mint);
