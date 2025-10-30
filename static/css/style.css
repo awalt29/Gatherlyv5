@@ -19,6 +19,7 @@
 html {
     overscroll-behavior: none;
     height: 100%;
+    overflow: hidden;
 }
 
 body {
@@ -26,13 +27,14 @@ body {
     background: linear-gradient(180deg, #37558C 0%, #0F1726 100%);
     background-attachment: fixed;
     color: var(--text-light);
-    min-height: 100vh;
+    height: 100vh;
     margin: 0;
     padding: 0;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     overscroll-behavior: none;
+    overflow: hidden;
 }
 
 .container {
@@ -43,10 +45,13 @@ body {
     padding: 30px;
     box-shadow: none;
     position: relative;
-    min-height: 100vh;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Header */
