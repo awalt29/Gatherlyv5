@@ -378,6 +378,7 @@ h1 {
     border: 2px dashed var(--border-color);
     color: var(--accent-mint);
     font-size: 24px;
+    line-height: 1;
 }
 
 .friend-avatar.add-btn:hover {
