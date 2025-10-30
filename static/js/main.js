@@ -6,6 +6,7 @@ let selectedTimeSlots = [];
 let currentPlanId = null;
 let planningMode = 'setup'; // setup, selecting, planning, viewing
 let weekDays = []; // Store the 7 days of current week starting from today
+let lastNotificationCount = 0; // Track notification count to detect new ones
 
 // Generate calendar for the current week (today + next 6 days)
 function generateCalendar() {
@@ -99,11 +100,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadAvailability();
             loadNotifications();
             
-            // Auto-refresh availability every 15 seconds
-            setInterval(loadAvailability, 15000);
-            
-            // Load notifications every 30 seconds
-            setInterval(loadNotifications, 30000);
+            // Check for new notifications every 10 seconds (which will auto-refresh calendar)
+            setInterval(loadNotifications, 10000);
         } else {
             // Not authenticated, redirect to login
             window.location.href = '/login';
@@ -455,11 +453,6 @@ async function loadAvailability() {
         return;
     }
     
-    // Don't auto-refresh while user is actively selecting slots
-    if (planningMode === 'selecting') {
-        return;
-    }
-    
     try {
         const mondayDate = getMondayOfWeek();
         console.log('Loading availability for week:', mondayDate, 'planner ID:', plannerInfo.id);
@@ -599,6 +592,15 @@ async function loadNotifications() {
     try {
         const response = await fetch(`/api/notifications/${plannerInfo.id}`);
         const notifications = await response.json();
+        
+        // Check if we have new notifications (more than before)
+        const currentCount = notifications.length;
+        if (lastNotificationCount > 0 && currentCount > lastNotificationCount) {
+            console.log('New notification detected, refreshing availability');
+            // Refresh the calendar when new notifications arrive
+            loadAvailability();
+        }
+        lastNotificationCount = currentCount;
         
         // Update badge count
         const unreadCount = notifications.filter(n => !n.read).length;
