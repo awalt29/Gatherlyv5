@@ -857,7 +857,7 @@ h1 {
 }
 
 /* Authentication Pages */
-body:has(.auth-container) .container {
+.container.login-page {
     overflow: hidden;
     height: 100vh;
     display: flex;
