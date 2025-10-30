@@ -134,7 +134,7 @@ async function setupPlanner(event) {
         
         if (response.ok) {
             const user = await response.json();
-            plannerInfo = { id: user.id, name: user.name, phone: user.phone_number };
+            plannerInfo = { id: user.id, name: user.name, phone: user.phone_number, email: user.email };
             localStorage.setItem('gatherly_planner', JSON.stringify(plannerInfo));
             
             document.getElementById('setupModal').classList.remove('active');
@@ -686,6 +686,10 @@ function openSettings() {
             <div class="account-info-value">${plannerInfo.name}</div>
         </div>
         <div class="account-info-item">
+            <div class="account-info-label">Email</div>
+            <div class="account-info-value">${plannerInfo.email}</div>
+        </div>
+        <div class="account-info-item">
             <div class="account-info-label">Phone Number</div>
             <div class="account-info-value">${plannerInfo.phone}</div>
         </div>
@@ -732,7 +736,7 @@ async function updateAccount(event) {
         
         if (response.ok) {
             const updatedUser = await response.json();
-            plannerInfo = { id: updatedUser.id, name: updatedUser.name, phone: updatedUser.phone_number };
+            plannerInfo = { id: updatedUser.id, name: updatedUser.name, phone: updatedUser.phone_number, email: updatedUser.email };
             localStorage.setItem('gatherly_planner', JSON.stringify(plannerInfo));
             
             closeEditAccount();
