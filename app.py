@@ -337,7 +337,8 @@ def create_plan():
         db.session.flush()
         
         # Send SMS
-        guest_url = f"{APP_BASE_URL}/guest/{plan_guest.unique_token}"
+        base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
+        guest_url = f"{base_url}/guest/{plan_guest.unique_token}"
         message = f"Hey {contact.name}, {planner.name} wants to hang out this week! Share your availability: {guest_url}"
         send_sms(contact.phone_number, message)
     
