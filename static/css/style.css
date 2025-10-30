@@ -334,7 +334,7 @@ h1 {
 }
 
 .menu-btn {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.1);
     border: none;
     color: var(--text-light);
     font-size: 20px;
@@ -346,10 +346,14 @@ h1 {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.2s;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transition: all 0.2s;
 }
 
 .menu-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
     color: var(--accent-mint);
 }
 
