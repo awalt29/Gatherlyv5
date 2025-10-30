@@ -402,7 +402,7 @@ h1 {
 
 .calendar-header {
     display: grid;
-    grid-template-columns: 20px repeat(7, 46px);
+    grid-template-columns: 20px repeat(7, 43px);
     gap: 4px;
     margin-bottom: 4px;
 }
@@ -413,7 +413,7 @@ h1 {
     text-align: center;
     color: var(--text-light);
     padding: 4px 0;
-    width: 46px;
+    width: 43px;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -433,7 +433,7 @@ h1 {
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: 20px repeat(7, 46px);
+    grid-template-columns: 20px repeat(7, 43px);
     gap: 4px;
 }
 
@@ -453,7 +453,7 @@ h1 {
 }
 
 .time-slot {
-    width: 46px;
+    width: 43px;
     height: 105px;
     background: #3A4D6B;
     border-radius: 0;
