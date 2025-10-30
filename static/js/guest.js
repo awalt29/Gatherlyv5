@@ -86,9 +86,10 @@ async function loadGuestInfo() {
         plannerInfo = data.planner;
         planInfo = data.plan;
         
-        // Update UI
-        document.getElementById('guestMessage').textContent = 
-            `${plannerInfo.name} wants to hang out this week!`;
+        // Update UI - update legend with planner's first name
+        const firstName = plannerInfo.name.split(' ')[0];
+        document.getElementById('plannerLegend').textContent = 
+            `${firstName}'s availability`;
         
         // Load planner's availability to show on calendar
         await loadPlannerAvailability();
