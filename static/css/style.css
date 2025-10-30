@@ -27,8 +27,9 @@ body {
     background-color: #0F1726;
     background: linear-gradient(180deg, #37558C 0%, #0F1726 100%);
     background-attachment: fixed;
+    background-size: 100% 100%;
     color: var(--text-light);
-    height: 100vh;
+    min-height: 100vh;
     margin: 0;
     padding: 0;
     display: flex;
@@ -825,7 +826,7 @@ h1 {
 /* Responsive */
 @media (max-width: 480px) {
     .container {
-        padding: 20px 20px 10px;
+        padding: 20px 20px 120px;
         max-width: 100%;
     }
     
