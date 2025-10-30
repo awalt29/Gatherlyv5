@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
 from models import db, User, Contact, Plan, PlanGuest, Availability, Notification
 from datetime import datetime, timedelta
@@ -18,9 +18,11 @@ if database_url.startswith('postgres://'):
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = True if os.getenv('APP_BASE_URL', '').startswith('https') else False
 
 db.init_app(app)
-CORS(app)
+CORS(app, supports_credentials=True)
 
 # Twilio setup
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
@@ -61,9 +63,94 @@ def send_sms(to_phone, message):
 
 
 # Routes - Main App
+# Auth routes
 @app.route('/')
 def index():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
     return render_template('index.html')
+
+
+@app.route('/login')
+def login():
+    # If already logged in, redirect to main app
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+    return render_template('login.html')
+
+
+@app.route('/signup')
+def signup():
+    # If already logged in, redirect to main app
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+    return render_template('signup.html')
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+
+@app.route('/api/auth/signup', methods=['POST'])
+def auth_signup():
+    data = request.json
+    
+    # Check if email already exists
+    existing_user = User.query.filter_by(email=data['email']).first()
+    if existing_user:
+        return jsonify({'error': 'Email already registered'}), 400
+    
+    # Create new user
+    user = User(
+        name=data['name'],
+        email=data['email'],
+        phone_number=data['phone_number']
+    )
+    user.set_password(data['password'])
+    
+    db.session.add(user)
+    db.session.commit()
+    
+    # Log the user in
+    session['user_id'] = user.id
+    session['user_email'] = user.email
+    session['user_name'] = user.name
+    
+    return jsonify({'user': user.to_dict()}), 201
+
+
+@app.route('/api/auth/login', methods=['POST'])
+def auth_login():
+    data = request.json
+    
+    # Find user by email
+    user = User.query.filter_by(email=data['email']).first()
+    
+    if not user or not user.check_password(data['password']):
+        return jsonify({'error': 'Invalid email or password'}), 401
+    
+    # Log the user in
+    session['user_id'] = user.id
+    session['user_email'] = user.email
+    session['user_name'] = user.name
+    
+    return jsonify({'user': user.to_dict()}), 200
+
+
+@app.route('/api/auth/me', methods=['GET'])
+def auth_me():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user = User.query.get(session['user_id'])
+    if not user:
+        session.clear()
+        return jsonify({'error': 'User not found'}), 404
+    
+    return jsonify({'user': user.to_dict()}), 200
 
 
 @app.route('/guest/<token>')

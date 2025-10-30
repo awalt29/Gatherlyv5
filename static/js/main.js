@@ -70,42 +70,44 @@ function generateCalendar() {
 }
 
 // Initialize
+// Logout function
+function logout() {
+    window.location.href = '/logout';
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Generate calendar first
     generateCalendar();
     
-    // Check if planner is already set up
-    const savedPlanner = localStorage.getItem('gatherly_planner');
-    if (savedPlanner) {
-        plannerInfo = JSON.parse(savedPlanner);
+    // Fetch user info from session
+    try {
+        const response = await fetch('/api/auth/me', {
+            credentials: 'include'
+        });
         
-        // Verify the planner still exists in the database
-        try {
-            const response = await fetch(`/api/users/${plannerInfo.id}`);
-            if (response.ok) {
-                const user = await response.json();
-                plannerInfo = { id: user.id, name: user.name, phone: user.phone_number };
-                localStorage.setItem('gatherly_planner', JSON.stringify(plannerInfo));
-                
-                document.getElementById('setupModal').classList.remove('active');
-                loadFriends();
-                loadAvailability();
-                loadNotifications();
-            } else {
-                // Planner doesn't exist in DB anymore, clear localStorage and show setup
-                console.log('Planner not found in database, showing setup modal');
-                localStorage.removeItem('gatherly_planner');
-                localStorage.removeItem('gatherly_friends');
-                plannerInfo = null;
-                document.getElementById('setupModal').classList.add('active');
-            }
-        } catch (error) {
-            console.error('Error verifying planner:', error);
-            // Show setup modal on error
-            localStorage.removeItem('gatherly_planner');
-            plannerInfo = null;
-            document.getElementById('setupModal').classList.add('active');
+        if (response.ok) {
+            const data = await response.json();
+            plannerInfo = { 
+                id: data.user.id, 
+                name: data.user.name, 
+                phone: data.user.phone_number,
+                email: data.user.email
+            };
+            
+            document.getElementById('setupModal').classList.remove('active');
+            loadFriends();
+            loadAvailability();
+            loadNotifications();
+            
+            // Load notifications every 30 seconds
+            setInterval(loadNotifications, 30000);
+        } else {
+            // Not authenticated, redirect to login
+            window.location.href = '/login';
         }
+    } catch (error) {
+        console.error('Error fetching user info:', error);
+        window.location.href = '/login';
     }
     
     // Set up calendar click handlers
