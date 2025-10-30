@@ -74,10 +74,13 @@ body {
 }
 
 .app-logo {
-    width: 10px;
-    height: 10px;
-    background: var(--accent-mint);
-    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    background-image: url('/static/favicon-512x512.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .header-icons {
