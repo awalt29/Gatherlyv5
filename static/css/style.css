@@ -397,12 +397,12 @@ h1 {
     background: transparent;
     border-radius: 15px;
     padding: 0;
-    margin-left: -40px;
+    margin-left: -35px;
 }
 
 .calendar-header {
     display: grid;
-    grid-template-columns: 30px repeat(7, 46px);
+    grid-template-columns: 20px repeat(7, 46px);
     gap: 4px;
     margin-bottom: 4px;
 }
@@ -433,7 +433,7 @@ h1 {
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: 30px repeat(7, 46px);
+    grid-template-columns: 20px repeat(7, 46px);
     gap: 4px;
 }
 
