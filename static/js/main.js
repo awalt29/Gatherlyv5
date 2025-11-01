@@ -684,7 +684,7 @@ setInterval(() => {
 }, 30000);
 
 // Settings functions
-function openSettings() {
+async function openSettings() {
     if (!plannerInfo) {
         showStatus('Please set up your account first', 'error');
         return;
@@ -706,6 +706,9 @@ function openSettings() {
             <div class="account-info-value">${plannerInfo.phone}</div>
         </div>
     `;
+    
+    // Load reminder preferences
+    await loadReminderPreferences();
     
     document.getElementById('settingsModal').classList.add('active');
 }
@@ -760,6 +763,58 @@ async function updateAccount(event) {
     } catch (error) {
         console.error('Error updating account:', error);
         showStatus('Error updating account', 'error');
+    }
+}
+
+// Reminder preferences functions
+async function loadReminderPreferences() {
+    try {
+        const response = await fetch(`/api/users/${plannerInfo.id}/reminders`);
+        const data = await response.json();
+        
+        // Uncheck all checkboxes first
+        document.querySelectorAll('input[name="reminder-day"]').forEach(cb => {
+            cb.checked = false;
+        });
+        
+        // Check the boxes for selected days
+        if (data.reminder_days && Array.isArray(data.reminder_days)) {
+            data.reminder_days.forEach(day => {
+                const checkbox = document.querySelector(`input[name="reminder-day"][value="${day}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error loading reminder preferences:', error);
+    }
+}
+
+async function saveReminderPreferences() {
+    try {
+        // Get selected days
+        const selectedDays = [];
+        document.querySelectorAll('input[name="reminder-day"]:checked').forEach(cb => {
+            selectedDays.push(cb.value);
+        });
+        
+        const response = await fetch(`/api/users/${plannerInfo.id}/reminders`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reminder_days: selectedDays })
+        });
+        
+        if (response.ok) {
+            showStatus('Reminder preferences saved!', 'success');
+        } else {
+            showStatus('Error saving preferences', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving reminder preferences:', error);
+        showStatus('Error saving preferences', 'error');
     }
 }
 

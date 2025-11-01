@@ -166,6 +166,43 @@
                         <button class="btn-secondary" onclick="logout()">Logout</button>
                     </div>
                 </div>
+                <div class="settings-section">
+                    <h3 class="settings-section-title">Planning Reminders</h3>
+                    <p class="settings-description">Get text reminders to plan your week. Select which days you'd like to receive reminders.</p>
+                    <div class="reminder-days">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="reminder-day" value="monday">
+                            <span>Monday</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="reminder-day" value="tuesday">
+                            <span>Tuesday</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="reminder-day" value="wednesday">
+                            <span>Wednesday</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="reminder-day" value="thursday">
+                            <span>Thursday</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="reminder-day" value="friday">
+                            <span>Friday</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="reminder-day" value="saturday">
+                            <span>Saturday</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="reminder-day" value="sunday">
+                            <span>Sunday</span>
+                        </label>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="button" class="btn-primary" onclick="saveReminderPreferences()">Save Preferences</button>
+                    </div>
+                </div>
                 <div class="settings-section danger-zone">
                     <h3 class="settings-section-title">Danger Zone</h3>
                     <p class="settings-warning">Deleting your account will permanently remove all your data, including plans and contacts.</p>

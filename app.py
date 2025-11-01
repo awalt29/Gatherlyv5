@@ -222,6 +222,22 @@ def get_user(user_id):
     return jsonify(user.to_dict())
 
 
+@app.route('/api/users/<int:user_id>/reminders', methods=['GET', 'PUT'])
+def user_reminders(user_id):
+    """Get or update user reminder preferences"""
+    user = User.query.get_or_404(user_id)
+    
+    if request.method == 'PUT':
+        data = request.json
+        reminder_days = data.get('reminder_days', [])
+        user.reminder_days = reminder_days
+        db.session.commit()
+        return jsonify({'message': 'Reminder preferences updated', 'reminder_days': user.reminder_days}), 200
+    
+    # GET request
+    return jsonify({'reminder_days': user.reminder_days or []}), 200
+
+
 # API Routes - Contacts
 @app.route('/api/contacts', methods=['GET', 'POST'])
 def contacts():
