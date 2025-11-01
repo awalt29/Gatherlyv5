@@ -6,7 +6,7 @@ let selectedTimeSlots = [];
 let currentPlanId = null;
 let planningMode = 'setup'; // setup, selecting, planning, viewing
 let weekDays = []; // Store the 7 days of current week starting from today
-let lastNotificationCount = 0; // Track notification count to detect new ones
+let lastNotificationCount = null; // Track notification count to detect new ones (null = not initialized)
 
 // Generate calendar for the current week (today + next 6 days)
 function generateCalendar() {
@@ -597,7 +597,7 @@ async function loadNotifications() {
         
         // Check if we have new notifications (more than before)
         const currentCount = notifications.length;
-        if (lastNotificationCount > 0 && currentCount > lastNotificationCount) {
+        if (lastNotificationCount !== null && currentCount > lastNotificationCount) {
             console.log('New notification detected, refreshing availability');
             // Refresh the calendar when new notifications arrive
             loadAvailability();
