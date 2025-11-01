@@ -20,6 +20,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = True if os.getenv('APP_BASE_URL', '').startswith('https') else False
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # Remember Me for 30 days
 
 db.init_app(app)
 CORS(app, supports_credentials=True)
@@ -136,6 +137,13 @@ def auth_login():
     session['user_id'] = user.id
     session['user_email'] = user.email
     session['user_name'] = user.name
+    
+    # Handle "Remember Me" - make session permanent if requested
+    remember_me = data.get('remember_me', False)
+    if remember_me:
+        session.permanent = True
+    else:
+        session.permanent = False
     
     return jsonify({'user': user.to_dict()}), 200
 

@@ -931,6 +931,32 @@ h1 {
     color: var(--text-muted);
 }
 
+.form-group.remember-me {
+    flex-direction: row;
+    align-items: center;
+    margin-top: -8px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--accent-mint);
+}
+
+.checkbox-label span {
+    user-select: none;
+}
+
 .error-message {
     padding: 12px;
     background: rgba(255, 100, 100, 0.1);
