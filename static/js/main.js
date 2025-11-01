@@ -64,6 +64,7 @@ function generateCalendar() {
             timeSlot.className = 'time-slot';
             timeSlot.dataset.day = day.dayIndex; // Use Monday-based index for backend
             timeSlot.dataset.displayDay = dayIndex; // Use display index for UI
+            timeSlot.dataset.date = day.date.toISOString().split('T')[0]; // Store actual date YYYY-MM-DD
             timeSlot.dataset.slot = slot;
             grid.appendChild(timeSlot);
         });
@@ -348,19 +349,19 @@ function setupCalendar() {
         slot.addEventListener('click', () => {
             if (planningMode === 'viewing') return;
             
-            const day = parseInt(slot.dataset.day);
+            const date = slot.dataset.date; // Use actual date instead of day index
             const timeSlot = slot.dataset.slot;
             
             slot.classList.toggle('selected');
             
             const slotIndex = selectedTimeSlots.findIndex(
-                s => s.day === day && s.slot === timeSlot
+                s => s.date === date && s.slot === timeSlot
             );
             
             if (slotIndex > -1) {
                 selectedTimeSlots.splice(slotIndex, 1);
             } else {
-                selectedTimeSlots.push({ day, slot: timeSlot });
+                selectedTimeSlots.push({ date, slot: timeSlot });
             }
             
             updatePlanButton();
@@ -488,7 +489,8 @@ async function loadAvailability() {
             const isPlanner = avail.contact_id === null;
             
             avail.time_slots.forEach(slot => {
-                const key = `${slot.day}-${slot.slot}`;
+                // Use date if available, fallback to day (for backwards compatibility)
+                const key = slot.date ? `${slot.date}|${slot.slot}` : `${slot.day}|${slot.slot}`;
                 
                 if (isPlanner) {
                     // Just track planner slots for highlighting, don't add bubble
@@ -511,19 +513,19 @@ async function loadAvailability() {
         
         // Highlight planner's own slots (no bubbles) and populate selectedTimeSlots
         plannerSlots.forEach(key => {
-            const [day, slot] = key.split('-');
+            const [date, slot] = key.split('|'); // Changed separator to | to avoid date conflicts
             const element = document.querySelector(
-                `.time-slot[data-day="${day}"][data-slot="${slot}"]`
+                `.time-slot[data-date="${date}"][data-slot="${slot}"]`
             );
             if (element) {
                 element.classList.add('selected');
                 
                 // Add to selectedTimeSlots array if not already there
                 const exists = selectedTimeSlots.find(
-                    s => s.day === parseInt(day) && s.slot === slot
+                    s => s.date === date && s.slot === slot
                 );
                 if (!exists) {
-                    selectedTimeSlots.push({ day: parseInt(day), slot: slot });
+                    selectedTimeSlots.push({ date, slot: slot });
                 }
             }
         });
@@ -533,9 +535,9 @@ async function loadAvailability() {
         
         // Add guest bubbles to their slots (don't highlight, just add bubbles)
         Object.keys(slotUsers).forEach(key => {
-            const [day, slot] = key.split('-');
+            const [date, slot] = key.split('|'); // Changed separator to | to avoid date conflicts
             const element = document.querySelector(
-                `.time-slot[data-day="${day}"][data-slot="${slot}"]`
+                `.time-slot[data-date="${date}"][data-slot="${slot}"]`
             );
             
             if (element) {

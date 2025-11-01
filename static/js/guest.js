@@ -61,6 +61,7 @@ function generateCalendar() {
             timeSlot.className = 'time-slot';
             timeSlot.dataset.day = day.dayIndex; // Use Monday-based index for backend
             timeSlot.dataset.displayDay = dayIndex; // Use display index for UI
+            timeSlot.dataset.date = day.date.toISOString().split('T')[0]; // Store actual date YYYY-MM-DD
             timeSlot.dataset.slot = slot;
             grid.appendChild(timeSlot);
         });
@@ -122,9 +123,11 @@ async function loadPlannerAvailability() {
         if (plannerAvail) {
             // Highlight planner's slots with a special class
             plannerAvail.time_slots.forEach(slot => {
-                const element = document.querySelector(
-                    `.time-slot[data-day="${slot.day}"][data-slot="${slot.slot}"]`
-                );
+                // Support both date and day for backwards compatibility
+                const selector = slot.date 
+                    ? `.time-slot[data-date="${slot.date}"][data-slot="${slot.slot}"]`
+                    : `.time-slot[data-day="${slot.day}"][data-slot="${slot.slot}"]`;
+                const element = document.querySelector(selector);
                 if (element) {
                     element.classList.add('planner-available');
                 }
@@ -142,19 +145,19 @@ function setupCalendar() {
     
     slots.forEach(slot => {
         slot.addEventListener('click', () => {
-            const day = parseInt(slot.dataset.day);
+            const date = slot.dataset.date; // Use actual date instead of day index
             const timeSlot = slot.dataset.slot;
             
             slot.classList.toggle('selected');
             
             const slotIndex = selectedTimeSlots.findIndex(
-                s => s.day === day && s.slot === timeSlot
+                s => s.date === date && s.slot === timeSlot
             );
             
             if (slotIndex > -1) {
                 selectedTimeSlots.splice(slotIndex, 1);
             } else {
-                selectedTimeSlots.push({ day, slot: timeSlot });
+                selectedTimeSlots.push({ date, slot: timeSlot });
             }
         });
     });
@@ -163,9 +166,11 @@ function setupCalendar() {
 // Render selected slots
 function renderSelectedSlots() {
     selectedTimeSlots.forEach(slot => {
-        const element = document.querySelector(
-            `.time-slot[data-day="${slot.day}"][data-slot="${slot.slot}"]`
-        );
+        // Support both date and day for backwards compatibility
+        const selector = slot.date 
+            ? `.time-slot[data-date="${slot.date}"][data-slot="${slot.slot}"]`
+            : `.time-slot[data-day="${slot.day}"][data-slot="${slot.slot}"]`;
+        const element = document.querySelector(selector);
         if (element) {
             element.classList.add('selected');
         }
