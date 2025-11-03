@@ -252,6 +252,14 @@ body {
     margin: 0;
 }
 
+.day-checkbox input[type="checkbox"]:focus {
+    outline: none;
+}
+
+.day-checkbox input[type="checkbox"]:focus-visible {
+    outline: none;
+}
+
 .day-checkbox span {
     display: flex;
     align-items: center;
@@ -267,9 +275,10 @@ body {
     transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     user-select: none;
     -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
-    pointer-events: none;
 }
 
 .day-checkbox input[type="checkbox"]:checked + span {
