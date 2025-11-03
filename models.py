@@ -107,6 +107,7 @@ class PlanGuest(db.Model):
             'plan_id': self.plan_id,
             'contact_id': self.contact_id,
             'contact_name': self.contact.name,
+            'contact_phone': self.contact.phone_number,
             'unique_token': self.unique_token,
             'has_responded': self.has_responded,
             'notified_at': self.notified_at.isoformat() if self.notified_at else None

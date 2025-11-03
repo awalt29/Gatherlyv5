@@ -55,8 +55,8 @@ async function loadPlanDetails() {
                     <tbody>
                         ${guests.map(guest => `
                             <tr>
-                                <td>${guest.guest_name}</td>
-                                <td>${guest.guest_id}</td>
+                                <td>${guest.contact_name}</td>
+                                <td>${guest.contact_phone}</td>
                                 <td><span class="badge ${guest.has_responded ? 'yes' : 'no'}">${guest.has_responded ? 'Yes' : 'No'}</span></td>
                                 <td>${guest.notified_at ? formatDateTime(guest.notified_at) : 'Not sent'}</td>
                                 <td><code>${guest.unique_token.substring(0, 20)}...</code></td>
