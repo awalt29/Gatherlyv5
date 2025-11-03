@@ -226,9 +226,13 @@ body {
 .reminder-days {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     gap: 12px;
     margin-bottom: 20px;
     justify-content: center;
+    max-width: 220px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .day-checkbox {
@@ -246,12 +250,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.1);
-    border: 2px solid var(--border-color);
-    color: var(--text-light);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
     font-weight: 600;
     font-size: 16px;
     transition: all 0.2s;
@@ -264,13 +268,8 @@ body {
     color: var(--primary-bg);
 }
 
-.day-checkbox:hover span {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: var(--accent-mint);
-}
-
-.day-checkbox input[type="checkbox"]:checked:hover + span {
-    background: var(--accent-mint-dark);
+.day-checkbox:not(:has(input:checked)):hover span {
+    opacity: 0.8;
 }
 
 .account-info {
