@@ -238,12 +238,16 @@ body {
 .day-checkbox {
     position: relative;
     cursor: pointer;
+    touch-action: manipulation;
 }
 
 .day-checkbox input[type="checkbox"] {
     position: absolute;
     opacity: 0;
     cursor: pointer;
+    width: 44px;
+    height: 44px;
+    margin: 0;
 }
 
 .day-checkbox span {
@@ -258,14 +262,19 @@ body {
     color: var(--text-muted);
     font-weight: 600;
     font-size: 16px;
-    transition: all 0.2s;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .day-checkbox input[type="checkbox"]:checked + span {
     background: var(--accent-mint);
     border-color: var(--accent-mint);
     color: var(--primary-bg);
+}
+
+.day-checkbox:active span {
+    transform: scale(0.95);
 }
 
 .day-checkbox:not(:has(input:checked)):hover span {
