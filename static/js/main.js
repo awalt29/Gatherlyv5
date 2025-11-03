@@ -400,11 +400,11 @@ async function createPlan() {
         return;
     }
     
-    const mondayDate = getMondayOfWeek();
+    const dateRange = getCalendarDateRange();
     
     const planData = {
         planner_id: plannerInfo.id,
-        week_start_date: mondayDate,
+        week_start_date: dateRange.start, // Use today's date as the start
         planner_availability: selectedTimeSlots,
         contact_ids: selectedFriends.map(f => f.id)
     };
@@ -438,13 +438,16 @@ async function createPlan() {
     }
 }
 
-// Get Monday of current week
-function getMondayOfWeek() {
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-    const monday = new Date(now.setDate(diff));
-    return monday.toISOString().split('T')[0];
+// Get date range for displayed calendar (today + 6 days)
+function getCalendarDateRange() {
+    const today = new Date();
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() + 6);
+    
+    return {
+        start: today.toISOString().split('T')[0],
+        end: endDate.toISOString().split('T')[0]
+    };
 }
 
 // Load availability for current week
@@ -455,11 +458,11 @@ async function loadAvailability() {
     }
     
     try {
-        const mondayDate = getMondayOfWeek();
-        console.log('Loading availability for week:', mondayDate, 'planner ID:', plannerInfo.id);
+        const dateRange = getCalendarDateRange();
+        console.log('Loading availability for date range:', dateRange.start, 'to', dateRange.end, 'planner ID:', plannerInfo.id);
         
-        // Get all availability for this week and planner
-        const availResponse = await fetch(`/api/availability/week/${mondayDate}?planner_id=${plannerInfo.id}`);
+        // Get all availability for this date range and planner
+        const availResponse = await fetch(`/api/availability/daterange?planner_id=${plannerInfo.id}&start_date=${dateRange.start}&end_date=${dateRange.end}`);
         
         if (!availResponse.ok) {
             console.log('No availability found for this week');

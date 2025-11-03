@@ -489,6 +489,41 @@ def get_week_availability(date_str):
     return jsonify([a.to_dict() for a in availabilities])
 
 
+@app.route('/api/availability/daterange', methods=['GET'])
+def get_availability_by_daterange():
+    """Get all availability for a specific date range and planner"""
+    planner_id = request.args.get('planner_id')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    
+    if not all([planner_id, start_date, end_date]):
+        return jsonify({'error': 'planner_id, start_date, and end_date required'}), 400
+    
+    start = datetime.fromisoformat(start_date).date()
+    end = datetime.fromisoformat(end_date).date()
+    
+    # Get all availability for this planner
+    all_avails = Availability.query.filter_by(planner_id=int(planner_id)).all()
+    
+    # Filter to only include availability with time_slots in the date range
+    filtered_avails = []
+    for avail in all_avails:
+        matching_slots = []
+        for slot in avail.time_slots:
+            if 'date' in slot:
+                slot_date = datetime.fromisoformat(slot['date']).date()
+                if start <= slot_date <= end:
+                    matching_slots.append(slot)
+        
+        if matching_slots:
+            # Create a copy with only matching slots
+            avail_dict = avail.to_dict()
+            avail_dict['time_slots'] = matching_slots
+            filtered_avails.append(avail_dict)
+    
+    return jsonify(filtered_avails)
+
+
 @app.route('/api/guest/<token>', methods=['GET'])
 def get_guest_info(token):
     """Get guest and plan info from token"""
