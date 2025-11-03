@@ -813,6 +813,7 @@ async function saveReminderPreferences() {
         
         if (response.ok) {
             showStatus('Reminder preferences saved!', 'success');
+            closeSettings(); // Auto-close modal after saving
         } else {
             showStatus('Error saving preferences', 'error');
         }

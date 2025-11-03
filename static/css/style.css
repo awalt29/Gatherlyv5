@@ -225,9 +225,52 @@ body {
 
 .reminder-days {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 12px;
     margin-bottom: 20px;
+    justify-content: center;
+}
+
+.day-checkbox {
+    position: relative;
+    cursor: pointer;
+}
+
+.day-checkbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.day-checkbox span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--border-color);
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.day-checkbox input[type="checkbox"]:checked + span {
+    background: var(--accent-mint);
+    border-color: var(--accent-mint);
+    color: var(--primary-bg);
+}
+
+.day-checkbox:hover span {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--accent-mint);
+}
+
+.day-checkbox input[type="checkbox"]:checked:hover + span {
+    background: var(--accent-mint-dark);
 }
 
 .account-info {
