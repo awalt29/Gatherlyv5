@@ -279,6 +279,9 @@ def contacts():
 def delete_contact(contact_id):
     contact = Contact.query.get_or_404(contact_id)
     
+    # Delete notifications for this contact (to avoid foreign key constraint)
+    Notification.query.filter_by(contact_id=contact_id).delete()
+    
     # Delete all plan guests associated with this contact
     PlanGuest.query.filter_by(contact_id=contact_id).delete()
     
