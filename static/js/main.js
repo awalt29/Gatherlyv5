@@ -710,7 +710,8 @@ async function openSettings() {
         </div>
     `;
     
-    // Load reminder preferences
+    // Load timezone and reminder preferences
+    await loadTimezone();
     await loadReminderPreferences();
     
     document.getElementById('settingsModal').classList.add('active');
@@ -818,6 +819,47 @@ async function saveReminderPreferences() {
     } catch (error) {
         console.error('Error saving reminder preferences:', error);
         showStatus('Error saving preferences', 'error');
+    }
+}
+
+// Timezone functions
+async function loadTimezone() {
+    try {
+        const response = await fetch(`/api/users/${plannerInfo.id}`);
+        const user = await response.json();
+        
+        // Set the timezone dropdown
+        const timezoneSelect = document.getElementById('timezoneSelect');
+        if (timezoneSelect && user.timezone) {
+            timezoneSelect.value = user.timezone;
+        }
+    } catch (error) {
+        console.error('Error loading timezone:', error);
+    }
+}
+
+async function saveTimezone() {
+    try {
+        const timezone = document.getElementById('timezoneSelect').value;
+        
+        const response = await fetch(`/api/users/${plannerInfo.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ timezone })
+        });
+        
+        if (response.ok) {
+            const updatedUser = await response.json();
+            plannerInfo.timezone = updatedUser.timezone;
+            showStatus('Timezone saved!', 'success');
+        } else {
+            showStatus('Error saving timezone', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving timezone:', error);
+        showStatus('Error saving timezone', 'error');
     }
 }
 

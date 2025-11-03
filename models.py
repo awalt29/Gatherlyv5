@@ -14,6 +14,7 @@ class User(db.Model):
     phone_number = db.Column(db.String(20), nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     reminder_days = db.Column(db.JSON, default=list)  # List of days to send reminders: ["monday", "wednesday", "friday"]
+    timezone = db.Column(db.String(50), default='America/New_York')  # User's timezone (e.g., 'America/New_York', 'America/Los_Angeles')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -32,6 +33,7 @@ class User(db.Model):
             'name': self.name,
             'email': self.email,
             'phone_number': self.phone_number,
+            'timezone': self.timezone,
             'created_at': self.created_at.isoformat()
         }
 

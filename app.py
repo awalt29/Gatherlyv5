@@ -108,7 +108,8 @@ def auth_signup():
     user = User(
         name=data['name'],
         email=data['email'],
-        phone_number=data['phone_number']
+        phone_number=data['phone_number'],
+        timezone=data.get('timezone', 'America/New_York')  # Default to EST
     )
     user.set_password(data['password'])
     
@@ -199,6 +200,7 @@ def get_user(user_id):
         data = request.json
         user.name = data.get('name', user.name)
         user.phone_number = data.get('phone_number', user.phone_number)
+        user.timezone = data.get('timezone', user.timezone)
         db.session.commit()
         return jsonify(user.to_dict()), 200
     

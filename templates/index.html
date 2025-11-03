@@ -167,6 +167,24 @@
                     </div>
                 </div>
                 <div class="settings-section">
+                    <h3 class="settings-section-title">Timezone</h3>
+                    <p class="settings-description">Your timezone is auto-detected. Update if incorrect.</p>
+                    <div class="form-group">
+                        <label class="form-label">Timezone</label>
+                        <select class="form-input" id="timezoneSelect">
+                            <option value="America/New_York">Eastern Time (ET)</option>
+                            <option value="America/Chicago">Central Time (CT)</option>
+                            <option value="America/Denver">Mountain Time (MT)</option>
+                            <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                            <option value="America/Anchorage">Alaska Time (AKT)</option>
+                            <option value="Pacific/Honolulu">Hawaii Time (HST)</option>
+                        </select>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="button" class="btn-primary" onclick="saveTimezone()">Save Timezone</button>
+                    </div>
+                </div>
+                <div class="settings-section">
                     <h3 class="settings-section-title">Planning Reminders</h3>
                     <p class="settings-description">Get text reminders to plan your week. Select which days you'd like to receive reminders.</p>
                     <div class="reminder-days">

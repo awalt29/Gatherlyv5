@@ -6,6 +6,7 @@ This script is run by Railway cron job
 
 import os
 from datetime import datetime
+import pytz
 from dotenv import load_dotenv
 from models import db, User
 from flask import Flask
@@ -54,16 +55,29 @@ def send_sms(to_number, message):
 def send_reminders():
     """Send reminders to users based on their preferences"""
     with app.app_context():
-        # Get current day of week (lowercase)
-        today = datetime.now().strftime('%A').lower()
-        print(f"📅 Today is {today.capitalize()}")
+        # Get current UTC time
+        utc_now = datetime.now(pytz.UTC)
+        print(f"🌍 Current UTC time: {utc_now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         
-        # Find users who have reminders enabled for today
+        # Find users who have reminders enabled
         users = User.query.all()
         
         sent_count = 0
         for user in users:
-            if user.reminder_days and today in user.reminder_days:
+            if not user.reminder_days:
+                continue
+            
+            # Get user's timezone (default to America/New_York if not set)
+            user_tz = pytz.timezone(user.timezone or 'America/New_York')
+            
+            # Convert current time to user's timezone
+            user_time = utc_now.astimezone(user_tz)
+            today_for_user = user_time.strftime('%A').lower()
+            
+            print(f"👤 {user.name}: {user_time.strftime('%Y-%m-%d %H:%M:%S %Z')} ({today_for_user})")
+            
+            # Check if user wants reminder today
+            if today_for_user in user.reminder_days:
                 # Prepare the reminder message
                 base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
                 message = f"Hi {user.name.split()[0]}! 👋 Time to plan your weekend with friends. Start here: {base_url}"
@@ -71,7 +85,11 @@ def send_reminders():
                 # Send SMS
                 if send_sms(user.phone_number, message):
                     sent_count += 1
-                    print(f"   📱 Reminded {user.name} ({user.phone_number})")
+                    print(f"   📱 ✅ Sent reminder to {user.name} ({user.phone_number})")
+                else:
+                    print(f"   📱 ❌ Failed to send to {user.name}")
+            else:
+                print(f"   ⏭️  Skipped (no reminder for {today_for_user})")
         
         print(f"\n✅ Sent {sent_count} reminder(s)")
         return sent_count

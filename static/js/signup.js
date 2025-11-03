@@ -26,6 +26,9 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
         return;
     }
     
+    // Auto-detect timezone
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
     try {
         const response = await fetch('/api/auth/signup', {
             method: 'POST',
@@ -36,7 +39,8 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
                 name: `${firstName} ${lastName}`,
                 email,
                 phone_number: phone,
-                password
+                password,
+                timezone
             })
         });
         
