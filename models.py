@@ -143,6 +143,7 @@ class Availability(db.Model):
             'planner_id': self.planner_id,
             'contact_id': self.contact_id,
             'contact_name': name,
+            'user_name': name,  # Alias for admin dashboard compatibility
             'time_slots': self.time_slots,
             'submitted_at': self.submitted_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
