@@ -13,7 +13,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     phone_number = db.Column(db.String(20), nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    reminder_days = db.Column(db.JSON, default=list)  # List of days to send reminders: ["monday", "wednesday", "friday"]
+    reminder_days = db.Column(db.JSON, default=lambda: ["monday", "tuesday", "wednesday", "thursday"])  # List of days to send reminders
     timezone = db.Column(db.String(50), default='America/New_York')  # User's timezone (e.g., 'America/New_York', 'America/Los_Angeles')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
