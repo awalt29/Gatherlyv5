@@ -100,6 +100,7 @@ class PlanGuest(db.Model):
     unique_token = db.Column(db.String(64), unique=True, nullable=False, default=lambda: secrets.token_urlsafe(32))
     has_responded = db.Column(db.Boolean, default=False)
     notified_at = db.Column(db.DateTime)
+    link_clicked_at = db.Column(db.DateTime)  # Track when guest first clicked the link
     
     def to_dict(self):
         return {
@@ -110,7 +111,8 @@ class PlanGuest(db.Model):
             'contact_phone': self.contact.phone_number,
             'unique_token': self.unique_token,
             'has_responded': self.has_responded,
-            'notified_at': self.notified_at.isoformat() if self.notified_at else None
+            'notified_at': self.notified_at.isoformat() if self.notified_at else None,
+            'link_clicked_at': self.link_clicked_at.isoformat() if self.link_clicked_at else None
         }
 
 

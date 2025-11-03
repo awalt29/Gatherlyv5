@@ -165,6 +165,12 @@ def auth_me():
 @app.route('/guest/<token>')
 def guest_response(token):
     plan_guest = PlanGuest.query.filter_by(unique_token=token).first_or_404()
+    
+    # Track first click if not already tracked
+    if not plan_guest.link_clicked_at:
+        plan_guest.link_clicked_at = datetime.utcnow()
+        db.session.commit()
+    
     return render_template('guest.html', token=token)
 
 

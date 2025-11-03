@@ -47,6 +47,7 @@ async function loadPlanDetails() {
                         <tr>
                             <th>Name</th>
                             <th>Phone</th>
+                            <th>Link Clicked</th>
                             <th>Responded</th>
                             <th>Notified</th>
                             <th>Link Token</th>
@@ -57,6 +58,7 @@ async function loadPlanDetails() {
                             <tr>
                                 <td>${guest.contact_name}</td>
                                 <td>${guest.contact_phone}</td>
+                                <td><span class="badge ${guest.link_clicked_at ? 'yes' : 'no'}">${guest.link_clicked_at ? formatDateTime(guest.link_clicked_at) : 'Not clicked'}</span></td>
                                 <td><span class="badge ${guest.has_responded ? 'yes' : 'no'}">${guest.has_responded ? 'Yes' : 'No'}</span></td>
                                 <td>${guest.notified_at ? formatDateTime(guest.notified_at) : 'Not sent'}</td>
                                 <td><code>${guest.unique_token.substring(0, 20)}...</code></td>
