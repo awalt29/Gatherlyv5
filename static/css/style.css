@@ -17,8 +17,9 @@
 }
 
 html {
-    overscroll-behavior: none;
+    overscroll-behavior-y: contain;
     height: 100%;
+    background-color: #0F1726;
 }
 
 body {
@@ -29,12 +30,13 @@ body {
     background-size: 100% 100%;
     color: var(--text-light);
     min-height: 100vh;
+    min-height: -webkit-fill-available;
     margin: 0;
     padding: 0;
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    overscroll-behavior: none;
+    overscroll-behavior-y: contain;
 }
 
 .container {
