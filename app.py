@@ -394,7 +394,6 @@ def create_plan():
         base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
         guest_url = f"{base_url}/guest/{plan_guest.unique_token}"
         contact_first_name = contact.name.split()[0]
-        planner_first_name = planner.name.split()[0] if planner.name else planner.name
         message = f"Hey {contact_first_name}, {planner.name} wants to hang out {days_text}. Click the link to share your availability: {guest_url}"
         send_sms(contact.phone_number, message)
     
