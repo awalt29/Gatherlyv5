@@ -175,10 +175,13 @@ function renderFriends() {
     const friendsList = document.getElementById('friendsList');
     friendsList.innerHTML = '<div class="friend-avatar add-btn" onclick="openAddFriendModal()">+</div>';
     
+    // Get display map with subscripts for duplicate initials
+    const displayMap = getContactDisplayMap(allFriends);
+    
     allFriends.forEach(friend => {
         const avatar = document.createElement('div');
         avatar.className = 'friend-avatar';
-        avatar.textContent = getInitials(friend.name);
+        avatar.textContent = displayMap[friend.id];
         avatar.onclick = () => toggleFriend(friend);
         avatar.dataset.friendId = friend.id;
         
@@ -193,6 +196,38 @@ function renderFriends() {
 // Get initials from name
 function getInitials(name) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+}
+
+// Get display text for contacts (with subscripts for duplicate initials)
+function getContactDisplayMap(contacts) {
+    const displayMap = {};
+    const initialsGroups = {};
+    
+    // Group contacts by their initials
+    contacts.forEach(contact => {
+        const initials = getInitials(contact.name);
+        if (!initialsGroups[initials]) {
+            initialsGroups[initials] = [];
+        }
+        initialsGroups[initials].push(contact);
+    });
+    
+    // Assign display text with subscripts for duplicates
+    Object.keys(initialsGroups).forEach(initials => {
+        const group = initialsGroups[initials];
+        if (group.length === 1) {
+            // No duplicates, just show initials
+            displayMap[group[0].id] = initials;
+        } else {
+            // Duplicates exist, add subscript numbers
+            group.forEach((contact, index) => {
+                const subscript = String(index + 1).split('').map(d => '₀₁₂₃₄₅₆₇₈₉'[d]).join('');
+                displayMap[contact.id] = initials + subscript;
+            });
+        }
+    });
+    
+    return displayMap;
 }
 
 // Toggle friend selection
@@ -483,6 +518,9 @@ async function loadAvailability() {
             }
         });
         
+        // Get display map with subscripts for duplicate initials
+        const displayMap = getContactDisplayMap(allFriends);
+        
         // Group users by slot (exclude planner's own availability from bubbles)
         const slotUsers = {};
         const plannerSlots = new Set();
@@ -505,7 +543,7 @@ async function loadAvailability() {
                     }
                     slotUsers[key].push({
                         name: avail.contact_name,
-                        initials: getInitials(avail.contact_name)
+                        initials: displayMap[avail.contact_id] || getInitials(avail.contact_name)
                     });
                 }
             });
