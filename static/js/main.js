@@ -855,6 +855,7 @@ async function saveTimezone() {
             const updatedUser = await response.json();
             plannerInfo.timezone = updatedUser.timezone;
             showStatus('Timezone saved!', 'success');
+            closeSettings(); // Auto-close modal after saving
         } else {
             showStatus('Error saving timezone', 'error');
         }
