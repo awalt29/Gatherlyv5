@@ -349,6 +349,31 @@ def create_plan():
             )
             db.session.add(availability)
     
+    # Format available days for SMS
+    available_days = []
+    if data.get('planner_availability'):
+        # Get unique dates from planner availability
+        unique_dates = set()
+        for slot in data['planner_availability']:
+            if 'date' in slot:
+                unique_dates.add(slot['date'])
+        
+        # Convert dates to day names
+        for date_str in sorted(unique_dates):
+            date_obj = datetime.fromisoformat(date_str).date()
+            day_name = date_obj.strftime('%A')
+            available_days.append(day_name)
+    
+    # Format days as "Thursday, Friday, or Saturday"
+    if len(available_days) == 0:
+        days_text = "this week"
+    elif len(available_days) == 1:
+        days_text = available_days[0]
+    elif len(available_days) == 2:
+        days_text = f"{available_days[0]} or {available_days[1]}"
+    else:
+        days_text = ", ".join(available_days[:-1]) + f", or {available_days[-1]}"
+    
     # Add guests and send notifications
     contact_ids = data.get('contact_ids', [])
     print(f"[DEBUG] Processing {len(contact_ids)} contacts")
@@ -368,7 +393,9 @@ def create_plan():
         # Send SMS
         base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
         guest_url = f"{base_url}/guest/{plan_guest.unique_token}"
-        message = f"Hey {contact.name}, {planner.name} wants to hang out this week! Share your availability: {guest_url}"
+        contact_first_name = contact.name.split()[0]
+        planner_first_name = planner.name.split()[0] if planner.name else planner.name
+        message = f"Hey {contact_first_name}, {planner.name} wants to hang out {days_text}. Click the link to share your availability: {guest_url}"
         send_sms(contact.phone_number, message)
     
     db.session.commit()
