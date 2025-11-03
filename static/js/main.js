@@ -277,10 +277,13 @@ function renderManageFriends() {
         return;
     }
     
+    // Get display map with subscripts for duplicate initials
+    const displayMap = getContactDisplayMap(allFriends);
+    
     manageList.innerHTML = allFriends.map(friend => `
         <div class="friend-manage-item">
             <div class="friend-manage-info">
-                <div class="friend-manage-avatar">${getInitials(friend.name)}</div>
+                <div class="friend-manage-avatar">${displayMap[friend.id]}</div>
                 <div class="friend-manage-details">
                     <div class="friend-manage-name">${friend.name}</div>
                     <div class="friend-manage-phone">${friend.phone_number}</div>
