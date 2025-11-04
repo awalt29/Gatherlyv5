@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
+from flask_migrate import Migrate
 from models import db, User, Contact, Plan, PlanGuest, Availability, Notification
 from datetime import datetime, timedelta
 from twilio.rest import Client
@@ -23,6 +24,7 @@ app.config['SESSION_COOKIE_SECURE'] = True if os.getenv('APP_BASE_URL', '').star
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # Remember Me for 30 days
 
 db.init_app(app)
+migrate = Migrate(app, db)
 CORS(app, supports_credentials=True)
 
 # Twilio setup
