@@ -719,7 +719,15 @@ function renderNotifications(notifications) {
 }
 
 function getTimeAgo(date) {
-    const seconds = Math.floor((new Date() - date) / 1000);
+    const now = new Date();
+    const notifDate = new Date(date);
+    const seconds = Math.floor((now - notifDate) / 1000);
+    
+    console.log('getTimeAgo:', {
+        now: now.toISOString(),
+        notifDate: notifDate.toISOString(),
+        secondsAgo: seconds
+    });
     
     if (seconds < 60) return 'just now';
     const minutes = Math.floor(seconds / 60);
