@@ -157,7 +157,7 @@ class Notification(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     planner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    contact_id = db.Column(db.Integer, db.ForeignKey('contacts.id'), nullable=False)
+    contact_id = db.Column(db.Integer, db.ForeignKey('contacts.id'), nullable=True)  # Nullable for system notifications
     message = db.Column(db.String(500), nullable=False)
     read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -171,7 +171,7 @@ class Notification(db.Model):
             'id': self.id,
             'planner_id': self.planner_id,
             'contact_id': self.contact_id,
-            'contact_name': self.contact.name,
+            'contact_name': self.contact.name if self.contact else None,
             'message': self.message,
             'read': self.read,
             'created_at': self.created_at.isoformat()

@@ -385,10 +385,14 @@ def create_plan():
     # Add guests and send notifications
     contact_ids = data.get('contact_ids', [])
     print(f"[DEBUG] Processing {len(contact_ids)} contacts")
+    
+    invited_contacts = []
     for contact_id in contact_ids:
         contact = db.session.get(Contact, contact_id)
         if not contact:
             continue
+        
+        invited_contacts.append(contact.name)
         
         plan_guest = PlanGuest(
             plan_id=plan.id,
@@ -404,6 +408,23 @@ def create_plan():
         contact_first_name = contact.name.split()[0]
         message = f"Hey {contact_first_name}, {planner.name} wants to hang out {days_text}. Click the link to share your availability: {guest_url}"
         send_sms(contact.phone_number, message)
+    
+    # Create notification for planner about sent invites
+    if invited_contacts:
+        # Format names: "John, Jane, and Bob" or "John and Jane" or "John"
+        if len(invited_contacts) == 1:
+            names_text = invited_contacts[0]
+        elif len(invited_contacts) == 2:
+            names_text = f"{invited_contacts[0]} and {invited_contacts[1]}"
+        else:
+            names_text = ", ".join(invited_contacts[:-1]) + f", and {invited_contacts[-1]}"
+        
+        notification = Notification(
+            planner_id=planner.id,
+            contact_id=None,  # System notification
+            message=f"Availability request sent to {names_text}"
+        )
+        db.session.add(notification)
     
     db.session.commit()
     return jsonify(plan.to_dict()), 201
