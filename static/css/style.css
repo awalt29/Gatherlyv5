@@ -161,6 +161,13 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.notification-avatar.system-notification {
+    background: rgba(91, 163, 255, 0.3);
+    color: var(--accent-blue);
+    font-size: 18px;
+    font-weight: 700;
     flex-shrink: 0;
 }
 
