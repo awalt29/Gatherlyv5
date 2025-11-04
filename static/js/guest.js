@@ -75,6 +75,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     await loadGuestInfo();
     setupCalendar();
+    
+    // Initialize submit button state
+    updateSubmitButton();
 });
 
 // Load guest information
@@ -159,8 +162,24 @@ function setupCalendar() {
             } else {
                 selectedTimeSlots.push({ date, slot: timeSlot });
             }
+            
+            // Update submit button based on selection
+            updateSubmitButton();
         });
     });
+}
+
+// Update submit button text and style based on whether slots are selected
+function updateSubmitButton() {
+    const submitButton = document.getElementById('submitButton');
+    
+    if (selectedTimeSlots.length === 0) {
+        submitButton.textContent = 'No availability';
+        submitButton.classList.add('no-availability');
+    } else {
+        submitButton.textContent = 'Submit Availability';
+        submitButton.classList.remove('no-availability');
+    }
 }
 
 // Render selected slots
@@ -179,12 +198,9 @@ function renderSelectedSlots() {
 
 // Submit availability
 async function submitAvailability() {
-    if (selectedTimeSlots.length === 0) {
-        showStatus('Please select at least one time slot', 'error');
-        return;
-    }
-    
     const submitButton = document.getElementById('submitButton');
+    const hasAvailability = selectedTimeSlots.length > 0;
+    
     submitButton.disabled = true;
     submitButton.textContent = 'Submitting...';
     
@@ -199,7 +215,11 @@ async function submitAvailability() {
         });
         
         if (response.ok) {
-            showStatus('Thank you! Your availability has been shared.', 'success');
+            if (hasAvailability) {
+                showStatus('Thank you! Your availability has been shared.', 'success');
+            } else {
+                showStatus('Thank you for letting us know!', 'success');
+            }
             submitButton.textContent = 'Submitted ✓';
             
             // Disable further editing after a delay
@@ -208,17 +228,18 @@ async function submitAvailability() {
                     slot.style.cursor = 'default';
                     slot.style.pointerEvents = 'none';
                 });
+                submitButton.style.pointerEvents = 'none';
             }, 2000);
         } else {
             showStatus('Error submitting availability. Please try again.', 'error');
             submitButton.disabled = false;
-            submitButton.textContent = 'Submit Availability';
+            updateSubmitButton();
         }
     } catch (error) {
         console.error('Error submitting availability:', error);
         showStatus('Error submitting availability. Please try again.', 'error');
         submitButton.disabled = false;
-        submitButton.textContent = 'Submit Availability';
+        updateSubmitButton();
     }
 }
 

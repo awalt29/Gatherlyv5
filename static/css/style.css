@@ -683,6 +683,19 @@ h1 {
     color: var(--text-light);
 }
 
+.btn-primary.no-availability {
+    background: rgba(91, 163, 255, 0.2);
+    border: 2px solid rgba(91, 163, 255, 0.3);
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+}
+
+.btn-primary.no-availability:hover {
+    background: rgba(91, 163, 255, 0.25);
+    border: 2px solid rgba(91, 163, 255, 0.4);
+    transform: translateY(-1px);
+}
+
 /* Modal */
 .modal {
     display: none;
