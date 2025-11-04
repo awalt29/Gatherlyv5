@@ -730,6 +730,8 @@ function getTimeAgo(date) {
     return `${days}d`;
 }
 
+let notificationUpdateInterval = null;
+
 async function openNotifications() {
     document.getElementById('notificationsModal').classList.add('active');
     await loadNotifications();
@@ -743,10 +745,24 @@ async function openNotifications() {
         // Hide badge immediately
         document.getElementById('notificationBadge').style.display = 'none';
     }
+    
+    // Update timestamps every 5 seconds while modal is open
+    if (notificationUpdateInterval) {
+        clearInterval(notificationUpdateInterval);
+    }
+    notificationUpdateInterval = setInterval(() => {
+        loadNotifications();
+    }, 5000);
 }
 
 function closeNotifications() {
     document.getElementById('notificationsModal').classList.remove('active');
+    
+    // Stop updating timestamps when modal closes
+    if (notificationUpdateInterval) {
+        clearInterval(notificationUpdateInterval);
+        notificationUpdateInterval = null;
+    }
 }
 
 // Poll for new notifications every 30 seconds
