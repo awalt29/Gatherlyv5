@@ -667,42 +667,55 @@ async function loadNotifications() {
 
 function renderNotifications(notifications) {
     const list = document.getElementById('notificationsList');
+    console.log('Rendering notifications:', notifications);
+    
+    if (!list) {
+        console.error('notificationsList element not found!');
+        return;
+    }
     
     if (notifications.length === 0) {
         list.innerHTML = '<div class="no-notifications">No notifications yet</div>';
         return;
     }
     
-    list.innerHTML = notifications.map(notif => {
-        const timeAgo = getTimeAgo(new Date(notif.created_at));
-        
-        // System notifications (no contact) vs contact notifications
-        if (!notif.contact_name) {
-            // System notification - show checkmark icon and just the message
-            return `
-                <div class="notification-item ${notif.read ? '' : 'unread'}">
-                    <div class="notification-avatar system-notification">✓</div>
-                    <div class="notification-content">
-                        <div class="notification-text">${notif.message}</div>
-                        <div class="notification-time">${timeAgo}</div>
-                    </div>
-                </div>
-            `;
-        } else {
-            // Contact notification - show contact initials and name
-            return `
-                <div class="notification-item ${notif.read ? '' : 'unread'}">
-                    <div class="notification-avatar">${getInitials(notif.contact_name)}</div>
-                    <div class="notification-content">
-                        <div class="notification-text">
-                            <strong>${notif.contact_name}</strong> ${notif.message}
+    try {
+        const html = notifications.map(notif => {
+            const timeAgo = getTimeAgo(new Date(notif.created_at));
+            
+            // System notifications (no contact) vs contact notifications
+            if (!notif.contact_name) {
+                // System notification - show checkmark icon and just the message
+                return `
+                    <div class="notification-item ${notif.read ? '' : 'unread'}">
+                        <div class="notification-avatar system-notification">✓</div>
+                        <div class="notification-content">
+                            <div class="notification-text">${notif.message}</div>
+                            <div class="notification-time">${timeAgo}</div>
                         </div>
-                        <div class="notification-time">${timeAgo}</div>
                     </div>
-                </div>
-            `;
-        }
-    }).join('');
+                `;
+            } else {
+                // Contact notification - show contact initials and name
+                return `
+                    <div class="notification-item ${notif.read ? '' : 'unread'}">
+                        <div class="notification-avatar">${getInitials(notif.contact_name)}</div>
+                        <div class="notification-content">
+                            <div class="notification-text">
+                                <strong>${notif.contact_name}</strong> ${notif.message}
+                            </div>
+                            <div class="notification-time">${timeAgo}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }).join('');
+        
+        console.log('Setting innerHTML with', html.length, 'characters');
+        list.innerHTML = html;
+    } catch (error) {
+        console.error('Error rendering notifications:', error);
+    }
 }
 
 function getTimeAgo(date) {
