@@ -667,7 +667,6 @@ async function loadNotifications() {
 
 function renderNotifications(notifications) {
     const list = document.getElementById('notificationsList');
-    console.log('Rendering notifications:', notifications);
     
     if (!list) {
         console.error('notificationsList element not found!');
@@ -711,7 +710,6 @@ function renderNotifications(notifications) {
             }
         }).join('');
         
-        console.log('Setting innerHTML with', html.length, 'characters');
         list.innerHTML = html;
     } catch (error) {
         console.error('Error rendering notifications:', error);
@@ -722,12 +720,6 @@ function getTimeAgo(date) {
     const now = new Date();
     const notifDate = new Date(date);
     const seconds = Math.floor((now - notifDate) / 1000);
-    
-    console.log('getTimeAgo:', {
-        now: now.toISOString(),
-        notifDate: notifDate.toISOString(),
-        secondsAgo: seconds
-    });
     
     if (seconds < 60) return 'just now';
     const minutes = Math.floor(seconds / 60);

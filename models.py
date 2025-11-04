@@ -174,5 +174,5 @@ class Notification(db.Model):
             'contact_name': self.contact.name if self.contact else None,
             'message': self.message,
             'read': self.read,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat() + 'Z'  # Add Z to indicate UTC
         }
