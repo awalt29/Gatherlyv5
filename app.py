@@ -681,10 +681,13 @@ def init_db():
 # Create tables on startup (works with both gunicorn and direct execution)
 with app.app_context():
     try:
+        print("🔄 Initializing database tables...")
         db.create_all()
         print("✅ Database tables created successfully!")
     except Exception as e:
-        print(f"⚠️ Error creating database tables: {e}")
+        print(f"❌ Error creating database tables: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 if __name__ == '__main__':
