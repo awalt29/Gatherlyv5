@@ -135,6 +135,14 @@ body {
     max-height: 500px;
     overflow-y: auto;
     padding: 16px 0;
+    min-height: 100px;
+}
+
+@media (max-width: 480px) {
+    .notifications-list {
+        max-height: calc(90vh - 150px);
+        min-height: 200px;
+    }
 }
 
 .notification-item {
@@ -702,6 +710,13 @@ h1 {
     max-width: 400px;
     max-height: 90vh;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* For notifications modal, let the list handle scrolling */
+#notificationsModal .modal-content {
+    overflow-y: hidden;
 }
 
 .modal-header {
