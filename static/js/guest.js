@@ -169,16 +169,14 @@ function setupCalendar() {
     });
 }
 
-// Update submit button text and style based on whether slots are selected
+// Update submit button text based on whether slots are selected
 function updateSubmitButton() {
     const submitButton = document.getElementById('submitButton');
     
     if (selectedTimeSlots.length === 0) {
-        submitButton.textContent = 'No availability';
-        submitButton.classList.add('no-availability');
+        submitButton.textContent = "I'm unavailable";
     } else {
-        submitButton.textContent = 'Submit Availability';
-        submitButton.classList.remove('no-availability');
+        submitButton.textContent = 'Share Availability';
     }
 }
 
