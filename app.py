@@ -385,6 +385,14 @@ def create_plan():
     contact_ids = data.get('contact_ids', [])
     print(f"[DEBUG] Processing {len(contact_ids)} contacts")
     
+    # Delete old guest availability for these contacts (fresh start for new plan)
+    for contact_id in contact_ids:
+        Availability.query.filter_by(
+            planner_id=planner.id,
+            contact_id=contact_id
+        ).delete()
+    print(f"[DEBUG] Cleared old guest availability for {len(contact_ids)} contacts")
+    
     invited_contacts = []
     for contact_id in contact_ids:
         contact = db.session.get(Contact, contact_id)
