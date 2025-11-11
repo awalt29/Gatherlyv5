@@ -475,6 +475,8 @@ def submit_availability():
         
         # Create notification for planner
         contact = db.session.get(Contact, plan_guest.contact_id)
+        guest_message = data.get('message', '').strip()
+        
         if contact and len(data['time_slots']) > 0:
             # Get date range from time slots (use 'date' field, fallback to 'day' for backwards compatibility)
             dates = []
@@ -495,6 +497,10 @@ def submit_availability():
                 
                 message = f"shared their availability for {date_range}"
                 
+                # Append guest message if provided
+                if guest_message:
+                    message += f': "{guest_message}"'
+                
                 notification = Notification(
                     planner_id=plan.planner_id,
                     contact_id=contact.id,
@@ -504,6 +510,11 @@ def submit_availability():
         elif contact:
             # No availability shared
             message = f"is not available this week"
+            
+            # Append guest message if provided
+            if guest_message:
+                message += f': "{guest_message}"'
+            
             notification = Notification(
                 planner_id=plan.planner_id,
                 contact_id=contact.id,

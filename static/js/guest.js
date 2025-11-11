@@ -245,7 +245,9 @@ function renderSelectedSlots() {
 // Submit availability
 async function submitAvailability() {
     const submitButton = document.getElementById('submitButton');
+    const messageInput = document.getElementById('guestMessage');
     const hasAvailability = selectedTimeSlots.length > 0;
+    const message = messageInput ? messageInput.value.trim() : '';
     
     submitButton.disabled = true;
     submitButton.textContent = 'Submitting...';
@@ -256,7 +258,8 @@ async function submitAvailability() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 token: guestToken,
-                time_slots: selectedTimeSlots
+                time_slots: selectedTimeSlots,
+                message: message
             })
         });
         
