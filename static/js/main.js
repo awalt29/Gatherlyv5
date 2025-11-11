@@ -8,25 +8,49 @@ let planningMode = 'setup'; // setup, selecting, planning, viewing
 let weekDays = []; // Store the 7 days of current week starting from today
 let lastNotificationCount = null; // Track notification count to detect new ones (null = not initialized)
 
+// Get today's date as YYYY-MM-DD string (no timezone conversion)
+function getTodayString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Add days to a YYYY-MM-DD date string
+function addDaysToDateString(dateStr, daysToAdd) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // Create date at midnight local time
+    date.setDate(date.getDate() + daysToAdd);
+    
+    const newYear = date.getFullYear();
+    const newMonth = String(date.getMonth() + 1).padStart(2, '0');
+    const newDay = String(date.getDate()).padStart(2, '0');
+    return `${newYear}-${newMonth}-${newDay}`;
+}
+
 // Generate calendar for the current week (today + next 6 days)
 function generateCalendar() {
-    const today = new Date();
+    const todayStr = getTodayString();
     weekDays = [];
     
     // Generate 7 days starting from today
     for (let i = 0; i < 7; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
+        const dateStr = addDaysToDateString(todayStr, i);
+        const [year, month, day] = dateStr.split('-').map(Number);
+        
+        // Create date at noon local time to avoid any timezone issues
+        const date = new Date(year, month - 1, day, 12, 0, 0);
         
         const dayOfWeek = date.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
         const mondayBasedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert to 0=Mon, 6=Sun
         
         weekDays.push({
-            date: date,
+            dateString: dateStr, // Store as string!
             dayIndex: mondayBasedDay, // For backend compatibility (0=Mon, 6=Sun)
             dayName: date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
-            dayDate: date.getDate(),
-            month: date.getMonth() + 1
+            dayDate: day,
+            month: month
         });
     }
     
@@ -64,11 +88,7 @@ function generateCalendar() {
             timeSlot.className = 'time-slot';
             timeSlot.dataset.day = day.dayIndex; // Use Monday-based index for backend
             timeSlot.dataset.displayDay = dayIndex; // Use display index for UI
-            // Store date in local timezone (YYYY-MM-DD) to match displayed day
-            const year = day.date.getFullYear();
-            const month = String(day.date.getMonth() + 1).padStart(2, '0');
-            const dayNum = String(day.date.getDate()).padStart(2, '0');
-            timeSlot.dataset.date = `${year}-${month}-${dayNum}`;
+            timeSlot.dataset.date = day.dateString; // Use the pre-calculated date string
             timeSlot.dataset.slot = slot;
             grid.appendChild(timeSlot);
         });
@@ -482,21 +502,12 @@ async function createPlan() {
 
 // Get date range for displayed calendar (today + 6 days)
 function getCalendarDateRange() {
-    const today = new Date();
-    const endDate = new Date(today);
-    endDate.setDate(today.getDate() + 6);
-    
-    // Format dates in local timezone to match calendar display
-    const formatLocalDate = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
+    const todayStr = getTodayString();
+    const endDateStr = addDaysToDateString(todayStr, 6);
     
     return {
-        start: formatLocalDate(today),
-        end: formatLocalDate(endDate)
+        start: todayStr,
+        end: endDateStr
     };
 }
 
