@@ -337,6 +337,7 @@ def create_plan():
     
     # Save planner's availability (update if exists)
     if data.get('planner_availability'):
+        print(f"[DEBUG] Planner availability slots: {data['planner_availability']}")
         availability = Availability.query.filter_by(
             week_start_date=week_start,
             planner_id=planner.id,
@@ -347,6 +348,7 @@ def create_plan():
             # Update existing
             availability.time_slots = data['planner_availability']
             availability.updated_at = datetime.utcnow()
+            print(f"[DEBUG] Updated existing availability with {len(data['planner_availability'])} slots")
         else:
             # Create new
             availability = Availability(
@@ -356,6 +358,7 @@ def create_plan():
                 time_slots=data['planner_availability']
             )
             db.session.add(availability)
+            print(f"[DEBUG] Created new availability with {len(data['planner_availability'])} slots")
     
     # Format available days for SMS
     available_days = []
