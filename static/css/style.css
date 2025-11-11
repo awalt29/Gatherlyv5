@@ -1029,6 +1029,13 @@ h1 {
     justify-content: flex-start;
 }
 
+/* Guest Page - remove nested scrolling */
+body:has(.guest-info) .container {
+    overflow-y: visible;
+    height: auto;
+    min-height: 100vh;
+}
+
 .auth-container {
     padding: 40px 20px;
     max-width: 400px;
