@@ -64,7 +64,11 @@ function generateCalendar() {
             timeSlot.className = 'time-slot';
             timeSlot.dataset.day = day.dayIndex; // Use Monday-based index for backend
             timeSlot.dataset.displayDay = dayIndex; // Use display index for UI
-            timeSlot.dataset.date = day.date.toISOString().split('T')[0]; // Store actual date YYYY-MM-DD
+            // Store date in local timezone (YYYY-MM-DD) to match displayed day
+            const year = day.date.getFullYear();
+            const month = String(day.date.getMonth() + 1).padStart(2, '0');
+            const dayNum = String(day.date.getDate()).padStart(2, '0');
+            timeSlot.dataset.date = `${year}-${month}-${dayNum}`;
             timeSlot.dataset.slot = slot;
             grid.appendChild(timeSlot);
         });
@@ -482,9 +486,17 @@ function getCalendarDateRange() {
     const endDate = new Date(today);
     endDate.setDate(today.getDate() + 6);
     
+    // Format dates in local timezone to match calendar display
+    const formatLocalDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+    
     return {
-        start: today.toISOString().split('T')[0],
-        end: endDate.toISOString().split('T')[0]
+        start: formatLocalDate(today),
+        end: formatLocalDate(endDate)
     };
 }
 
