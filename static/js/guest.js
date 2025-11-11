@@ -47,6 +47,7 @@ function addDaysToDateString(dateStr, daysToAdd) {
 // Generate calendar for the current week (today + next 6 days)
 function generateCalendar() {
     const todayStr = getTodayString();
+    console.log('📅 GUEST TODAY STRING:', todayStr);
     weekDays = [];
     
     // Generate 7 days starting from today
@@ -67,6 +68,8 @@ function generateCalendar() {
             dayDate: day,
             month: month
         });
+        
+        console.log(`📅 GUEST Day ${i}: ${date.toLocaleDateString('en-US', { weekday: 'short' })} ${month}/${day} → dateString: ${dateStr}`);
     }
     
     // Generate header
@@ -162,10 +165,13 @@ async function loadPlannerAvailability() {
         const response = await fetch(`/api/availability/plan/${planInfo.id}`);
         const availabilities = await response.json();
         
+        console.log('📅 GUEST received availabilities:', availabilities);
+        
         // Find planner's availability (contact_id will be null for planner's own)
         const plannerAvail = availabilities.find(a => a.contact_id === null);
         
         if (plannerAvail) {
+            console.log('📅 GUEST planner slots:', plannerAvail.time_slots);
             // Highlight planner's slots with a special class
             plannerAvail.time_slots.forEach(slot => {
                 // Support both date and day for backwards compatibility
