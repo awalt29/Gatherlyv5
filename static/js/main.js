@@ -17,21 +17,40 @@ function getTodayString() {
     return `${year}-${month}-${day}`;
 }
 
-// Add days to a YYYY-MM-DD date string
+// Add days to a YYYY-MM-DD date string (pure math, no Date objects!)
 function addDaysToDateString(dateStr, daysToAdd) {
     const [year, month, day] = dateStr.split('-').map(Number);
-    const date = new Date(year, month - 1, day); // Create date at midnight local time
-    date.setDate(date.getDate() + daysToAdd);
     
-    const newYear = date.getFullYear();
-    const newMonth = String(date.getMonth() + 1).padStart(2, '0');
-    const newDay = String(date.getDate()).padStart(2, '0');
-    return `${newYear}-${newMonth}-${newDay}`;
+    // Calculate total days since epoch for simple math
+    const daysInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    
+    // Check for leap year
+    const isLeapYear = (y) => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+    if (isLeapYear(year)) daysInMonth[2] = 29;
+    
+    let newDay = day + daysToAdd;
+    let newMonth = month;
+    let newYear = year;
+    
+    // Handle month overflow
+    while (newDay > daysInMonth[newMonth]) {
+        newDay -= daysInMonth[newMonth];
+        newMonth++;
+        if (newMonth > 12) {
+            newMonth = 1;
+            newYear++;
+            if (isLeapYear(newYear)) daysInMonth[2] = 29;
+            else daysInMonth[2] = 28;
+        }
+    }
+    
+    return `${newYear}-${String(newMonth).padStart(2, '0')}-${String(newDay).padStart(2, '0')}`;
 }
 
 // Generate calendar for the current week (today + next 6 days)
 function generateCalendar() {
     const todayStr = getTodayString();
+    console.log('📅 TODAY STRING:', todayStr);
     weekDays = [];
     
     // Generate 7 days starting from today
@@ -52,6 +71,8 @@ function generateCalendar() {
             dayDate: day,
             month: month
         });
+        
+        console.log(`📅 Day ${i}: ${date.toLocaleDateString('en-US', { weekday: 'short' })} ${month}/${day} → dateString: ${dateStr}`);
     }
     
     // Generate header
