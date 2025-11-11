@@ -459,15 +459,19 @@ def submit_availability():
             contact_id=plan_guest.contact_id
         ).first()
         
+        guest_message = data.get('message', '').strip()
+        
         if availability:
             availability.time_slots = data['time_slots']
+            availability.message = guest_message if guest_message else None
             availability.updated_at = datetime.utcnow()
         else:
             availability = Availability(
                 week_start_date=plan.week_start_date,
                 planner_id=plan.planner_id,
                 contact_id=plan_guest.contact_id,
-                time_slots=data['time_slots']
+                time_slots=data['time_slots'],
+                message=guest_message if guest_message else None
             )
             db.session.add(availability)
         

@@ -124,6 +124,7 @@ class Availability(db.Model):
     planner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     contact_id = db.Column(db.Integer, db.ForeignKey('contacts.id'), nullable=True)  # Null if it's the planner's own availability
     time_slots = db.Column(db.JSON, nullable=False)  # [{"day": 0, "slot": "morning"}, ...]
+    message = db.Column(db.String(200))  # Optional message from guest
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -147,6 +148,7 @@ class Availability(db.Model):
             'contact_name': name,
             'user_name': name,  # Alias for admin dashboard compatibility
             'time_slots': self.time_slots,
+            'message': self.message,
             'submitted_at': self.submitted_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }

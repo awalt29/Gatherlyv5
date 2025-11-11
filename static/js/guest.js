@@ -121,6 +121,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadGuestInfo();
     setupCalendar();
     
+    // Load guest's previous submission if exists
+    await loadGuestPreviousSubmission();
+    
     // Initialize submit button state
     updateSubmitButton();
 });
@@ -187,6 +190,29 @@ async function loadPlannerAvailability() {
     } catch (error) {
         console.error('Error loading planner availability:', error);
         // Non-fatal, continue without showing planner availability
+    }
+}
+
+// Load guest's previous submission (if any)
+async function loadGuestPreviousSubmission() {
+    try {
+        const response = await fetch(`/api/availability/plan/${planInfo.id}`);
+        const availabilities = await response.json();
+        
+        // Find guest's own availability (matches the contact_id)
+        const guestAvail = availabilities.find(a => a.contact_id === guestInfo.id);
+        
+        if (guestAvail && guestAvail.message) {
+            // Display the saved message
+            const savedMessageDiv = document.getElementById('savedMessage');
+            const savedMessageText = document.getElementById('savedMessageText');
+            
+            savedMessageText.textContent = guestAvail.message;
+            savedMessageDiv.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading previous submission:', error);
+        // Non-fatal, continue without showing previous message
     }
 }
 
