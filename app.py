@@ -335,30 +335,26 @@ def create_plan():
     db.session.add(plan)
     db.session.flush()
     
-    # Save planner's availability (update if exists)
+    # Save planner's availability (always replace old records)
     if data.get('planner_availability'):
         print(f"[DEBUG] Planner availability slots: {data['planner_availability']}")
-        availability = Availability.query.filter_by(
+        
+        # Delete ALL old planner availability records (fresh start each time)
+        old_count = Availability.query.filter_by(
+            planner_id=planner.id,
+            contact_id=None
+        ).delete()
+        print(f"[DEBUG] Deleted {old_count} old planner availability records")
+        
+        # Create new availability record
+        availability = Availability(
             week_start_date=week_start,
             planner_id=planner.id,
-            contact_id=None  # Planner's own availability
-        ).first()
-        
-        if availability:
-            # Update existing
-            availability.time_slots = data['planner_availability']
-            availability.updated_at = datetime.utcnow()
-            print(f"[DEBUG] Updated existing availability with {len(data['planner_availability'])} slots")
-        else:
-            # Create new
-            availability = Availability(
-                week_start_date=week_start,
-                planner_id=planner.id,
-                contact_id=None,  # Planner's own availability
-                time_slots=data['planner_availability']
-            )
-            db.session.add(availability)
-            print(f"[DEBUG] Created new availability with {len(data['planner_availability'])} slots")
+            contact_id=None,  # Planner's own availability
+            time_slots=data['planner_availability']
+        )
+        db.session.add(availability)
+        print(f"[DEBUG] Created new availability with {len(data['planner_availability'])} slots")
     
     # Format available days for SMS
     available_days = []
