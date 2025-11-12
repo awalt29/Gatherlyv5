@@ -295,6 +295,53 @@ def auth_me():
     return jsonify({'user': user.to_dict()}), 200
 
 
+@app.route('/api/feedback', methods=['POST'])
+def submit_feedback():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.json
+    message = data.get('message', '').strip()
+    
+    if not message:
+        return jsonify({'error': 'Message is required'}), 400
+    
+    # Get user info
+    user = User.query.get(session['user_id'])
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Send feedback email via SendGrid
+    if not sendgrid_client or not SENDGRID_FROM_EMAIL:
+        return jsonify({'error': 'Email service not configured'}), 500
+    
+    try:
+        feedback_email = Mail(
+            from_email=Email(SENDGRID_FROM_EMAIL),
+            to_emails=To('hello@trygatherly.com'),
+            subject=f'Feedback from {user.name}',
+            html_content=f"""
+            <html>
+                <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #37558C;">New Feedback from Gatherly</h2>
+                    <p><strong>From:</strong> {user.name}</p>
+                    <p><strong>Email:</strong> {user.email}</p>
+                    <p><strong>Phone:</strong> {user.phone_number}</p>
+                    <hr style="border: 1px solid #eee; margin: 20px 0;">
+                    <p><strong>Message:</strong></p>
+                    <p style="background: #f5f5f5; padding: 15px; border-radius: 8px; white-space: pre-wrap;">{message}</p>
+                </body>
+            </html>
+            """
+        )
+        
+        sendgrid_client.send(feedback_email)
+        return jsonify({'message': 'Feedback sent successfully'}), 200
+    except Exception as e:
+        print(f"Error sending feedback email: {e}")
+        return jsonify({'error': 'Failed to send feedback'}), 500
+
+
 @app.route('/guest/<token>')
 def guest_response(token):
     plan_guest = PlanGuest.query.filter_by(unique_token=token).first_or_404()

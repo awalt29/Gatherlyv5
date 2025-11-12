@@ -1240,3 +1240,46 @@ async function confirmDeleteAccount() {
         showStatus('Error deleting account', 'error');
     }
 }
+
+// Send feedback
+async function sendFeedback() {
+    const message = document.getElementById('feedbackMessage').value.trim();
+    const successDiv = document.getElementById('feedbackSuccess');
+    const errorDiv = document.getElementById('feedbackError');
+    
+    // Hide messages
+    successDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+    
+    // Validate message
+    if (!message) {
+        errorDiv.textContent = 'Please enter your feedback';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/feedback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message })
+        });
+        
+        if (response.ok) {
+            successDiv.textContent = 'Thank you! Your feedback has been sent.';
+            successDiv.style.display = 'block';
+            // Clear the textarea
+            document.getElementById('feedbackMessage').value = '';
+        } else {
+            const data = await response.json();
+            errorDiv.textContent = data.error || 'Failed to send feedback';
+            errorDiv.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error sending feedback:', error);
+        errorDiv.textContent = 'An error occurred. Please try again.';
+        errorDiv.style.display = 'block';
+    }
+}
