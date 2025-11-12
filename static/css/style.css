@@ -1146,19 +1146,7 @@ body:has(.guest-info) .container {
 .form-group.remember-me {
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
     margin-top: -8px;
-}
-
-.forgot-password-link {
-    color: var(--accent-mint);
-    text-decoration: none;
-    font-size: 14px;
-    transition: opacity 0.2s;
-}
-
-.forgot-password-link:hover {
-    opacity: 0.8;
 }
 
 .checkbox-label {
@@ -1187,16 +1175,6 @@ body:has(.guest-info) .container {
     border: 1px solid #ff6464;
     border-radius: 8px;
     color: #ff6464;
-    font-size: 14px;
-    text-align: center;
-}
-
-.success-message {
-    padding: 12px;
-    background: rgba(91, 163, 255, 0.1);
-    border: 1px solid var(--accent-mint);
-    border-radius: 8px;
-    color: var(--accent-mint);
     font-size: 14px;
     text-align: center;
 }

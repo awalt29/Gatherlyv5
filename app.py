@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
 from flask_migrate import Migrate
-from flask_mail import Mail, Message
-from models import db, User, Contact, Plan, PlanGuest, Availability, Notification, PasswordReset
+from models import db, User, Contact, Plan, PlanGuest, Availability, Notification
 from datetime import datetime, timedelta
 from twilio.rest import Client
 import os
@@ -38,16 +37,6 @@ twilio_client = None
 if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
     twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
-# Flask-Mail setup
-app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
-app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
-app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'true').lower() == 'true'
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', os.getenv('MAIL_USERNAME'))
-
-mail = Mail(app)
-
 
 # Helper functions
 def get_monday_of_week(date=None):
@@ -73,63 +62,6 @@ def send_sms(to_phone, message):
         return {'status': 'sent', 'sid': message.sid}
     except Exception as e:
         print(f"Error sending SMS: {e}")
-        return {'status': 'error', 'message': str(e)}
-
-
-def send_password_reset_email(email, reset_token):
-    """Send password reset email"""
-    if not app.config['MAIL_USERNAME']:
-        print(f"[Email Mock] To: {email}")
-        print(f"[Email Mock] Reset token: {reset_token}")
-        return {'status': 'mocked', 'message': 'Email not configured'}
-    
-    try:
-        base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
-        reset_link = f"{base_url}/reset-password?token={reset_token}"
-        
-        msg = Message(
-            'Password Reset - Gatherly',
-            recipients=[email]
-        )
-        msg.body = f"""Hi there!
-
-You requested to reset your password for your Gatherly account.
-
-Click the link below to reset your password:
-{reset_link}
-
-This link will expire in 1 hour.
-
-If you didn't request this, please ignore this email.
-
-- The Gatherly Team"""
-        
-        msg.html = f"""
-        <html>
-            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h2 style="color: #37558C;">Password Reset</h2>
-                <p>Hi there!</p>
-                <p>You requested to reset your password for your Gatherly account.</p>
-                <p style="margin: 30px 0;">
-                    <a href="{reset_link}" style="background-color: #5BA3FF; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; display: inline-block;">
-                        Reset Password
-                    </a>
-                </p>
-                <p style="color: #666; font-size: 14px;">
-                    Or copy this link: <br/>
-                    <a href="{reset_link}">{reset_link}</a>
-                </p>
-                <p style="color: #666; font-size: 14px;">This link will expire in 1 hour.</p>
-                <p style="color: #666; font-size: 14px;">If you didn't request this, please ignore this email.</p>
-                <p style="margin-top: 30px; color: #999; font-size: 12px;">- The Gatherly Team</p>
-            </body>
-        </html>
-        """
-        
-        mail.send(msg)
-        return {'status': 'sent'}
-    except Exception as e:
-        print(f"Error sending email: {e}")
         return {'status': 'error', 'message': str(e)}
 
 
@@ -163,22 +95,6 @@ def signup():
 def logout():
     session.clear()
     return redirect(url_for('login'))
-
-
-@app.route('/forgot-password')
-def forgot_password_page():
-    # If already logged in, redirect to main app
-    if 'user_id' in session:
-        return redirect(url_for('index'))
-    return render_template('forgot_password.html')
-
-
-@app.route('/reset-password')
-def reset_password_page():
-    # If already logged in, redirect to main app
-    if 'user_id' in session:
-        return redirect(url_for('index'))
-    return render_template('reset_password.html')
 
 
 @app.route('/api/auth/signup', methods=['POST'])
@@ -233,64 +149,6 @@ def auth_login():
         session.permanent = False
     
     return jsonify({'user': user.to_dict()}), 200
-
-
-@app.route('/api/auth/forgot-password', methods=['POST'])
-def forgot_password():
-    data = request.json
-    email = data.get('email')
-    
-    if not email:
-        return jsonify({'error': 'Email is required'}), 400
-    
-    # Check if user exists
-    user = User.query.filter_by(email=email).first()
-    
-    if not user:
-        # Don't reveal whether email exists or not for security
-        return jsonify({'message': 'If an account exists with this email, a password reset link has been sent.'}), 200
-    
-    # Create password reset token
-    reset = PasswordReset(
-        email=email,
-        expires_at=datetime.utcnow() + timedelta(hours=1)
-    )
-    db.session.add(reset)
-    db.session.commit()
-    
-    # Send reset email
-    send_password_reset_email(email, reset.reset_token)
-    
-    return jsonify({'message': 'If an account exists with this email, a password reset link has been sent.'}), 200
-
-
-@app.route('/api/auth/reset-password', methods=['POST'])
-def reset_password():
-    data = request.json
-    token = data.get('token')
-    new_password = data.get('password')
-    
-    if not token or not new_password:
-        return jsonify({'error': 'Token and password are required'}), 400
-    
-    # Find valid reset token
-    reset = PasswordReset.query.filter_by(reset_token=token).first()
-    
-    if not reset or not reset.is_valid():
-        return jsonify({'error': 'Invalid or expired reset link'}), 400
-    
-    # Find user by email
-    user = User.query.filter_by(email=reset.email).first()
-    
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
-    
-    # Update password
-    user.set_password(new_password)
-    reset.used = True
-    db.session.commit()
-    
-    return jsonify({'message': 'Password successfully reset'}), 200
 
 
 @app.route('/api/auth/me', methods=['GET'])

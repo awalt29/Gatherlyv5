@@ -180,27 +180,3 @@ class Notification(db.Model):
             'read': self.read,
             'created_at': self.created_at.isoformat() + 'Z'  # Add Z to indicate UTC
         }
-
-
-class PasswordReset(db.Model):
-    __tablename__ = 'password_resets'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), nullable=False)
-    reset_token = db.Column(db.String(64), unique=True, nullable=False, default=lambda: secrets.token_urlsafe(32))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    expires_at = db.Column(db.DateTime, nullable=False)
-    used = db.Column(db.Boolean, default=False)
-    
-    def is_valid(self):
-        """Check if token is still valid (not expired and not used)"""
-        return not self.used and datetime.utcnow() < self.expires_at
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'email': self.email,
-            'created_at': self.created_at.isoformat(),
-            'expires_at': self.expires_at.isoformat(),
-            'used': self.used
-        }
