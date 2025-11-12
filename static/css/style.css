@@ -84,6 +84,23 @@ body {
     opacity: 0.8;
 }
 
+.login-link {
+    padding: 8px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.login-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--accent-mint);
+}
+
 .app-logo {
     width: 24px;
     height: 24px;
