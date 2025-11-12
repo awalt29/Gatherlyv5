@@ -162,9 +162,8 @@ def forgot_password_page():
 
 @app.route('/reset-password')
 def reset_password_page():
-    # If already logged in, redirect to main app
-    if 'user_id' in session:
-        return redirect(url_for('index'))
+    # Allow access to reset page even if logged in
+    # (in case user wants to reset password from email link while logged in)
     return render_template('reset_password.html')
 
 
