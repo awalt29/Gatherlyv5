@@ -248,9 +248,11 @@ function getInitials(name) {
 let draggedManageItem = null;
 
 function handleManageDragStart(e) {
-    draggedManageItem = e.target;
-    e.target.style.opacity = '0.5';
+    console.log('Drag started');
+    draggedManageItem = e.currentTarget; // Use currentTarget instead of target
+    e.currentTarget.style.opacity = '0.5';
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
 }
 
 function handleManageDragOver(e) {
@@ -279,6 +281,8 @@ function handleManageDrop(e) {
         e.stopPropagation();
     }
     
+    console.log('Drop event fired');
+    
     // Get the item being dropped on (could be child element)
     let targetItem = e.target;
     while (targetItem && !targetItem.classList.contains('friend-manage-item')) {
@@ -286,10 +290,12 @@ function handleManageDrop(e) {
     }
     
     if (!targetItem || !targetItem.classList.contains('friend-manage-item')) {
+        console.log('Invalid drop target');
         return false;
     }
     
     if (draggedManageItem !== targetItem) {
+        console.log('Reordering items');
         // Get all items
         const manageList = document.getElementById('friendsManageList');
         const allItems = Array.from(manageList.querySelectorAll('.friend-manage-item'));
@@ -297,6 +303,8 @@ function handleManageDrop(e) {
         // Get indices
         const draggedIndex = allItems.indexOf(draggedManageItem);
         const targetIndex = allItems.indexOf(targetItem);
+        
+        console.log(`Moving from ${draggedIndex} to ${targetIndex}`);
         
         // Reorder in the allFriends array
         const [removed] = allFriends.splice(draggedIndex, 1);
@@ -314,13 +322,80 @@ function handleManageDrop(e) {
 }
 
 function handleManageDragEnd(e) {
-    e.target.style.opacity = '1';
+    console.log('Drag ended');
+    e.currentTarget.style.opacity = '1';
     
     // Remove all border highlights
     const manageList = document.getElementById('friendsManageList');
     manageList.querySelectorAll('.friend-manage-item').forEach(item => {
         item.style.borderTop = '';
     });
+}
+
+// Touch event handlers for mobile drag-and-drop
+let touchedItem = null;
+let touchStartY = 0;
+let touchCurrentY = 0;
+
+function handleManageTouchStart(e) {
+    touchedItem = e.currentTarget;
+    touchStartY = e.touches[0].clientY;
+    touchedItem.style.opacity = '0.5';
+    console.log('Touch started');
+}
+
+function handleManageTouchMove(e) {
+    if (!touchedItem) return;
+    
+    e.preventDefault(); // Prevent scrolling while dragging
+    touchCurrentY = e.touches[0].clientY;
+    
+    const manageList = document.getElementById('friendsManageList');
+    const allItems = Array.from(manageList.querySelectorAll('.friend-manage-item'));
+    
+    // Find which item we're over
+    const currentIndex = allItems.indexOf(touchedItem);
+    const touchedIndex = allItems.findIndex(item => {
+        const rect = item.getBoundingClientRect();
+        return touchCurrentY >= rect.top && touchCurrentY <= rect.bottom;
+    });
+    
+    if (touchedIndex !== -1 && touchedIndex !== currentIndex) {
+        // Swap in DOM
+        if (touchedIndex < currentIndex) {
+            manageList.insertBefore(touchedItem, allItems[touchedIndex]);
+        } else {
+            manageList.insertBefore(touchedItem, allItems[touchedIndex].nextSibling);
+        }
+    }
+}
+
+function handleManageTouchEnd(e) {
+    if (!touchedItem) return;
+    
+    console.log('Touch ended');
+    touchedItem.style.opacity = '1';
+    
+    // Get final order from DOM
+    const manageList = document.getElementById('friendsManageList');
+    const allItems = Array.from(manageList.querySelectorAll('.friend-manage-item'));
+    
+    // Reorder allFriends array to match DOM order
+    const newOrder = allItems.map(item => {
+        const friendId = parseInt(item.dataset.friendId);
+        return allFriends.find(f => f.id === friendId);
+    });
+    
+    allFriends.length = 0;
+    allFriends.push(...newOrder);
+    
+    // Save new order to backend
+    saveContactOrder();
+    
+    // Re-render friend bubbles
+    renderFriends();
+    
+    touchedItem = null;
 }
 
 // Save contact order to backend
@@ -448,11 +523,16 @@ function renderManageFriends() {
         const deleteBtn = item.querySelector('.btn-delete');
         deleteBtn.onclick = () => deleteFriend(friend.id);
         
-        // Add drag handlers
+        // Add drag handlers for desktop
         item.addEventListener('dragstart', handleManageDragStart);
         item.addEventListener('dragover', handleManageDragOver);
         item.addEventListener('drop', handleManageDrop);
         item.addEventListener('dragend', handleManageDragEnd);
+        
+        // Add touch handlers for mobile
+        item.addEventListener('touchstart', handleManageTouchStart, { passive: false });
+        item.addEventListener('touchmove', handleManageTouchMove, { passive: false });
+        item.addEventListener('touchend', handleManageTouchEnd);
         
         manageList.appendChild(item);
     });
