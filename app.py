@@ -276,6 +276,9 @@ def reset_password():
     reset.used = True
     db.session.commit()
     
+    # Log out the user if they're logged in (clear any existing session)
+    session.clear()
+    
     return jsonify({'message': 'Password successfully reset'}), 200
 
 
