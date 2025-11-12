@@ -219,7 +219,7 @@ async function loadFriends() {
 // Render friends list
 function renderFriends() {
     const friendsList = document.getElementById('friendsList');
-    friendsList.innerHTML = '<div class="friend-avatar add-btn" onclick="openAddFriendModal()">+</div>';
+    friendsList.innerHTML = '';
     
     // Get display map with subscripts for duplicate initials
     const displayMap = getContactDisplayMap(allFriends);
@@ -237,6 +237,13 @@ function renderFriends() {
         
         friendsList.appendChild(avatar);
     });
+    
+    // Add the "+" button at the end
+    const addBtn = document.createElement('div');
+    addBtn.className = 'friend-avatar add-btn';
+    addBtn.textContent = '+';
+    addBtn.onclick = openAddFriendModal;
+    friendsList.appendChild(addBtn);
 }
 
 // Get initials from name
