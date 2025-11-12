@@ -47,15 +47,16 @@ function addDaysToDateString(dateStr, daysToAdd) {
     return `${newYear}-${String(newMonth).padStart(2, '0')}-${String(newDay).padStart(2, '0')}`;
 }
 
-// Generate calendar for the current week (today + next 6 days)
+// Generate calendar for the next 7 days (starting tomorrow)
 function generateCalendar() {
     const todayStr = getTodayString();
-    console.log('📅 TODAY STRING:', todayStr);
+    const tomorrowStr = addDaysToDateString(todayStr, 1); // Start from tomorrow
+    console.log('📅 STARTING FROM:', tomorrowStr);
     weekDays = [];
     
-    // Generate 7 days starting from today
+    // Generate 7 days starting from tomorrow
     for (let i = 0; i < 7; i++) {
-        const dateStr = addDaysToDateString(todayStr, i);
+        const dateStr = addDaysToDateString(tomorrowStr, i);
         const [year, month, day] = dateStr.split('-').map(Number);
         
         // Create date at noon local time to avoid any timezone issues
