@@ -268,18 +268,22 @@ def contacts():
         if existing_contact:
             return jsonify(existing_contact.to_dict()), 200
         
+        # Get max display_order for this owner to append new contact at the end
+        max_order = db.session.query(db.func.max(Contact.display_order)).filter_by(owner_id=data['owner_id']).scalar() or 0
+        
         # Create new contact
         contact = Contact(
             owner_id=data['owner_id'],
             name=data['name'],
-            phone_number=data['phone_number']
+            phone_number=data['phone_number'],
+            display_order=max_order + 1
         )
         db.session.add(contact)
         db.session.commit()
         return jsonify(contact.to_dict()), 201
     
-    # GET - fetch all contacts for this owner
-    contacts = Contact.query.filter_by(owner_id=int(owner_id)).all()
+    # GET - fetch all contacts for this owner, sorted by display_order
+    contacts = Contact.query.filter_by(owner_id=int(owner_id)).order_by(Contact.display_order).all()
     return jsonify([c.to_dict() for c in contacts])
 
 
@@ -301,6 +305,24 @@ def delete_contact(contact_id):
     db.session.commit()
     
     return jsonify({'message': 'Contact deleted successfully'}), 200
+
+
+@app.route('/api/contacts/reorder', methods=['POST'])
+def reorder_contacts():
+    data = request.json
+    contact_ids = data.get('contact_ids', [])  # Array of contact IDs in new order
+    
+    if not contact_ids:
+        return jsonify({'error': 'contact_ids required'}), 400
+    
+    # Update display_order for each contact based on position in array
+    for index, contact_id in enumerate(contact_ids):
+        contact = db.session.get(Contact, contact_id)
+        if contact:
+            contact.display_order = index
+    
+    db.session.commit()
+    return jsonify({'message': 'Contact order updated successfully'}), 200
 
 
 # API Routes - Plans

@@ -508,8 +508,22 @@ h1 {
     justify-content: center;
     font-size: 14px;
     font-weight: 600;
-    cursor: pointer;
+    cursor: move;
+    cursor: grab;
     transition: all 0.2s;
+    user-select: none;
+}
+
+.friend-avatar:active {
+    cursor: grabbing;
+}
+
+.friend-avatar[draggable="true"] {
+    cursor: grab;
+}
+
+.friend-avatar[draggable="true"]:active {
+    cursor: grabbing;
 }
 
 .friend-avatar.selected {
@@ -523,6 +537,7 @@ h1 {
     color: var(--accent-mint);
     font-size: 24px;
     line-height: 1;
+    cursor: pointer;
 }
 
 .friend-avatar.add-btn:hover {

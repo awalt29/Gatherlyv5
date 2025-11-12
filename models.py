@@ -45,6 +45,7 @@ class Contact(db.Model):
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     phone_number = db.Column(db.String(20), nullable=False)
+    display_order = db.Column(db.Integer, default=0)  # Order for displaying contacts
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # A user can't have duplicate contacts
@@ -62,6 +63,7 @@ class Contact(db.Model):
             'owner_id': self.owner_id,
             'name': self.name,
             'phone_number': self.phone_number,
+            'display_order': self.display_order,
             'created_at': self.created_at.isoformat()
         }
 

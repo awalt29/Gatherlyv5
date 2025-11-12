@@ -231,6 +231,13 @@ function renderFriends() {
         avatar.onclick = () => toggleFriend(friend);
         avatar.dataset.friendId = friend.id;
         
+        // Make draggable
+        avatar.draggable = true;
+        avatar.addEventListener('dragstart', handleDragStart);
+        avatar.addEventListener('dragover', handleDragOver);
+        avatar.addEventListener('drop', handleDrop);
+        avatar.addEventListener('dragend', handleDragEnd);
+        
         if (selectedFriends.find(f => f.id === friend.id)) {
             avatar.classList.add('selected');
         }
@@ -242,6 +249,98 @@ function renderFriends() {
 // Get initials from name
 function getInitials(name) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+}
+
+// Drag and drop handlers
+let draggedElement = null;
+
+function handleDragStart(e) {
+    draggedElement = e.target;
+    e.target.style.opacity = '0.5';
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.target.innerHTML);
+}
+
+function handleDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    }
+    
+    // Don't allow dropping on the add button
+    if (e.target.classList.contains('add-btn')) {
+        return;
+    }
+    
+    e.dataTransfer.dropEffect = 'move';
+    
+    // Visual feedback - show where it will be dropped
+    if (e.target.classList.contains('friend-avatar') && e.target !== draggedElement) {
+        e.target.style.borderLeft = '3px solid var(--accent-mint)';
+    }
+    
+    return false;
+}
+
+function handleDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation();
+    }
+    
+    // Don't allow dropping on the add button
+    if (e.target.classList.contains('add-btn') || !e.target.classList.contains('friend-avatar')) {
+        return false;
+    }
+    
+    if (draggedElement !== e.target) {
+        // Get the container
+        const friendsList = document.getElementById('friendsList');
+        const allAvatars = Array.from(friendsList.querySelectorAll('.friend-avatar:not(.add-btn)'));
+        
+        // Get indices
+        const draggedIndex = allAvatars.indexOf(draggedElement);
+        const targetIndex = allAvatars.indexOf(e.target);
+        
+        // Reorder in the allFriends array
+        const [removed] = allFriends.splice(draggedIndex, 1);
+        allFriends.splice(targetIndex, 0, removed);
+        
+        // Save new order to backend
+        saveContactOrder();
+        
+        // Re-render
+        renderFriends();
+    }
+    
+    return false;
+}
+
+function handleDragEnd(e) {
+    e.target.style.opacity = '1';
+    
+    // Remove all border highlights
+    const friendsList = document.getElementById('friendsList');
+    friendsList.querySelectorAll('.friend-avatar').forEach(avatar => {
+        avatar.style.borderLeft = '';
+    });
+}
+
+// Save contact order to backend
+async function saveContactOrder() {
+    try {
+        const contactIds = allFriends.map(f => f.id);
+        
+        await fetch('/api/contacts/reorder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contact_ids: contactIds
+            })
+        });
+    } catch (error) {
+        console.error('Error saving contact order:', error);
+    }
 }
 
 // Get display text for contacts (with subscripts for duplicate initials)
