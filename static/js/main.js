@@ -231,13 +231,6 @@ function renderFriends() {
         avatar.onclick = () => toggleFriend(friend);
         avatar.dataset.friendId = friend.id;
         
-        // Make draggable
-        avatar.draggable = true;
-        avatar.addEventListener('dragstart', handleDragStart);
-        avatar.addEventListener('dragover', handleDragOver);
-        avatar.addEventListener('drop', handleDrop);
-        avatar.addEventListener('dragend', handleDragEnd);
-        
         if (selectedFriends.find(f => f.id === friend.id)) {
             avatar.classList.add('selected');
         }
@@ -251,54 +244,59 @@ function getInitials(name) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
-// Drag and drop handlers
-let draggedElement = null;
+// Drag and drop handlers for manage friends modal
+let draggedManageItem = null;
 
-function handleDragStart(e) {
-    draggedElement = e.target;
+function handleManageDragStart(e) {
+    draggedManageItem = e.target;
     e.target.style.opacity = '0.5';
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', e.target.innerHTML);
 }
 
-function handleDragOver(e) {
+function handleManageDragOver(e) {
     if (e.preventDefault) {
         e.preventDefault();
     }
     
-    // Don't allow dropping on the add button
-    if (e.target.classList.contains('add-btn')) {
-        return;
-    }
-    
     e.dataTransfer.dropEffect = 'move';
     
-    // Visual feedback - show where it will be dropped
-    if (e.target.classList.contains('friend-avatar') && e.target !== draggedElement) {
-        e.target.style.borderLeft = '3px solid var(--accent-mint)';
+    // Get the item being dragged over (could be child element)
+    let targetItem = e.target;
+    while (targetItem && !targetItem.classList.contains('friend-manage-item')) {
+        targetItem = targetItem.parentElement;
+    }
+    
+    // Visual feedback
+    if (targetItem && targetItem.classList.contains('friend-manage-item') && targetItem !== draggedManageItem) {
+        targetItem.style.borderTop = '2px solid var(--accent-mint)';
     }
     
     return false;
 }
 
-function handleDrop(e) {
+function handleManageDrop(e) {
     if (e.stopPropagation) {
         e.stopPropagation();
     }
     
-    // Don't allow dropping on the add button
-    if (e.target.classList.contains('add-btn') || !e.target.classList.contains('friend-avatar')) {
+    // Get the item being dropped on (could be child element)
+    let targetItem = e.target;
+    while (targetItem && !targetItem.classList.contains('friend-manage-item')) {
+        targetItem = targetItem.parentElement;
+    }
+    
+    if (!targetItem || !targetItem.classList.contains('friend-manage-item')) {
         return false;
     }
     
-    if (draggedElement !== e.target) {
-        // Get the container
-        const friendsList = document.getElementById('friendsList');
-        const allAvatars = Array.from(friendsList.querySelectorAll('.friend-avatar:not(.add-btn)'));
+    if (draggedManageItem !== targetItem) {
+        // Get all items
+        const manageList = document.getElementById('friendsManageList');
+        const allItems = Array.from(manageList.querySelectorAll('.friend-manage-item'));
         
         // Get indices
-        const draggedIndex = allAvatars.indexOf(draggedElement);
-        const targetIndex = allAvatars.indexOf(e.target);
+        const draggedIndex = allItems.indexOf(draggedManageItem);
+        const targetIndex = allItems.indexOf(targetItem);
         
         // Reorder in the allFriends array
         const [removed] = allFriends.splice(draggedIndex, 1);
@@ -307,20 +305,21 @@ function handleDrop(e) {
         // Save new order to backend
         saveContactOrder();
         
-        // Re-render
+        // Re-render both the modal and the main friend bubbles
+        renderManageFriends();
         renderFriends();
     }
     
     return false;
 }
 
-function handleDragEnd(e) {
+function handleManageDragEnd(e) {
     e.target.style.opacity = '1';
     
     // Remove all border highlights
-    const friendsList = document.getElementById('friendsList');
-    friendsList.querySelectorAll('.friend-avatar').forEach(avatar => {
-        avatar.style.borderLeft = '';
+    const manageList = document.getElementById('friendsManageList');
+    manageList.querySelectorAll('.friend-manage-item').forEach(item => {
+        item.style.borderTop = '';
     });
 }
 
@@ -425,8 +424,16 @@ function renderManageFriends() {
     // Get display map with subscripts for duplicate initials
     const displayMap = getContactDisplayMap(allFriends);
     
-    manageList.innerHTML = allFriends.map(friend => `
-        <div class="friend-manage-item">
+    manageList.innerHTML = '';
+    
+    allFriends.forEach(friend => {
+        const item = document.createElement('div');
+        item.className = 'friend-manage-item';
+        item.dataset.friendId = friend.id;
+        item.draggable = true;
+        
+        item.innerHTML = `
+            <div class="friend-manage-drag-handle">☰</div>
             <div class="friend-manage-info">
                 <div class="friend-manage-avatar">${displayMap[friend.id]}</div>
                 <div class="friend-manage-details">
@@ -434,9 +441,21 @@ function renderManageFriends() {
                     <div class="friend-manage-phone">${friend.phone_number}</div>
                 </div>
             </div>
-            <button class="btn-delete" onclick="deleteFriend(${friend.id})">Delete</button>
-        </div>
-    `).join('');
+            <button class="btn-delete">Delete</button>
+        `;
+        
+        // Add delete handler
+        const deleteBtn = item.querySelector('.btn-delete');
+        deleteBtn.onclick = () => deleteFriend(friend.id);
+        
+        // Add drag handlers
+        item.addEventListener('dragstart', handleManageDragStart);
+        item.addEventListener('dragover', handleManageDragOver);
+        item.addEventListener('drop', handleManageDrop);
+        item.addEventListener('dragend', handleManageDragEnd);
+        
+        manageList.appendChild(item);
+    });
 }
 
 // Delete contact (friend)
