@@ -958,18 +958,8 @@ h1 {
     background: var(--secondary-bg);
     border-radius: 12px;
     margin-bottom: 10px;
-    cursor: move;
-    cursor: grab;
     user-select: none;
     transition: all 0.2s;
-}
-
-.friend-manage-item:active {
-    cursor: grabbing;
-}
-
-.friend-manage-item[draggable="true"]:active {
-    cursor: grabbing;
 }
 
 .friend-manage-drag-handle {
@@ -977,6 +967,13 @@ h1 {
     font-size: 18px;
     margin-right: 10px;
     cursor: grab;
+    padding: 5px;
+    touch-action: none;
+}
+
+.friend-manage-drag-handle:active {
+    cursor: grabbing;
+    color: var(--accent-mint);
 }
 
 .friend-manage-info {

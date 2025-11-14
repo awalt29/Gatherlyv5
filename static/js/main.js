@@ -345,7 +345,10 @@ let touchStartY = 0;
 let touchCurrentY = 0;
 
 function handleManageTouchStart(e) {
-    touchedItem = e.currentTarget;
+    // Get the parent item from the drag handle
+    touchedItem = e.currentTarget.closest('.friend-manage-item');
+    if (!touchedItem) return;
+    
     touchStartY = e.touches[0].clientY;
     touchedItem.style.opacity = '0.5';
     console.log('Touch started');
@@ -530,16 +533,25 @@ function renderManageFriends() {
         const deleteBtn = item.querySelector('.btn-delete');
         deleteBtn.onclick = () => deleteFriend(friend.id);
         
-        // Add drag handlers for desktop
+        // Get the drag handle
+        const dragHandle = item.querySelector('.friend-manage-drag-handle');
+        
+        // Add drag handlers for desktop - only to the handle
+        dragHandle.addEventListener('mousedown', (e) => {
+            item.draggable = true;
+        });
         item.addEventListener('dragstart', handleManageDragStart);
         item.addEventListener('dragover', handleManageDragOver);
         item.addEventListener('drop', handleManageDrop);
-        item.addEventListener('dragend', handleManageDragEnd);
+        item.addEventListener('dragend', (e) => {
+            handleManageDragEnd(e);
+            item.draggable = false;
+        });
         
-        // Add touch handlers for mobile
-        item.addEventListener('touchstart', handleManageTouchStart, { passive: false });
-        item.addEventListener('touchmove', handleManageTouchMove, { passive: false });
-        item.addEventListener('touchend', handleManageTouchEnd);
+        // Add touch handlers for mobile - only to the handle
+        dragHandle.addEventListener('touchstart', handleManageTouchStart, { passive: false });
+        dragHandle.addEventListener('touchmove', handleManageTouchMove, { passive: false });
+        dragHandle.addEventListener('touchend', handleManageTouchEnd);
         
         manageList.appendChild(item);
     });
