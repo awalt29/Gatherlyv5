@@ -77,6 +77,10 @@ def send_sms(to_phone, message):
 
 def send_password_reset_email(email, reset_token):
     """Send password reset email via SendGrid"""
+    print(f"[SENDGRID] Attempting to send password reset email to: {email}")
+    print(f"[SENDGRID] SendGrid configured: {sendgrid_client is not None}")
+    print(f"[SENDGRID] From email: {SENDGRID_FROM_EMAIL}")
+    
     if not sendgrid_client or not SENDGRID_FROM_EMAIL:
         print(f"[Email Mock] To: {email}")
         print(f"[Email Mock] Reset token: {reset_token}")
@@ -85,6 +89,8 @@ def send_password_reset_email(email, reset_token):
     try:
         base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
         reset_link = f"{base_url}/reset-password?token={reset_token}"
+        
+        print(f"[SENDGRID] Reset link: {reset_link}")
         
         message = Mail(
             from_email=Email(SENDGRID_FROM_EMAIL),
@@ -113,10 +119,18 @@ def send_password_reset_email(email, reset_token):
             """
         )
         
+        print(f"[SENDGRID] Sending email via SendGrid...")
         response = sendgrid_client.send(message)
+        print(f"[SENDGRID] Response status code: {response.status_code}")
+        print(f"[SENDGRID] Response body: {response.body}")
+        print(f"[SENDGRID] Response headers: {response.headers}")
+        
         return {'status': 'sent', 'status_code': response.status_code}
     except Exception as e:
-        print(f"Error sending email: {e}")
+        print(f"[SENDGRID ERROR] Failed to send email: {e}")
+        print(f"[SENDGRID ERROR] Exception type: {type(e).__name__}")
+        import traceback
+        print(f"[SENDGRID ERROR] Traceback: {traceback.format_exc()}")
         return {'status': 'error', 'message': str(e)}
 
 
@@ -226,6 +240,8 @@ def forgot_password():
     data = request.json
     email = data.get('email')
     
+    print(f"[PASSWORD RESET] Request received for email: {email}")
+    
     if not email:
         return jsonify({'error': 'Email is required'}), 400
     
@@ -233,8 +249,11 @@ def forgot_password():
     user = User.query.filter_by(email=email).first()
     
     if not user:
+        print(f"[PASSWORD RESET] No user found for email: {email}")
         # Don't reveal whether email exists or not for security
         return jsonify({'message': 'If an account exists with this email, a password reset link has been sent.'}), 200
+    
+    print(f"[PASSWORD RESET] User found: {user.name} ({email})")
     
     # Create password reset token
     reset = PasswordReset(
@@ -244,8 +263,11 @@ def forgot_password():
     db.session.add(reset)
     db.session.commit()
     
+    print(f"[PASSWORD RESET] Token created: {reset.reset_token[:20]}...")
+    
     # Send reset email
-    send_password_reset_email(email, reset.reset_token)
+    result = send_password_reset_email(email, reset.reset_token)
+    print(f"[PASSWORD RESET] Email send result: {result}")
     
     return jsonify({'message': 'If an account exists with this email, a password reset link has been sent.'}), 200
 
@@ -293,53 +315,6 @@ def auth_me():
         return jsonify({'error': 'User not found'}), 404
     
     return jsonify({'user': user.to_dict()}), 200
-
-
-@app.route('/api/feedback', methods=['POST'])
-def submit_feedback():
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    data = request.json
-    message = data.get('message', '').strip()
-    
-    if not message:
-        return jsonify({'error': 'Message is required'}), 400
-    
-    # Get user info
-    user = User.query.get(session['user_id'])
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
-    
-    # Send feedback email via SendGrid
-    if not sendgrid_client or not SENDGRID_FROM_EMAIL:
-        return jsonify({'error': 'Email service not configured'}), 500
-    
-    try:
-        feedback_email = Mail(
-            from_email=Email(SENDGRID_FROM_EMAIL),
-            to_emails=To('hello@trygatherly.com'),
-            subject=f'Feedback from {user.name}',
-            html_content=f"""
-            <html>
-                <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h2 style="color: #37558C;">New Feedback from Gatherly</h2>
-                    <p><strong>From:</strong> {user.name}</p>
-                    <p><strong>Email:</strong> {user.email}</p>
-                    <p><strong>Phone:</strong> {user.phone_number}</p>
-                    <hr style="border: 1px solid #eee; margin: 20px 0;">
-                    <p><strong>Message:</strong></p>
-                    <p style="background: #f5f5f5; padding: 15px; border-radius: 8px; white-space: pre-wrap;">{message}</p>
-                </body>
-            </html>
-            """
-        )
-        
-        sendgrid_client.send(feedback_email)
-        return jsonify({'message': 'Feedback sent successfully'}), 200
-    except Exception as e:
-        print(f"Error sending feedback email: {e}")
-        return jsonify({'error': 'Failed to send feedback'}), 500
 
 
 @app.route('/guest/<token>')
