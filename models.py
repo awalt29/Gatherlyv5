@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import secrets
 
@@ -14,7 +14,8 @@ class User(db.Model):
     phone_number = db.Column(db.String(20), nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     reminder_days = db.Column(db.JSON, default=lambda: ["monday", "tuesday", "wednesday", "thursday"])  # List of days to send reminders
-    timezone = db.Column(db.String(50), default='America/New_York')  # User's timezone (e.g., 'America/New_York', 'America/Los_Angeles')
+    timezone = db.Column(db.String(50), default='America/New_York')  # User's timezone
+    weekly_availability_date = db.Column(db.Date)  # Date of the Monday when user submitted availability this week
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -27,6 +28,15 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
     
+    def is_active_this_week(self):
+        """Check if user has submitted availability for the current week"""
+        if not self.weekly_availability_date:
+            return False
+        # Get current Monday
+        today = datetime.utcnow().date()
+        monday = today - timedelta(days=today.weekday())
+        return self.weekly_availability_date >= monday
+    
     def to_dict(self):
         return {
             'id': self.id,
@@ -34,6 +44,7 @@ class User(db.Model):
             'email': self.email,
             'phone_number': self.phone_number,
             'timezone': self.timezone,
+            'is_active_this_week': self.is_active_this_week(),
             'created_at': self.created_at.isoformat()
         }
 
@@ -58,12 +69,105 @@ class Contact(db.Model):
     availabilities = db.relationship('Availability', backref='contact', lazy=True)
     
     def to_dict(self):
+        # Check if this contact is a linked friend (mutual connection)
+        is_linked = False
+        linked_user_id = None
+        
+        # Find if contact's phone number belongs to a registered user
+        linked_user = User.query.filter_by(phone_number=self.phone_number).first()
+        if linked_user and linked_user.id != self.owner_id:
+            # Check if there's an accepted friendship
+            friendship = Friendship.query.filter(
+                ((Friendship.user_id_1 == self.owner_id) & (Friendship.user_id_2 == linked_user.id)) |
+                ((Friendship.user_id_1 == linked_user.id) & (Friendship.user_id_2 == self.owner_id))
+            ).first()
+            if friendship:
+                is_linked = True
+                linked_user_id = linked_user.id
+        
         return {
             'id': self.id,
             'owner_id': self.owner_id,
             'name': self.name,
             'phone_number': self.phone_number,
             'display_order': self.display_order,
+            'is_linked': is_linked,
+            'linked_user_id': linked_user_id,
+            'created_at': self.created_at.isoformat()
+        }
+
+
+class FriendRequest(db.Model):
+    """Pending friend requests between users"""
+    __tablename__ = 'friend_requests'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    from_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    to_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, accepted, rejected
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    responded_at = db.Column(db.DateTime)
+    
+    # Prevent duplicate requests
+    __table_args__ = (
+        db.UniqueConstraint('from_user_id', 'to_user_id', name='unique_friend_request'),
+    )
+    
+    # Relationships
+    from_user = db.relationship('User', foreign_keys=[from_user_id], backref='sent_friend_requests')
+    to_user = db.relationship('User', foreign_keys=[to_user_id], backref='received_friend_requests')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'from_user_id': self.from_user_id,
+            'from_user_name': self.from_user.name,
+            'to_user_id': self.to_user_id,
+            'to_user_name': self.to_user.name,
+            'status': self.status,
+            'created_at': self.created_at.isoformat() + 'Z'
+        }
+
+
+class Friendship(db.Model):
+    """Mutual friendships between users (accepted friend requests)"""
+    __tablename__ = 'friendships'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id_1 = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Always the lower ID
+    user_id_2 = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Always the higher ID
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Prevent duplicate friendships
+    __table_args__ = (
+        db.UniqueConstraint('user_id_1', 'user_id_2', name='unique_friendship'),
+    )
+    
+    # Relationships
+    user_1 = db.relationship('User', foreign_keys=[user_id_1])
+    user_2 = db.relationship('User', foreign_keys=[user_id_2])
+    
+    @staticmethod
+    def create_friendship(user_a_id, user_b_id):
+        """Create friendship ensuring user_id_1 < user_id_2 to prevent duplicates"""
+        lower_id = min(user_a_id, user_b_id)
+        higher_id = max(user_a_id, user_b_id)
+        return Friendship(user_id_1=lower_id, user_id_2=higher_id)
+    
+    @staticmethod
+    def are_friends(user_a_id, user_b_id):
+        """Check if two users are friends"""
+        lower_id = min(user_a_id, user_b_id)
+        higher_id = max(user_a_id, user_b_id)
+        return Friendship.query.filter_by(user_id_1=lower_id, user_id_2=higher_id).first() is not None
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id_1': self.user_id_1,
+            'user_id_2': self.user_id_2,
+            'user_1_name': self.user_1.name,
+            'user_2_name': self.user_2.name,
             'created_at': self.created_at.isoformat()
         }
 
@@ -119,14 +223,15 @@ class PlanGuest(db.Model):
 
 
 class Availability(db.Model):
+    """Legacy availability model - kept for backwards compatibility"""
     __tablename__ = 'availability'
     
     id = db.Column(db.Integer, primary_key=True)
     week_start_date = db.Column(db.Date, nullable=False)
     planner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    contact_id = db.Column(db.Integer, db.ForeignKey('contacts.id'), nullable=True)  # Null if it's the planner's own availability
-    time_slots = db.Column(db.JSON, nullable=False)  # [{"day": 0, "slot": "morning"}, ...]
-    message = db.Column(db.String(200))  # Optional message from guest
+    contact_id = db.Column(db.Integer, db.ForeignKey('contacts.id'), nullable=True)
+    time_slots = db.Column(db.JSON, nullable=False)
+    message = db.Column(db.String(200))
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -138,7 +243,6 @@ class Availability(db.Model):
         if self.contact_id:
             name = self.contact.name
         else:
-            # It's the planner's own availability
             planner = User.query.get(self.planner_id)
             name = planner.name
         
@@ -148,9 +252,40 @@ class Availability(db.Model):
             'planner_id': self.planner_id,
             'contact_id': self.contact_id,
             'contact_name': name,
-            'user_name': name,  # Alias for admin dashboard compatibility
+            'user_name': name,
             'time_slots': self.time_slots,
             'message': self.message,
+            'submitted_at': self.submitted_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
+        }
+
+
+class UserAvailability(db.Model):
+    """User's weekly availability - shown to their linked friends"""
+    __tablename__ = 'user_availability'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    week_start_date = db.Column(db.Date, nullable=False)  # Monday of the week
+    time_slots = db.Column(db.JSON, nullable=False)  # [{"date": "2025-11-12", "slot": "morning"}, ...]
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # One availability record per user per week
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'week_start_date', name='unique_user_availability_per_week'),
+    )
+    
+    # Relationship
+    user = db.relationship('User', backref='weekly_availabilities')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'user_name': self.user.name,
+            'week_start_date': self.week_start_date.isoformat(),
+            'time_slots': self.time_slots,
             'submitted_at': self.submitted_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }

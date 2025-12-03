@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
 from flask_migrate import Migrate
-from models import db, User, Contact, Plan, PlanGuest, Availability, Notification, PasswordReset
+from models import db, User, Contact, Plan, PlanGuest, Availability, Notification, PasswordReset, FriendRequest, Friendship, UserAvailability
 from datetime import datetime, timedelta
 from twilio.rest import Client
 from sendgrid import SendGridAPIClient
@@ -433,6 +433,39 @@ def contacts():
         )
         db.session.add(contact)
         db.session.commit()
+        
+        # Check if this phone number belongs to a registered user on the platform
+        existing_user = User.query.filter_by(phone_number=data['phone_number']).first()
+        if existing_user and existing_user.id != int(data['owner_id']):
+            # Check if there's already a pending/accepted friend request
+            existing_request = FriendRequest.query.filter(
+                ((FriendRequest.from_user_id == data['owner_id']) & (FriendRequest.to_user_id == existing_user.id)) |
+                ((FriendRequest.from_user_id == existing_user.id) & (FriendRequest.to_user_id == data['owner_id']))
+            ).first()
+            
+            # Check if they're already friends
+            already_friends = Friendship.are_friends(int(data['owner_id']), existing_user.id)
+            
+            if not existing_request and not already_friends:
+                # Send a friend request to the existing user
+                owner = User.query.get(data['owner_id'])
+                friend_request = FriendRequest(
+                    from_user_id=data['owner_id'],
+                    to_user_id=existing_user.id
+                )
+                db.session.add(friend_request)
+                
+                # Create notification for the recipient
+                notification = Notification(
+                    planner_id=existing_user.id,
+                    contact_id=None,
+                    message=f"{owner.name} sent you a friend request"
+                )
+                db.session.add(notification)
+                db.session.commit()
+                
+                print(f"[FRIEND REQUEST] {owner.name} sent friend request to {existing_user.name}")
+        
         return jsonify(contact.to_dict()), 201
     
     # GET - fetch all contacts for this owner, sorted by display_order
@@ -476,6 +509,237 @@ def reorder_contacts():
     
     db.session.commit()
     return jsonify({'message': 'Contact order updated successfully'}), 200
+
+
+# API Routes - Friend Requests
+@app.route('/api/friend-requests', methods=['GET'])
+def get_friend_requests():
+    """Get pending friend requests for the current user"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    
+    # Get pending requests sent TO this user
+    pending_requests = FriendRequest.query.filter_by(
+        to_user_id=user_id,
+        status='pending'
+    ).order_by(FriendRequest.created_at.desc()).all()
+    
+    return jsonify([r.to_dict() for r in pending_requests])
+
+
+@app.route('/api/friend-requests/<int:request_id>/accept', methods=['POST'])
+def accept_friend_request(request_id):
+    """Accept a friend request and create a mutual friendship"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    
+    # Find the request
+    friend_request = FriendRequest.query.get_or_404(request_id)
+    
+    # Make sure this request is for the current user
+    if friend_request.to_user_id != user_id:
+        return jsonify({'error': 'Not authorized'}), 403
+    
+    if friend_request.status != 'pending':
+        return jsonify({'error': 'Request already processed'}), 400
+    
+    # Accept the request
+    friend_request.status = 'accepted'
+    friend_request.responded_at = datetime.utcnow()
+    
+    # Create the mutual friendship
+    friendship = Friendship.create_friendship(friend_request.from_user_id, friend_request.to_user_id)
+    db.session.add(friendship)
+    
+    # Create notification for the person who sent the request
+    notification = Notification(
+        planner_id=friend_request.from_user_id,
+        contact_id=None,
+        message=f"{friend_request.to_user.name} accepted your friend request!"
+    )
+    db.session.add(notification)
+    
+    db.session.commit()
+    
+    return jsonify({'message': 'Friend request accepted', 'friendship': friendship.to_dict()})
+
+
+@app.route('/api/friend-requests/<int:request_id>/reject', methods=['POST'])
+def reject_friend_request(request_id):
+    """Reject a friend request"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    
+    # Find the request
+    friend_request = FriendRequest.query.get_or_404(request_id)
+    
+    # Make sure this request is for the current user
+    if friend_request.to_user_id != user_id:
+        return jsonify({'error': 'Not authorized'}), 403
+    
+    if friend_request.status != 'pending':
+        return jsonify({'error': 'Request already processed'}), 400
+    
+    # Reject the request
+    friend_request.status = 'rejected'
+    friend_request.responded_at = datetime.utcnow()
+    
+    db.session.commit()
+    
+    return jsonify({'message': 'Friend request rejected'})
+
+
+@app.route('/api/friends', methods=['GET'])
+def get_friends():
+    """Get all linked friends for the current user"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    
+    # Find all friendships where user is either user_id_1 or user_id_2
+    friendships = Friendship.query.filter(
+        (Friendship.user_id_1 == user_id) | (Friendship.user_id_2 == user_id)
+    ).all()
+    
+    friends = []
+    for f in friendships:
+        friend_id = f.user_id_2 if f.user_id_1 == user_id else f.user_id_1
+        friend = User.query.get(friend_id)
+        if friend:
+            friends.append({
+                'id': friend.id,
+                'name': friend.name,
+                'phone_number': friend.phone_number,
+                'is_active_this_week': friend.is_active_this_week(),
+                'friendship_created_at': f.created_at.isoformat()
+            })
+    
+    return jsonify(friends)
+
+
+@app.route('/api/friends/availability', methods=['GET'])
+def get_friends_availability():
+    """Get availability of all linked friends for the current week (only if user is active)"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    
+    # Check if user is active this week (has submitted availability)
+    if not user.is_active_this_week():
+        return jsonify({'error': 'You must save your availability to see friends\' availability', 'active': False}), 403
+    
+    # Get current week's Monday
+    today = datetime.utcnow().date()
+    monday = today - timedelta(days=today.weekday())
+    
+    # Find all friendships
+    friendships = Friendship.query.filter(
+        (Friendship.user_id_1 == user_id) | (Friendship.user_id_2 == user_id)
+    ).all()
+    
+    friend_ids = []
+    for f in friendships:
+        friend_id = f.user_id_2 if f.user_id_1 == user_id else f.user_id_1
+        friend_ids.append(friend_id)
+    
+    # Get availability for all friends who are also active this week
+    availabilities = []
+    for friend_id in friend_ids:
+        friend = User.query.get(friend_id)
+        if friend and friend.is_active_this_week():
+            # Get their availability for this week
+            avail = UserAvailability.query.filter_by(
+                user_id=friend_id,
+                week_start_date=monday
+            ).first()
+            if avail:
+                availabilities.append({
+                    'user_id': friend.id,
+                    'user_name': friend.name,
+                    'time_slots': avail.time_slots,
+                    'updated_at': avail.updated_at.isoformat()
+                })
+    
+    return jsonify({'active': True, 'availabilities': availabilities})
+
+
+@app.route('/api/my-availability', methods=['GET', 'POST'])
+def my_availability():
+    """Save or get the current user's own weekly availability"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    
+    # Get current week's Monday
+    today = datetime.utcnow().date()
+    monday = today - timedelta(days=today.weekday())
+    
+    if request.method == 'POST':
+        data = request.json
+        time_slots = data.get('time_slots', [])
+        
+        if len(time_slots) == 0:
+            return jsonify({'error': 'Please select at least one time slot'}), 400
+        
+        # Find or create availability for this week
+        availability = UserAvailability.query.filter_by(
+            user_id=user_id,
+            week_start_date=monday
+        ).first()
+        
+        if availability:
+            # Update existing
+            availability.time_slots = time_slots
+            availability.updated_at = datetime.utcnow()
+        else:
+            # Create new
+            availability = UserAvailability(
+                user_id=user_id,
+                week_start_date=monday,
+                time_slots=time_slots
+            )
+            db.session.add(availability)
+        
+        # Update user's weekly_availability_date to mark them as "active" this week
+        user.weekly_availability_date = monday
+        
+        db.session.commit()
+        
+        print(f"[AVAILABILITY] {user.name} saved availability with {len(time_slots)} slots for week of {monday}")
+        
+        return jsonify({
+            'message': 'Availability saved',
+            'availability': availability.to_dict(),
+            'is_active': True
+        })
+    
+    # GET - return user's availability for this week
+    availability = UserAvailability.query.filter_by(
+        user_id=user_id,
+        week_start_date=monday
+    ).first()
+    
+    if availability:
+        return jsonify({
+            'availability': availability.to_dict(),
+            'is_active': user.is_active_this_week()
+        })
+    
+    return jsonify({
+        'availability': None,
+        'is_active': False
+    })
 
 
 # API Routes - Plans
