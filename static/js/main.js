@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             document.getElementById('setupModal').classList.remove('active');
             loadFriends();
-            loadAvailability();
+            loadMyAvailability();
             loadFriendsAvailability();
             loadNotifications();
             
@@ -189,7 +189,7 @@ async function setupPlanner(event) {
             document.getElementById('setupModal').classList.remove('active');
             showStatus('Welcome, ' + name + '!', 'success');
             loadFriends();
-            loadAvailability();
+            loadMyAvailability();
             loadFriendsAvailability();
             loadNotifications();
         } else {
@@ -693,6 +693,37 @@ function updatePlanButton() {
     } else {
         button.classList.add('inactive');
         button.disabled = true;
+    }
+}
+
+// Load my saved availability
+async function loadMyAvailability() {
+    try {
+        const response = await fetch('/api/my-availability');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.availability && data.availability.time_slots) {
+                // Populate selectedTimeSlots with saved data
+                selectedTimeSlots = data.availability.time_slots;
+                
+                // Update the calendar display
+                selectedTimeSlots.forEach(slot => {
+                    const slotElement = document.querySelector(
+                        `.time-slot[data-date="${slot.date}"][data-slot="${slot.slot}"]`
+                    );
+                    if (slotElement) {
+                        slotElement.classList.add('selected');
+                    }
+                });
+                
+                // Update button state
+                updatePlanButton();
+                
+                console.log('Loaded my availability:', selectedTimeSlots.length, 'slots');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading my availability:', error);
     }
 }
 
