@@ -145,6 +145,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('setupModal').classList.remove('active');
             loadFriends();
             loadAvailability();
+            loadFriendsAvailability();
             loadNotifications();
             
             // Check for new notifications every 10 seconds (which will auto-refresh calendar)
@@ -189,6 +190,7 @@ async function setupPlanner(event) {
             showStatus('Welcome, ' + name + '!', 'success');
             loadFriends();
             loadAvailability();
+            loadFriendsAvailability();
             loadNotifications();
         } else {
             showStatus('Error setting up. Please try again.', 'error');
@@ -233,6 +235,15 @@ function renderFriends() {
         
         if (selectedFriends.find(f => f.id === friend.id)) {
             avatar.classList.add('selected');
+        }
+        
+        // Show linked badge for friends who are on the platform
+        if (friend.is_linked) {
+            avatar.classList.add('linked');
+            const badge = document.createElement('span');
+            badge.className = 'linked-badge';
+            badge.textContent = '✓';
+            avatar.appendChild(badge);
         }
         
         friendsList.appendChild(avatar);
@@ -673,9 +684,10 @@ function setupCalendar() {
 // Update plan button state
 function updatePlanButton() {
     const button = document.getElementById('planButton');
-    const hasSelections = selectedTimeSlots.length > 0 && selectedFriends.length > 0;
+    // Only require time slots to be selected (no longer need friends selected)
+    const hasTimeSlots = selectedTimeSlots.length > 0;
     
-    if (hasSelections) {
+    if (hasTimeSlots) {
         button.classList.remove('inactive');
         button.disabled = false;
     } else {
@@ -684,9 +696,105 @@ function updatePlanButton() {
     }
 }
 
-// Handle plan action
+// Save my availability (new flow)
+async function saveMyAvailability() {
+    if (selectedTimeSlots.length === 0) {
+        showStatus('Please select at least one time slot', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/my-availability', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                time_slots: selectedTimeSlots
+            })
+        });
+        
+        if (response.ok) {
+            showStatus('Availability saved! Your friends can now see when you\'re free.', 'success');
+            loadFriendsAvailability();
+            updatePlanButton();
+        } else {
+            const data = await response.json();
+            showStatus(data.error || 'Error saving availability', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving availability:', error);
+        showStatus('Error saving availability', 'error');
+    }
+}
+
+// Load friends' availability
+let friendsAvailability = [];
+
+async function loadFriendsAvailability() {
+    try {
+        const response = await fetch('/api/friends/availability');
+        if (response.ok) {
+            const data = await response.json();
+            if (data.active) {
+                friendsAvailability = data.availabilities;
+                displayFriendsAvailability();
+            }
+        } else {
+            friendsAvailability = [];
+        }
+    } catch (error) {
+        console.error('Error loading friends availability:', error);
+    }
+}
+
+// Display friends availability on calendar
+function displayFriendsAvailability() {
+    document.querySelectorAll('.time-slot').forEach(slot => {
+        const indicators = slot.querySelectorAll('.friend-indicator');
+        indicators.forEach(ind => ind.remove());
+        slot.classList.remove('has-friends');
+    });
+    
+    if (friendsAvailability.length === 0) return;
+    
+    const slotFriends = {};
+    friendsAvailability.forEach(avail => {
+        avail.time_slots.forEach(slot => {
+            const key = `${slot.date}-${slot.slot}`;
+            if (!slotFriends[key]) slotFriends[key] = [];
+            slotFriends[key].push({ name: avail.user_name, initials: getInitials(avail.user_name) });
+        });
+    });
+    
+    Object.keys(slotFriends).forEach(key => {
+        const dateStr = key.substring(0, 10);
+        const slot = key.substring(11);
+        const slotElement = document.querySelector(`.time-slot[data-date="${dateStr}"][data-slot="${slot}"]`);
+        if (slotElement) {
+            const friends = slotFriends[key];
+            const indicator = document.createElement('div');
+            indicator.className = 'friend-indicator';
+            indicator.textContent = friends.length === 1 ? friends[0].initials : friends.length;
+            indicator.title = friends.map(f => f.name).join(', ') + (friends.length === 1 ? ' is free' : ' are free');
+            slotElement.appendChild(indicator);
+            slotElement.classList.add('has-friends');
+        }
+    });
+}
+
+// Load linked friends
+let linkedFriends = [];
+async function loadFriends() {
+    try {
+        const response = await fetch('/api/friends');
+        if (response.ok) linkedFriends = await response.json();
+    } catch (error) {
+        console.error('Error loading friends:', error);
+    }
+}
+
+// Legacy handle plan action
 async function handlePlanAction() {
-    await createPlan();
+    await saveMyAvailability();
 }
 
 // Create plan and send invites
@@ -898,20 +1006,27 @@ async function loadNotifications() {
     }
     
     try {
-        const response = await fetch(`/api/notifications/${plannerInfo.id}`);
-        const notifications = await response.json();
+        // Load both notifications and friend requests
+        const [notifResponse, friendReqResponse] = await Promise.all([
+            fetch(`/api/notifications/${plannerInfo.id}`),
+            fetch('/api/friend-requests')
+        ]);
+        
+        const notifications = await notifResponse.json();
+        const friendRequests = friendReqResponse.ok ? await friendReqResponse.json() : [];
         
         // Check if we have new notifications (more than before)
-        const currentCount = notifications.length;
+        const currentCount = notifications.length + friendRequests.length;
         if (lastNotificationCount !== null && currentCount > lastNotificationCount) {
             console.log('New notification detected, refreshing availability');
             // Refresh the calendar when new notifications arrive
             loadAvailability();
+            loadFriendsAvailability();
         }
         lastNotificationCount = currentCount;
         
-        // Update badge count
-        const unreadCount = notifications.filter(n => !n.read).length;
+        // Update badge count (unread notifications + pending friend requests)
+        const unreadCount = notifications.filter(n => !n.read).length + friendRequests.length;
         const badge = document.getElementById('notificationBadge');
         if (unreadCount > 0) {
             badge.textContent = unreadCount;
@@ -920,14 +1035,14 @@ async function loadNotifications() {
             badge.style.display = 'none';
         }
         
-        // Render notifications
-        renderNotifications(notifications);
+        // Render notifications with friend requests
+        renderNotifications(notifications, friendRequests);
     } catch (error) {
         console.error('Error loading notifications:', error);
     }
 }
 
-function renderNotifications(notifications) {
+function renderNotifications(notifications, friendRequests = []) {
     const list = document.getElementById('notificationsList');
     
     if (!list) {
@@ -935,13 +1050,34 @@ function renderNotifications(notifications) {
         return;
     }
     
-    if (notifications.length === 0) {
+    if (notifications.length === 0 && friendRequests.length === 0) {
         list.innerHTML = '<div class="no-notifications">No notifications yet</div>';
         return;
     }
     
     try {
-        const html = notifications.map(notif => {
+        // Render friend requests first (with accept/deny buttons)
+        const friendRequestsHtml = friendRequests.map(req => {
+            const timeAgo = getTimeAgo(new Date(req.created_at));
+            return `
+                <div class="notification-item unread friend-request" data-request-id="${req.id}">
+                    <div class="notification-avatar friend-request-avatar">👤</div>
+                    <div class="notification-content">
+                        <div class="notification-text">
+                            <strong>${req.from_user_name}</strong> wants to be friends
+                        </div>
+                        <div class="notification-time">${timeAgo}</div>
+                        <div class="friend-request-actions">
+                            <button class="btn-accept" onclick="acceptFriendRequest(${req.id})">Accept</button>
+                            <button class="btn-reject" onclick="rejectFriendRequest(${req.id})">Decline</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Render regular notifications
+        const notificationsHtml = notifications.map(notif => {
             const timeAgo = getTimeAgo(new Date(notif.created_at));
             
             // System notifications (no contact) vs contact notifications
@@ -972,9 +1108,51 @@ function renderNotifications(notifications) {
             }
         }).join('');
         
-        list.innerHTML = html;
+        list.innerHTML = friendRequestsHtml + notificationsHtml;
     } catch (error) {
         console.error('Error rendering notifications:', error);
+    }
+}
+
+// Accept friend request
+async function acceptFriendRequest(requestId) {
+    try {
+        const response = await fetch(`/api/friend-requests/${requestId}/accept`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            showStatus('Friend request accepted!', 'success');
+            loadNotifications();
+            loadFriends();
+            loadFriendsAvailability();
+        } else {
+            const data = await response.json();
+            showStatus(data.error || 'Failed to accept request', 'error');
+        }
+    } catch (error) {
+        console.error('Error accepting friend request:', error);
+        showStatus('Error accepting request', 'error');
+    }
+}
+
+// Reject friend request
+async function rejectFriendRequest(requestId) {
+    try {
+        const response = await fetch(`/api/friend-requests/${requestId}/reject`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            showStatus('Friend request declined', 'success');
+            loadNotifications();
+        } else {
+            const data = await response.json();
+            showStatus(data.error || 'Failed to decline request', 'error');
+        }
+    } catch (error) {
+        console.error('Error rejecting friend request:', error);
+        showStatus('Error declining request', 'error');
     }
 }
 

@@ -1,7 +1,7 @@
-# Setting Up Planning Reminders Cron Job on Railway
+# Setting Up Weekly Availability Reminders on Railway
 
 ## Overview
-The planning reminders feature sends SMS reminders to users on the days they've selected in their account settings.
+The weekly reminder feature sends SMS reminders every Monday at 6pm asking users to share their availability for the week. When users save their availability, they become "active" and can see their linked friends' availability.
 
 ## Setup Instructions
 
@@ -28,9 +28,10 @@ The planning reminders feature sends SMS reminders to users on the days they've 
    - In the service settings, go to "Deployments"
    - Set the "Start Command" to: `python3 send_reminders.py`
    - Click on "Settings" > "Cron Schedule"
-   - Enter the cron expression: `0 9 * * *` (runs daily at 9 AM UTC)
-     - For 9 AM EST (Eastern): `0 14 * * *` (9 AM EST = 2 PM UTC)
-     - For 9 AM PST (Pacific): `0 17 * * *` (9 AM PST = 5 PM UTC)
+   - **The cron runs daily but only sends on Monday for each user's timezone**
+   - Enter the cron expression: `0 22,23 * * *` (runs at 10 PM and 11 PM UTC to catch 6 PM EST/PST)
+     - For 6 PM EST (Eastern): 11 PM UTC (during standard time)
+     - For 6 PM PST (Pacific): 2 AM UTC next day (script handles timezone)
 
 5. **Deploy the Cron Service**
    - The service should automatically deploy from your GitHub repo
@@ -83,12 +84,14 @@ python3 send_reminders.py
 
 ## How It Works
 
-1. The cron job runs on the schedule you set (e.g., daily at 9 AM)
-2. It checks the current day of the week
-3. It queries all users from the database
-4. For each user who has today in their `reminder_days` preferences
-5. It sends an SMS reminder with a link to the app
-6. Example message: "Hi John! 👋 Time to plan your weekend with friends. Start here: https://trygatherly.com"
+1. The cron job runs multiple times daily to catch 6 PM in various timezones
+2. For each user, it converts UTC to their local timezone
+3. If it's Monday in the user's timezone:
+   - Resets their `weekly_availability_date` (they become "inactive")
+   - Sends an SMS asking them to share availability
+4. When users save their availability, they become "active" for the week
+5. Active users can see their linked friends' availability
+6. Example message: "Hi John! 👋 New week! Share your availability to see when your friends are free: https://trygatherly.com"
 
 ## Monitoring
 

@@ -53,20 +53,19 @@ def send_sms(to_number, message):
         return False
 
 def send_reminders():
-    """Send reminders to users based on their preferences"""
+    """Send weekly availability reminders on Monday at 6pm in user's timezone"""
     with app.app_context():
         # Get current UTC time
         utc_now = datetime.now(pytz.UTC)
         print(f"🌍 Current UTC time: {utc_now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         
-        # Find users who have reminders enabled
+        # Find all users
         users = User.query.all()
         
         sent_count = 0
+        reset_count = 0
+        
         for user in users:
-            if not user.reminder_days:
-                continue
-            
             # Get user's timezone (default to America/New_York if not set)
             user_tz = pytz.timezone(user.timezone or 'America/New_York')
             
@@ -76,22 +75,31 @@ def send_reminders():
             
             print(f"👤 {user.name}: {user_time.strftime('%Y-%m-%d %H:%M:%S %Z')} ({today_for_user})")
             
-            # Check if user wants reminder today
-            if today_for_user in user.reminder_days:
+            # Check if it's Monday in the user's timezone
+            if today_for_user == 'monday':
+                # Reset user's weekly availability (they're no longer "active")
+                if user.weekly_availability_date:
+                    user.weekly_availability_date = None
+                    reset_count += 1
+                    print(f"   🔄 Reset weekly availability for {user.name}")
+                
                 # Prepare the reminder message
                 base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
-                message = f"Hi {user.name.split()[0]}! 👋 Time to plan your weekend with friends. Start here: {base_url}"
+                message = f"Hi {user.name.split()[0]}! 👋 New week! Share your availability to see when your friends are free: {base_url}"
                 
                 # Send SMS
                 if send_sms(user.phone_number, message):
                     sent_count += 1
-                    print(f"   📱 ✅ Sent reminder to {user.name} ({user.phone_number})")
+                    print(f"   📱 ✅ Sent weekly reminder to {user.name} ({user.phone_number})")
                 else:
                     print(f"   📱 ❌ Failed to send to {user.name}")
             else:
-                print(f"   ⏭️  Skipped (no reminder for {today_for_user})")
+                print(f"   ⏭️  Skipped (not Monday for this user, it's {today_for_user})")
         
-        print(f"\n✅ Sent {sent_count} reminder(s)")
+        # Commit the availability resets
+        db.session.commit()
+        
+        print(f"\n✅ Sent {sent_count} reminder(s), reset {reset_count} user(s)")
         return sent_count
 
 if __name__ == '__main__':

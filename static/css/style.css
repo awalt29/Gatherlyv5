@@ -207,6 +207,53 @@ body {
     flex-shrink: 0;
 }
 
+.notification-avatar.friend-request-avatar {
+    background: rgba(91, 163, 255, 0.3);
+    color: var(--accent-mint);
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.friend-request-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.friend-request-actions .btn-accept {
+    padding: 6px 16px;
+    background: var(--accent-mint);
+    color: var(--primary-bg);
+    border: none;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.friend-request-actions .btn-accept:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+.friend-request-actions .btn-reject {
+    padding: 6px 16px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.friend-request-actions .btn-reject:hover {
+    border-color: #FF6464;
+    color: #FF6464;
+}
+
 .notification-content {
     flex: 1;
     display: flex;
@@ -518,6 +565,27 @@ h1 {
     color: var(--primary-bg);
 }
 
+/* Linked friends (on the platform) */
+.friend-avatar.linked {
+    position: relative;
+}
+
+.linked-badge {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    background: var(--accent-blue);
+    color: white;
+    font-size: 8px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
 .friend-avatar.add-btn {
     border: 2px dashed var(--border-color);
     color: var(--accent-mint);
@@ -689,6 +757,31 @@ h1 {
 .time-slot.selected {
     background: var(--slot-selected);
     border-color: var(--slot-selected);
+}
+
+/* Time slot with friends available */
+.time-slot.has-friends {
+    border-color: var(--accent-mint);
+}
+
+.time-slot.has-friends.selected {
+    border-color: var(--accent-mint);
+    box-shadow: 0 0 0 2px var(--accent-mint);
+}
+
+/* Friend indicator badge */
+.friend-indicator {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: var(--accent-mint);
+    color: var(--primary-bg);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 4px;
+    border-radius: 8px;
+    min-width: 14px;
+    text-align: center;
 }
 
 /* Planner's availability shown to guest (subtle highlight) */
