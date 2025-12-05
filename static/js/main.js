@@ -703,6 +703,10 @@ async function loadMyAvailability() {
         const response = await fetch('/api/my-availability');
         if (response.ok) {
             const data = await response.json();
+            
+            // Update the page title with active status
+            updateActiveStatus(data.is_active, data.days_remaining);
+            
             if (data.availability && data.availability.time_slots) {
                 // Populate selectedTimeSlots with saved data
                 selectedTimeSlots = data.availability.time_slots;
@@ -728,6 +732,18 @@ async function loadMyAvailability() {
     }
 }
 
+// Update the page title based on active status
+function updateActiveStatus(isActive, daysRemaining) {
+    const titleEl = document.getElementById('pageTitle');
+    if (!titleEl) return;
+    
+    if (isActive && daysRemaining > 0) {
+        titleEl.innerHTML = `<span class="status-badge active">🟢 ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining</span>`;
+    } else {
+        titleEl.innerHTML = `<span class="status-badge inactive">⚪ Not active - save to unlock</span>`;
+    }
+}
+
 // Save my availability (new flow)
 async function saveMyAvailability() {
     if (selectedTimeSlots.length === 0) {
@@ -745,7 +761,9 @@ async function saveMyAvailability() {
         });
         
         if (response.ok) {
+            const data = await response.json();
             showStatus('Availability saved! Your friends can now see when you\'re free.', 'success');
+            updateActiveStatus(true, 7);  // Just saved = 7 days remaining
             loadFriendsAvailability();
             updatePlanButton();
         } else {

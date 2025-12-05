@@ -483,6 +483,29 @@ h1 {
     width: 100%;
 }
 
+/* Status Badge */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.status-badge.active {
+    background: rgba(74, 222, 128, 0.15);
+    color: #4ADE80;
+    border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.status-badge.inactive {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
 /* Section Headers */
 .section-header {
     font-size: 12px;

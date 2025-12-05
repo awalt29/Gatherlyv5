@@ -757,7 +757,8 @@ def my_availability():
         return jsonify({
             'message': 'Availability saved',
             'availability': availability.to_dict(),
-            'is_active': True
+            'is_active': True,
+            'days_remaining': 7
         })
     
     # GET - return user's availability for this week
@@ -766,15 +767,23 @@ def my_availability():
         week_start_date=monday
     ).first()
     
+    # Calculate days remaining
+    days_remaining = 0
+    if user.weekly_availability_date:
+        days_since = (today - user.weekly_availability_date).days
+        days_remaining = max(0, 7 - days_since)
+    
     if availability:
         return jsonify({
             'availability': availability.to_dict(),
-            'is_active': user.is_active_this_week()
+            'is_active': user.is_active(),
+            'days_remaining': days_remaining
         })
     
     return jsonify({
         'availability': None,
-        'is_active': False
+        'is_active': False,
+        'days_remaining': 0
     })
 
 
