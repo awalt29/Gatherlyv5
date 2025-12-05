@@ -535,6 +535,7 @@ def invite_contact(contact_id):
 def delete_contact(contact_id):
     contact = Contact.query.get_or_404(contact_id)
     owner_id = contact.owner_id
+    owner = User.query.get(owner_id)
     
     # Check if this contact is linked to a user on the platform
     linked_user = User.query.filter_by(phone_number=contact.phone_number).first()
@@ -550,6 +551,23 @@ def delete_contact(contact_id):
             ((FriendRequest.from_user_id == owner_id) & (FriendRequest.to_user_id == linked_user.id)) |
             ((FriendRequest.from_user_id == linked_user.id) & (FriendRequest.to_user_id == owner_id))
         ).delete()
+        
+        # Delete the reciprocal contact (the linked user's contact for the owner)
+        if owner:
+            reciprocal_contact = Contact.query.filter_by(
+                owner_id=linked_user.id,
+                phone_number=owner.phone_number
+            ).first()
+            
+            if reciprocal_contact:
+                # Delete notifications for reciprocal contact
+                Notification.query.filter_by(contact_id=reciprocal_contact.id).delete()
+                # Delete plan guests for reciprocal contact
+                PlanGuest.query.filter_by(contact_id=reciprocal_contact.id).delete()
+                # Delete availabilities for reciprocal contact
+                Availability.query.filter_by(contact_id=reciprocal_contact.id).delete()
+                # Delete the reciprocal contact
+                db.session.delete(reciprocal_contact)
     
     # Delete notifications for this contact (to avoid foreign key constraint)
     Notification.query.filter_by(contact_id=contact_id).delete()
