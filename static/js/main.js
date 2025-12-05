@@ -575,7 +575,7 @@ async function deleteFriend(friendId) {
     }
     
     try {
-        // Delete the contact from database (cascades to availability, plan_guests)
+        // Delete the contact from database (cascades to availability, plan_guests, friendship)
         const response = await fetch(`/api/contacts/${friendId}`, {
             method: 'DELETE'
         });
@@ -591,7 +591,8 @@ async function deleteFriend(friendId) {
             updatePlanButton();
             
             // Refresh calendar to remove their availability
-            loadAvailability();
+            loadLinkedFriends();
+            loadFriendsAvailability();
             
             showStatus('Friend removed', 'success');
         } else {

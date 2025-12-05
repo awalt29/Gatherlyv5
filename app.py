@@ -476,6 +476,22 @@ def contacts():
 @app.route('/api/contacts/<int:contact_id>', methods=['DELETE'])
 def delete_contact(contact_id):
     contact = Contact.query.get_or_404(contact_id)
+    owner_id = contact.owner_id
+    
+    # Check if this contact is linked to a user on the platform
+    linked_user = User.query.filter_by(phone_number=contact.phone_number).first()
+    if linked_user:
+        # Delete the friendship between owner and linked user
+        Friendship.query.filter(
+            ((Friendship.user_id_1 == owner_id) & (Friendship.user_id_2 == linked_user.id)) |
+            ((Friendship.user_id_1 == linked_user.id) & (Friendship.user_id_2 == owner_id))
+        ).delete()
+        
+        # Also delete any pending friend requests between them
+        FriendRequest.query.filter(
+            ((FriendRequest.from_user_id == owner_id) & (FriendRequest.to_user_id == linked_user.id)) |
+            ((FriendRequest.from_user_id == linked_user.id) & (FriendRequest.to_user_id == owner_id))
+        ).delete()
     
     # Delete notifications for this contact (to avoid foreign key constraint)
     Notification.query.filter_by(contact_id=contact_id).delete()
