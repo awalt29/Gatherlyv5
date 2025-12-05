@@ -86,12 +86,12 @@ python3 send_reminders.py
 
 1. The cron job runs multiple times daily to catch 6 PM in various timezones
 2. For each user, it converts UTC to their local timezone
-3. If it's Monday in the user's timezone:
-   - Resets their `weekly_availability_date` (they become "inactive")
-   - Sends an SMS asking them to share availability
-4. When users save their availability, they become "active" for the week
-5. Active users can see their linked friends' availability
-6. Example message: "Hi John! 👋 New week! Share your availability to see when your friends are free: https://trygatherly.com"
+3. If it's Monday in the user's timezone AND they're inactive (haven't saved in 7+ days):
+   - Sends an SMS reminder asking them to share availability
+4. When users save their availability, they become "active" for 7 days
+5. If they save again, their 7-day window resets from that day
+6. Active users can see their linked friends' availability
+7. Example message: "Hi John! 👋 Share your availability to see when your friends are free this week: https://trygatherly.com"
 
 ## Monitoring
 

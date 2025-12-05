@@ -28,14 +28,17 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
     
-    def is_active_this_week(self):
-        """Check if user has submitted availability for the current week"""
+    def is_active(self):
+        """Check if user has saved availability within the last 7 days"""
         if not self.weekly_availability_date:
             return False
-        # Get current Monday
         today = datetime.utcnow().date()
-        monday = today - timedelta(days=today.weekday())
-        return self.weekly_availability_date >= monday
+        # User is active if they saved within the last 7 days
+        return (today - self.weekly_availability_date).days < 7
+    
+    # Keep old method name for backwards compatibility
+    def is_active_this_week(self):
+        return self.is_active()
     
     def to_dict(self):
         return {

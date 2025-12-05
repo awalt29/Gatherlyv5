@@ -747,12 +747,12 @@ def my_availability():
             )
             db.session.add(availability)
         
-        # Update user's weekly_availability_date to mark them as "active" this week
-        user.weekly_availability_date = monday
+        # Update user's weekly_availability_date to today - they're "active" for 7 days
+        user.weekly_availability_date = today
         
         db.session.commit()
         
-        print(f"[AVAILABILITY] {user.name} saved availability with {len(time_slots)} slots for week of {monday}")
+        print(f"[AVAILABILITY] {user.name} saved availability with {len(time_slots)} slots, active until {today + timedelta(days=7)}")
         
         return jsonify({
             'message': 'Availability saved',

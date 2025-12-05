@@ -53,17 +53,17 @@ def send_sms(to_number, message):
         return False
 
 def send_reminders():
-    """Send weekly availability reminders on Monday at 6pm in user's timezone"""
+    """Send reminders to users who are no longer active (haven't saved availability in 7 days)"""
     with app.app_context():
         # Get current UTC time
         utc_now = datetime.now(pytz.UTC)
+        today = utc_now.date()
         print(f"🌍 Current UTC time: {utc_now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         
         # Find all users
         users = User.query.all()
         
         sent_count = 0
-        reset_count = 0
         
         for user in users:
             # Get user's timezone (default to America/New_York if not set)
@@ -75,31 +75,31 @@ def send_reminders():
             
             print(f"👤 {user.name}: {user_time.strftime('%Y-%m-%d %H:%M:%S %Z')} ({today_for_user})")
             
-            # Check if it's Monday in the user's timezone
+            # Check if it's Monday in the user's timezone (weekly reminder day)
             if today_for_user == 'monday':
-                # Reset user's weekly availability (they're no longer "active")
+                # Check if user is no longer active (hasn't saved in 7+ days)
+                is_inactive = True
                 if user.weekly_availability_date:
-                    user.weekly_availability_date = None
-                    reset_count += 1
-                    print(f"   🔄 Reset weekly availability for {user.name}")
+                    days_since_save = (today - user.weekly_availability_date).days
+                    is_inactive = days_since_save >= 7
+                    print(f"   📅 Last saved {days_since_save} days ago")
                 
-                # Prepare the reminder message
-                base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
-                message = f"Hi {user.name.split()[0]}! 👋 New week! Share your availability to see when your friends are free: {base_url}"
-                
-                # Send SMS
-                if send_sms(user.phone_number, message):
-                    sent_count += 1
-                    print(f"   📱 ✅ Sent weekly reminder to {user.name} ({user.phone_number})")
+                if is_inactive:
+                    # Send reminder to inactive users
+                    base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
+                    message = f"Hi {user.name.split()[0]}! 👋 Share your availability to see when your friends are free this week: {base_url}"
+                    
+                    if send_sms(user.phone_number, message):
+                        sent_count += 1
+                        print(f"   📱 ✅ Sent reminder to {user.name} ({user.phone_number})")
+                    else:
+                        print(f"   📱 ❌ Failed to send to {user.name}")
                 else:
-                    print(f"   📱 ❌ Failed to send to {user.name}")
+                    print(f"   ✅ Still active, no reminder needed")
             else:
                 print(f"   ⏭️  Skipped (not Monday for this user, it's {today_for_user})")
         
-        # Commit the availability resets
-        db.session.commit()
-        
-        print(f"\n✅ Sent {sent_count} reminder(s), reset {reset_count} user(s)")
+        print(f"\n✅ Sent {sent_count} reminder(s)")
         return sent_count
 
 if __name__ == '__main__':
