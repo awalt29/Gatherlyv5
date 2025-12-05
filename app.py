@@ -462,6 +462,14 @@ def contacts():
                     message=f"{owner.name} sent you a friend request"
                 )
                 db.session.add(notification)
+                
+                # Create notification for the sender
+                sender_notification = Notification(
+                    planner_id=data['owner_id'],
+                    contact_id=None,
+                    message=f"Friend request sent to {existing_user.name}"
+                )
+                db.session.add(notification)
                 db.session.commit()
                 
                 print(f"[FRIEND REQUEST] {owner.name} sent friend request to {existing_user.name}")

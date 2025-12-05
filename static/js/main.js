@@ -244,6 +244,14 @@ function renderFriends() {
             badge.className = 'linked-badge';
             badge.textContent = '✓';
             avatar.appendChild(badge);
+        } else if (friend.is_pending) {
+            // Show pending badge for awaiting response
+            avatar.classList.add('pending');
+            const badge = document.createElement('span');
+            badge.className = 'pending-badge';
+            badge.textContent = '⏳';
+            badge.title = 'Waiting for response';
+            avatar.appendChild(badge);
         }
         
         friendsList.appendChild(avatar);

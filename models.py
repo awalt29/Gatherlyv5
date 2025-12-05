@@ -72,8 +72,9 @@ class Contact(db.Model):
     availabilities = db.relationship('Availability', backref='contact', lazy=True)
     
     def to_dict(self):
-        # Check if this contact is a linked friend (mutual connection)
+        # Check if this contact is a linked friend (mutual connection) or has pending request
         is_linked = False
+        is_pending = False
         linked_user_id = None
         
         # Find if contact's phone number belongs to a registered user
@@ -87,6 +88,15 @@ class Contact(db.Model):
             if friendship:
                 is_linked = True
                 linked_user_id = linked_user.id
+            else:
+                # Check if there's a pending friend request
+                pending_request = FriendRequest.query.filter(
+                    ((FriendRequest.from_user_id == self.owner_id) & (FriendRequest.to_user_id == linked_user.id)) |
+                    ((FriendRequest.from_user_id == linked_user.id) & (FriendRequest.to_user_id == self.owner_id))
+                ).filter(FriendRequest.status == 'pending').first()
+                if pending_request:
+                    is_pending = True
+                    linked_user_id = linked_user.id
         
         return {
             'id': self.id,
@@ -95,6 +105,7 @@ class Contact(db.Model):
             'phone_number': self.phone_number,
             'display_order': self.display_order,
             'is_linked': is_linked,
+            'is_pending': is_pending,
             'linked_user_id': linked_user_id,
             'created_at': self.created_at.isoformat()
         }
