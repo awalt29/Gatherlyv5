@@ -789,22 +789,6 @@ h1 {
 
 .time-slot.has-friends.selected {
     border-color: var(--accent-mint);
-    box-shadow: 0 0 0 2px var(--accent-mint);
-}
-
-/* Friend indicator badge */
-.friend-indicator {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    background: var(--accent-mint);
-    color: var(--primary-bg);
-    font-size: 9px;
-    font-weight: 700;
-    padding: 2px 4px;
-    border-radius: 8px;
-    min-width: 14px;
-    text-align: center;
 }
 
 /* Planner's availability shown to guest (subtle highlight) */

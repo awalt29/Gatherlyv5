@@ -798,14 +798,16 @@ async function loadFriendsAvailability() {
 
 // Display friends availability on calendar
 function displayFriendsAvailability() {
+    // Clear previous friend avatars
     document.querySelectorAll('.time-slot').forEach(slot => {
-        const indicators = slot.querySelectorAll('.friend-indicator');
-        indicators.forEach(ind => ind.remove());
+        const avatars = slot.querySelector('.slot-avatars');
+        if (avatars) avatars.remove();
         slot.classList.remove('has-friends');
     });
     
     if (friendsAvailability.length === 0) return;
     
+    // Group friends by slot
     const slotFriends = {};
     friendsAvailability.forEach(avail => {
         avail.time_slots.forEach(slot => {
@@ -815,17 +817,37 @@ function displayFriendsAvailability() {
         });
     });
     
+    // Add avatars to matching slots (same style as original)
     Object.keys(slotFriends).forEach(key => {
         const dateStr = key.substring(0, 10);
         const slot = key.substring(11);
         const slotElement = document.querySelector(`.time-slot[data-date="${dateStr}"][data-slot="${slot}"]`);
         if (slotElement) {
             const friends = slotFriends[key];
-            const indicator = document.createElement('div');
-            indicator.className = 'friend-indicator';
-            indicator.textContent = friends.length === 1 ? friends[0].initials : friends.length;
-            indicator.title = friends.map(f => f.name).join(', ') + (friends.length === 1 ? ' is free' : ' are free');
-            slotElement.appendChild(indicator);
+            
+            // Create container for avatars
+            const avatarsContainer = document.createElement('div');
+            avatarsContainer.className = 'slot-avatars';
+            
+            // Add avatar for each friend (max 3 shown)
+            friends.slice(0, 3).forEach(friend => {
+                const avatar = document.createElement('div');
+                avatar.className = 'slot-avatar';
+                avatar.textContent = friend.initials;
+                avatar.title = friend.name + ' is free';
+                avatarsContainer.appendChild(avatar);
+            });
+            
+            // If more than 3, show count
+            if (friends.length > 3) {
+                const moreAvatar = document.createElement('div');
+                moreAvatar.className = 'slot-avatar';
+                moreAvatar.textContent = `+${friends.length - 3}`;
+                moreAvatar.title = friends.slice(3).map(f => f.name).join(', ');
+                avatarsContainer.appendChild(moreAvatar);
+            }
+            
+            slotElement.appendChild(avatarsContainer);
             slotElement.classList.add('has-friends');
         }
     });
