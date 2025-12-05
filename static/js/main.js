@@ -1174,9 +1174,10 @@ async function loadNotifications() {
         // Check if we have new notifications (more than before)
         const currentCount = notifications.length + friendRequests.length;
         if (lastNotificationCount !== null && currentCount > lastNotificationCount) {
-            console.log('New notification detected, refreshing availability');
+            console.log('New notification detected, refreshing data');
+            // Refresh friends list (updates status badges like pending -> connected)
+            loadFriends();
             // Refresh the calendar when new notifications arrive
-            loadAvailability();
             loadFriendsAvailability();
         }
         lastNotificationCount = currentCount;
