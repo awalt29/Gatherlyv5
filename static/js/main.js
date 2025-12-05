@@ -536,21 +536,42 @@ function renderManageFriends() {
         item.dataset.friendId = friend.id;
         item.draggable = true;
         
+        // Determine status badge
+        let statusBadge = '';
+        let showInviteBtn = false;
+        if (friend.is_linked) {
+            statusBadge = '<span class="friend-status linked">✓ Connected</span>';
+        } else if (friend.is_pending) {
+            statusBadge = '<span class="friend-status pending">⏳ Pending</span>';
+        } else {
+            statusBadge = '<span class="friend-status not-on-app">Not on app</span>';
+            showInviteBtn = true;
+        }
+        
         item.innerHTML = `
             <div class="friend-manage-drag-handle">☰</div>
             <div class="friend-manage-info">
                 <div class="friend-manage-avatar">${displayMap[friend.id]}</div>
                 <div class="friend-manage-details">
-                    <div class="friend-manage-name">${friend.name}</div>
+                    <div class="friend-manage-name">${friend.name} ${statusBadge}</div>
                     <div class="friend-manage-phone">${friend.phone_number}</div>
                 </div>
             </div>
-            <button class="btn-delete">Delete</button>
+            <div class="friend-manage-actions">
+                ${showInviteBtn ? '<button class="btn-invite">Invite</button>' : ''}
+                <button class="btn-delete">Delete</button>
+            </div>
         `;
         
         // Add delete handler
         const deleteBtn = item.querySelector('.btn-delete');
         deleteBtn.onclick = () => deleteFriend(friend.id);
+        
+        // Add invite handler if applicable
+        if (showInviteBtn) {
+            const inviteBtn = item.querySelector('.btn-invite');
+            inviteBtn.onclick = () => sendInvite(friend.id, friend.name);
+        }
         
         // Get the drag handle
         const dragHandle = item.querySelector('.friend-manage-drag-handle');
@@ -612,6 +633,39 @@ async function deleteFriend(friendId) {
     }
 }
 
+// Show invite prompt for contacts not on the platform
+function showInvitePrompt(contact) {
+    const shouldInvite = confirm(
+        `${contact.name} isn't on Gatherly yet.\n\nWould you like to send them a text invite to join?`
+    );
+    
+    if (shouldInvite) {
+        sendInvite(contact.id, contact.name);
+    } else {
+        showStatus('Friend added! You can invite them later from Manage Friends.', 'success');
+    }
+}
+
+// Send invite SMS to contact
+async function sendInvite(contactId, contactName) {
+    try {
+        const response = await fetch(`/api/contacts/${contactId}/invite`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            showStatus(`Invite sent to ${contactName}!`, 'success');
+            loadNotifications();
+        } else {
+            const data = await response.json();
+            showStatus(data.error || 'Failed to send invite', 'error');
+        }
+    } catch (error) {
+        console.error('Error sending invite:', error);
+        showStatus('Error sending invite', 'error');
+    }
+}
+
 // Add contact (friend)
 async function addFriend(event) {
     event.preventDefault();
@@ -651,8 +705,19 @@ async function addFriend(event) {
             
             renderFriends();
             closeAddFriendModal();
-            showStatus('Friend added!', 'success');
             updatePlanButton();
+            
+            // Check if friend is on the platform
+            if (contact.is_on_platform === false) {
+                // Show invite option
+                showInvitePrompt(contact);
+            } else if (contact.is_pending) {
+                showStatus('Friend added! Waiting for them to accept your request.', 'success');
+            } else if (contact.is_linked) {
+                showStatus('Friend added! You\'re already connected.', 'success');
+            } else {
+                showStatus('Friend added!', 'success');
+            }
         } else {
             showStatus('Error adding friend', 'error');
         }

@@ -1167,6 +1167,53 @@ h1 {
     color: var(--text-light);
 }
 
+.btn-invite {
+    background: transparent;
+    border: 2px solid var(--accent-mint);
+    color: var(--accent-mint);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-invite:hover {
+    background: var(--accent-mint);
+    color: var(--primary-bg);
+}
+
+.friend-manage-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* Friend status badges in manage list */
+.friend-status {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 6px;
+    font-weight: 500;
+}
+
+.friend-status.linked {
+    background: rgba(91, 163, 255, 0.2);
+    color: var(--accent-blue);
+}
+
+.friend-status.pending {
+    background: rgba(250, 204, 21, 0.2);
+    color: #FACC15;
+}
+
+.friend-status.not-on-app {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+}
+
 .no-friends-message {
     text-align: center;
     color: var(--text-muted);

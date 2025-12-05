@@ -474,11 +474,61 @@ def contacts():
                 
                 print(f"[FRIEND REQUEST] {owner.name} sent friend request to {existing_user.name}")
         
-        return jsonify(contact.to_dict()), 201
+        # Return contact with platform status
+        response = contact.to_dict()
+        response['is_on_platform'] = existing_user is not None
+        return jsonify(response), 201
     
     # GET - fetch all contacts for this owner, sorted by display_order
     contacts = Contact.query.filter_by(owner_id=int(owner_id)).order_by(Contact.display_order).all()
     return jsonify([c.to_dict() for c in contacts])
+
+
+@app.route('/api/contacts/<int:contact_id>/invite', methods=['POST'])
+def invite_contact(contact_id):
+    """Send an SMS invite to a contact who isn't on the platform"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    contact = Contact.query.get_or_404(contact_id)
+    user = User.query.get(session['user_id'])
+    
+    # Check if contact is already on platform
+    existing_user = User.query.filter_by(phone_number=contact.phone_number).first()
+    if existing_user:
+        return jsonify({'error': 'This person is already on Gatherly'}), 400
+    
+    # Send invite SMS
+    app_url = os.getenv('APP_BASE_URL', 'https://trygatherly.com')
+    if not app_url.startswith('http'):
+        app_url = f'https://{app_url}'
+    
+    message = f"Hey {contact.name.split()[0]}! {user.name} wants to plan hangouts with you on Gatherly. Join here: {app_url}"
+    
+    try:
+        twilio_client = Client(
+            os.getenv('TWILIO_ACCOUNT_SID'),
+            os.getenv('TWILIO_AUTH_TOKEN')
+        )
+        twilio_client.messages.create(
+            body=message,
+            from_=os.getenv('TWILIO_PHONE_NUMBER'),
+            to=contact.phone_number
+        )
+        
+        # Create notification for sender
+        notification = Notification(
+            planner_id=user.id,
+            contact_id=None,
+            message=f"Invite sent to {contact.name}"
+        )
+        db.session.add(notification)
+        db.session.commit()
+        
+        return jsonify({'message': 'Invite sent successfully'}), 200
+    except Exception as e:
+        print(f"Error sending invite SMS: {e}")
+        return jsonify({'error': 'Failed to send invite'}), 500
 
 
 @app.route('/api/contacts/<int:contact_id>', methods=['DELETE'])
