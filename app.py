@@ -536,6 +536,7 @@ def accept_friend_request(request_id):
         return jsonify({'error': 'Not authenticated'}), 401
     
     user_id = session['user_id']
+    current_user = User.query.get(user_id)
     
     # Find the request
     friend_request = FriendRequest.query.get_or_404(request_id)
@@ -555,11 +556,30 @@ def accept_friend_request(request_id):
     friendship = Friendship.create_friendship(friend_request.from_user_id, friend_request.to_user_id)
     db.session.add(friendship)
     
+    # Create reciprocal contact for the accepting user (so they see the requester in their contacts)
+    from_user = User.query.get(friend_request.from_user_id)
+    existing_contact = Contact.query.filter_by(
+        owner_id=user_id,
+        phone_number=from_user.phone_number
+    ).first()
+    
+    if not existing_contact:
+        # Get highest display_order for this user's contacts
+        max_order = db.session.query(db.func.max(Contact.display_order)).filter_by(owner_id=user_id).scalar() or 0
+        
+        new_contact = Contact(
+            owner_id=user_id,
+            name=from_user.name,
+            phone_number=from_user.phone_number,
+            display_order=max_order + 1
+        )
+        db.session.add(new_contact)
+    
     # Create notification for the person who sent the request
     notification = Notification(
         planner_id=friend_request.from_user_id,
         contact_id=None,
-        message=f"{friend_request.to_user.name} accepted your friend request!"
+        message=f"{current_user.name} accepted your friend request!"
     )
     db.session.add(notification)
     

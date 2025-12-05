@@ -812,14 +812,14 @@ function displayFriendsAvailability() {
     });
 }
 
-// Load linked friends
+// Load linked friends (users who have accepted friend requests)
 let linkedFriends = [];
-async function loadFriends() {
+async function loadLinkedFriends() {
     try {
         const response = await fetch('/api/friends');
         if (response.ok) linkedFriends = await response.json();
     } catch (error) {
-        console.error('Error loading friends:', error);
+        console.error('Error loading linked friends:', error);
     }
 }
 
@@ -1155,7 +1155,8 @@ async function acceptFriendRequest(requestId) {
         if (response.ok) {
             showStatus('Friend request accepted!', 'success');
             loadNotifications();
-            loadFriends();
+            loadFriends();  // Reload contacts (includes new reciprocal contact)
+            loadLinkedFriends();  // Reload linked friends
             loadFriendsAvailability();
         } else {
             const data = await response.json();
