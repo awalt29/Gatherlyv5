@@ -738,7 +738,18 @@ function updateActiveStatus(isActive, daysRemaining) {
     if (!titleEl) return;
     
     if (isActive && daysRemaining > 0) {
-        titleEl.innerHTML = `<span class="status-badge active">🟢 ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining</span>`;
+        let colorClass = 'green';  // 7, 6, 5 days
+        let emoji = '🟢';
+        
+        if (daysRemaining <= 1) {
+            colorClass = 'red';
+            emoji = '🔴';
+        } else if (daysRemaining <= 4) {
+            colorClass = 'yellow';
+            emoji = '🟡';
+        }
+        
+        titleEl.innerHTML = `<span class="status-badge active ${colorClass}">${emoji} ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining</span>`;
     } else {
         titleEl.innerHTML = `<span class="status-badge inactive">⚪ Not active - save to unlock</span>`;
     }
