@@ -11,6 +11,49 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+import re
+
+def normalize_phone(phone):
+    """Normalize phone number by removing all non-digit characters except leading +"""
+    if not phone:
+        return phone
+    # Remove all non-digit characters
+    digits = re.sub(r'\D', '', phone)
+    # If it's a US number without country code, add 1
+    if len(digits) == 10:
+        digits = '1' + digits
+    return '+' + digits
+
+def find_user_by_phone(phone):
+    """Find a user by phone number, trying multiple formats"""
+    if not phone:
+        return None
+    
+    normalized = normalize_phone(phone)
+    
+    # Try exact match first
+    user = User.query.filter_by(phone_number=phone).first()
+    if user:
+        return user
+    
+    # Try normalized match
+    user = User.query.filter_by(phone_number=normalized).first()
+    if user:
+        return user
+    
+    # Try matching just the digits (last 10)
+    digits = re.sub(r'\D', '', phone)
+    if len(digits) >= 10:
+        last_10 = digits[-10:]
+        # Search for any phone containing these last 10 digits
+        users = User.query.all()
+        for u in users:
+            u_digits = re.sub(r'\D', '', u.phone_number)
+            if u_digits[-10:] == last_10:
+                return u
+    
+    return None
+
 app = Flask(__name__)
 
 # Fix Railway's DATABASE_URL (postgres:// -> postgresql://)
@@ -435,7 +478,7 @@ def contacts():
         db.session.commit()
         
         # Check if this phone number belongs to a registered user on the platform
-        existing_user = User.query.filter_by(phone_number=data['phone_number']).first()
+        existing_user = find_user_by_phone(data['phone_number'])
         if existing_user and existing_user.id != int(data['owner_id']):
             # Check if there's already a pending/accepted friend request
             existing_request = FriendRequest.query.filter(
@@ -494,7 +537,7 @@ def invite_contact(contact_id):
     user = User.query.get(session['user_id'])
     
     # Check if contact is already on platform
-    existing_user = User.query.filter_by(phone_number=contact.phone_number).first()
+    existing_user = find_user_by_phone(contact.phone_number)
     if existing_user:
         return jsonify({'error': 'This person is already on Gatherly'}), 400
     

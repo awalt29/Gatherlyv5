@@ -2,8 +2,18 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import secrets
+import re
 
 db = SQLAlchemy()
+
+def normalize_phone(phone):
+    """Normalize phone number by removing all non-digit characters"""
+    if not phone:
+        return phone
+    digits = re.sub(r'\D', '', phone)
+    if len(digits) == 10:
+        digits = '1' + digits
+    return '+' + digits
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -77,8 +87,24 @@ class Contact(db.Model):
         is_pending = False
         linked_user_id = None
         
-        # Find if contact's phone number belongs to a registered user
+        # Find if contact's phone number belongs to a registered user (with normalized matching)
+        linked_user = None
+        normalized = normalize_phone(self.phone_number)
+        
+        # Try exact match first, then normalized
         linked_user = User.query.filter_by(phone_number=self.phone_number).first()
+        if not linked_user:
+            linked_user = User.query.filter_by(phone_number=normalized).first()
+        if not linked_user:
+            # Try matching last 10 digits
+            digits = re.sub(r'\D', '', self.phone_number)
+            if len(digits) >= 10:
+                last_10 = digits[-10:]
+                for u in User.query.all():
+                    u_digits = re.sub(r'\D', '', u.phone_number)
+                    if len(u_digits) >= 10 and u_digits[-10:] == last_10:
+                        linked_user = u
+                        break
         if linked_user and linked_user.id != self.owner_id:
             # Check if there's an accepted friendship
             friendship = Friendship.query.filter(
