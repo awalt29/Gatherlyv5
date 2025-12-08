@@ -880,27 +880,40 @@ def my_availability():
             'days_remaining': 7
         })
     
-    # GET - return user's availability for this week
-    availability = UserAvailability.query.filter_by(
-        user_id=user_id,
-        week_start_date=monday
-    ).first()
-    
-    # Calculate days remaining
+    # GET - return user's availability (get most recent if active)
+    # Calculate days remaining based on when they last saved
     days_remaining = 0
+    is_active = False
     if user.weekly_availability_date:
         days_since = (today - user.weekly_availability_date).days
         days_remaining = max(0, 7 - days_since)
+        is_active = days_remaining > 0
     
-    if availability:
+    # Query by the Monday of the week when they saved (not current Monday)
+    availability = None
+    if user.weekly_availability_date:
+        saved_monday = user.weekly_availability_date - timedelta(days=user.weekly_availability_date.weekday())
+        availability = UserAvailability.query.filter_by(
+            user_id=user_id,
+            week_start_date=saved_monday
+        ).first()
+    
+    # Also check current Monday in case they just saved
+    if not availability:
+        availability = UserAvailability.query.filter_by(
+            user_id=user_id,
+            week_start_date=monday
+        ).first()
+    
+    if availability and is_active:
         return jsonify({
             'availability': availability.to_dict(),
-            'is_active': user.is_active(),
+            'is_active': True,
             'days_remaining': days_remaining
         })
     
     return jsonify({
-        'availability': None,
+        'availability': availability.to_dict() if availability else None,
         'is_active': False,
         'days_remaining': 0
     })
