@@ -920,12 +920,19 @@ def my_availability():
             if watcher.notification_friend_ids and user_id in watcher.notification_friend_ids:
                 # Check if they're actually linked friends
                 if Friendship.are_friends(watcher.id, user_id):
+                    # In-app notification
                     notification = Notification(
                         planner_id=watcher.id,
                         contact_id=None,
                         message=f"{user.name} updated their availability"
                     )
                     db.session.add(notification)
+                    
+                    # Send SMS notification
+                    base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
+                    sms_message = f"{user.name} just updated their availability on Gatherly! Check it out: {base_url}"
+                    send_sms(watcher.phone_number, sms_message)
+                    print(f"[AVAILABILITY NOTIFY] Sent SMS to {watcher.name} about {user.name}'s availability")
         
         db.session.commit()
         
