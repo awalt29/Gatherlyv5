@@ -233,12 +233,15 @@ def auth_signup():
     if existing_user:
         return jsonify({'error': 'Email already registered'}), 400
     
-    # Create new user
+    # Create new user - set weekly_availability_date to today so they're "active" for 7 days
+    # This lets them see friends' availability immediately without having to add their own first
+    today = date.today()
     user = User(
         name=data['name'],
         email=data['email'],
         phone_number=data['phone_number'],
-        timezone=data.get('timezone', 'America/New_York')  # Default to EST
+        timezone=data.get('timezone', 'America/New_York'),  # Default to EST
+        weekly_availability_date=today  # Start active so they can see friends' availability
     )
     user.set_password(data['password'])
     
