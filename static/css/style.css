@@ -1229,19 +1229,15 @@ h1 {
 }
 
 .friend-manage-name {
-    display: flex;
-    align-items: center;
-    gap: 8px;
     font-weight: 600;
     color: var(--text-light);
-}
-
-.friend-manage-name-text {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    flex-shrink: 1;
-    min-width: 0;
+}
+
+.friend-manage-status {
+    margin-top: 4px;
 }
 
 .friend-manage-phone {

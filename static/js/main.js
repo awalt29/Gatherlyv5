@@ -632,8 +632,9 @@ function renderManageFriends() {
             <div class="friend-manage-info">
                 <div class="friend-manage-avatar">${displayMap[friend.id]}</div>
                 <div class="friend-manage-details">
-                    <div class="friend-manage-name"><span class="friend-manage-name-text">${friend.name}</span> ${statusBadge}</div>
+                    <div class="friend-manage-name">${friend.name}</div>
                     <div class="friend-manage-phone">${friend.phone_number}</div>
+                    ${statusBadge ? `<div class="friend-manage-status">${statusBadge}</div>` : ''}
                 </div>
             </div>
             <div class="friend-manage-actions">
