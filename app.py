@@ -466,41 +466,70 @@ def get_user(user_id):
         return jsonify(user.to_dict()), 200
     
     if request.method == 'DELETE':
-        # Delete notifications for this user
-        Notification.query.filter_by(planner_id=user_id).delete()
-        
-        # Delete friendships involving this user
-        Friendship.query.filter(
-            (Friendship.user_id_1 == user_id) | (Friendship.user_id_2 == user_id)
-        ).delete()
-        
-        # Delete friend requests involving this user
-        FriendRequest.query.filter(
-            (FriendRequest.from_user_id == user_id) | (FriendRequest.to_user_id == user_id)
-        ).delete()
-        
-        # Delete availabilities for this user
-        Availability.query.filter_by(user_id=user_id).delete()
-        
-        # Delete all contacts owned by this user
-        Contact.query.filter_by(owner_id=user_id).delete()
-        
-        # Delete plans where user is the planner (cascade will handle PlanGuests)
-        plans = Plan.query.filter_by(planner_id=user_id).all()
-        for plan in plans:
-            # Delete all availabilities for this plan
-            Availability.query.filter_by(week_start_date=plan.week_start_date, planner_id=plan.planner_id).delete()
-            # Plan deletion
-            db.session.delete(plan)
-        
-        # Finally delete the user
-        db.session.delete(user)
-        db.session.commit()
-        
-        # Clear the session
-        session.clear()
-        
-        return jsonify({'message': 'User deleted successfully'}), 200
+        try:
+            print(f"[DELETE ACCOUNT] Starting deletion for user {user_id}")
+            
+            # Delete notifications for this user
+            Notification.query.filter_by(planner_id=user_id).delete()
+            print(f"[DELETE ACCOUNT] Deleted notifications")
+            
+            # Delete user availabilities
+            UserAvailability.query.filter_by(user_id=user_id).delete()
+            print(f"[DELETE ACCOUNT] Deleted user availabilities")
+            
+            # Delete friendships involving this user
+            Friendship.query.filter(
+                (Friendship.user_id_1 == user_id) | (Friendship.user_id_2 == user_id)
+            ).delete(synchronize_session='fetch')
+            print(f"[DELETE ACCOUNT] Deleted friendships")
+            
+            # Delete friend requests involving this user
+            FriendRequest.query.filter(
+                (FriendRequest.from_user_id == user_id) | (FriendRequest.to_user_id == user_id)
+            ).delete(synchronize_session='fetch')
+            print(f"[DELETE ACCOUNT] Deleted friend requests")
+            
+            # Delete old-style availabilities where this user is the planner
+            Availability.query.filter_by(planner_id=user_id).delete()
+            print(f"[DELETE ACCOUNT] Deleted planner availabilities")
+            
+            # Get contacts owned by this user (need to delete related data first)
+            contacts = Contact.query.filter_by(owner_id=user_id).all()
+            for contact in contacts:
+                # Delete notifications referencing this contact
+                Notification.query.filter_by(contact_id=contact.id).delete()
+                # Delete plan guests for this contact
+                PlanGuest.query.filter_by(contact_id=contact.id).delete()
+                # Delete availabilities for this contact
+                Availability.query.filter_by(contact_id=contact.id).delete()
+            
+            # Now delete contacts
+            Contact.query.filter_by(owner_id=user_id).delete()
+            print(f"[DELETE ACCOUNT] Deleted contacts")
+            
+            # Delete plans where user is the planner
+            plans = Plan.query.filter_by(planner_id=user_id).all()
+            for plan in plans:
+                # Delete plan guests
+                PlanGuest.query.filter_by(plan_id=plan.id).delete()
+                # Delete availabilities for this plan
+                Availability.query.filter_by(week_start_date=plan.week_start_date, planner_id=plan.planner_id).delete()
+                db.session.delete(plan)
+            print(f"[DELETE ACCOUNT] Deleted plans")
+            
+            # Finally delete the user
+            db.session.delete(user)
+            db.session.commit()
+            print(f"[DELETE ACCOUNT] User {user_id} deleted successfully")
+            
+            # Clear the session
+            session.clear()
+            
+            return jsonify({'message': 'User deleted successfully'}), 200
+        except Exception as e:
+            db.session.rollback()
+            print(f"[DELETE ACCOUNT] Error: {e}")
+            return jsonify({'error': str(e)}), 500
     
     return jsonify(user.to_dict())
 
