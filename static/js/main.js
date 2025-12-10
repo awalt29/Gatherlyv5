@@ -1600,7 +1600,7 @@ async function loadNotificationFriends() {
     }).join('');
 }
 
-async function toggleNotificationFriend(friendId) {
+function toggleNotificationFriend(friendId) {
     const bubble = document.querySelector(`.notification-friend-bubble[data-friend-id="${friendId}"]`);
     
     if (selectedNotificationFriends.includes(friendId)) {
@@ -1612,8 +1612,9 @@ async function toggleNotificationFriend(friendId) {
         selectedNotificationFriends.push(friendId);
         bubble.classList.add('selected');
     }
-    
-    // Auto-save preferences
+}
+
+async function saveNotificationPreferences() {
     try {
         const response = await fetch(`/api/users/${plannerInfo.id}/notification-friends`, {
             method: 'PUT',
@@ -1623,11 +1624,15 @@ async function toggleNotificationFriend(friendId) {
             body: JSON.stringify({ friend_ids: selectedNotificationFriends })
         });
         
-        if (!response.ok) {
-            console.error('Error saving notification preferences');
+        if (response.ok) {
+            showStatus('Notification preferences saved!', 'success');
+            closeSettings();
+        } else {
+            showStatus('Error saving preferences', 'error');
         }
     } catch (error) {
         console.error('Error saving notification preferences:', error);
+        showStatus('Error saving preferences', 'error');
     }
 }
 
