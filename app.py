@@ -594,9 +594,11 @@ def delete_contact(contact_id):
     owner_id = contact.owner_id
     owner = User.query.get(owner_id)
     
-    # Check if this contact is linked to a user on the platform
-    linked_user = User.query.filter_by(phone_number=contact.phone_number).first()
-    if linked_user:
+    # Check if this contact is linked to a user on the platform (use normalized phone matching)
+    linked_user = find_user_by_phone(contact.phone_number)
+    if linked_user and linked_user.id != owner_id:
+        print(f"[DELETE] Deleting friendship between {owner_id} and {linked_user.id}")
+        
         # Delete the friendship between owner and linked user
         Friendship.query.filter(
             ((Friendship.user_id_1 == owner_id) & (Friendship.user_id_2 == linked_user.id)) |
@@ -610,13 +612,25 @@ def delete_contact(contact_id):
         ).delete()
         
         # Delete the reciprocal contact (the linked user's contact for the owner)
+        # Need to find by normalized phone matching
         if owner:
-            reciprocal_contact = Contact.query.filter_by(
-                owner_id=linked_user.id,
-                phone_number=owner.phone_number
-            ).first()
+            # Find reciprocal contact using normalized phone matching
+            reciprocal_contact = None
+            owner_normalized = normalize_phone(owner.phone_number)
+            owner_digits = re.sub(r'\D', '', owner.phone_number)[-10:] if owner.phone_number else ''
+            
+            # Check all contacts owned by the linked user
+            linked_user_contacts = Contact.query.filter_by(owner_id=linked_user.id).all()
+            for c in linked_user_contacts:
+                c_normalized = normalize_phone(c.phone_number)
+                c_digits = re.sub(r'\D', '', c.phone_number)[-10:] if c.phone_number else ''
+                
+                if c.phone_number == owner.phone_number or c_normalized == owner_normalized or c_digits == owner_digits:
+                    reciprocal_contact = c
+                    break
             
             if reciprocal_contact:
+                print(f"[DELETE] Found reciprocal contact {reciprocal_contact.id}, deleting...")
                 # Delete notifications for reciprocal contact
                 Notification.query.filter_by(contact_id=reciprocal_contact.id).delete()
                 # Delete plan guests for reciprocal contact
@@ -625,6 +639,8 @@ def delete_contact(contact_id):
                 Availability.query.filter_by(contact_id=reciprocal_contact.id).delete()
                 # Delete the reciprocal contact
                 db.session.delete(reciprocal_contact)
+            else:
+                print(f"[DELETE] No reciprocal contact found for owner phone {owner.phone_number}")
     
     # Delete notifications for this contact (to avoid foreign key constraint)
     Notification.query.filter_by(contact_id=contact_id).delete()
