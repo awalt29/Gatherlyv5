@@ -475,11 +475,8 @@ def contacts():
             # Use the provided name
             contact_name = data['name'].strip()
         else:
-            # No name provided and not on platform - return error asking for name
-            return jsonify({
-                'error': 'name_required',
-                'message': 'This person isn\'t on Gatherly. Please provide their name.'
-            }), 400
+            # Not on platform - use phone number as placeholder name
+            contact_name = data['phone_number']
         
         # Get max display_order for this owner to append new contact at the end
         max_order = db.session.query(db.func.max(Contact.display_order)).filter_by(owner_id=data['owner_id']).scalar() or 0

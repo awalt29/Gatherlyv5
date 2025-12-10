@@ -521,9 +521,6 @@ function showFriendsListView() {
     document.getElementById('manageFriendsListView').style.display = 'block';
     // Clear the add form
     document.getElementById('manageFriendPhone').value = '';
-    document.getElementById('manageFriendFirstName').value = '';
-    document.getElementById('manageFriendLastName').value = '';
-    document.getElementById('manageNameFieldsContainer').style.display = 'none';
 }
 
 // Add friend from manage modal
@@ -531,15 +528,6 @@ async function addFriendFromManage(event) {
     event.preventDefault();
     
     const phone = document.getElementById('manageFriendPhone').value.trim();
-    const firstName = document.getElementById('manageFriendFirstName').value.trim();
-    const lastName = document.getElementById('manageFriendLastName').value.trim();
-    const nameFieldsContainer = document.getElementById('manageNameFieldsContainer');
-    
-    // Build name if provided
-    let name = '';
-    if (firstName || lastName) {
-        name = `${firstName} ${lastName}`.trim();
-    }
     
     if (!plannerInfo || !plannerInfo.id) {
         showStatus('Planner not set up', 'error');
@@ -552,7 +540,6 @@ async function addFriendFromManage(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 owner_id: plannerInfo.id,
-                name: name || null, 
                 phone_number: phone 
             })
         });
@@ -584,10 +571,6 @@ async function addFriendFromManage(event) {
             } else {
                 showStatus('Friend added!', 'success');
             }
-        } else if (data.error === 'name_required') {
-            nameFieldsContainer.style.display = 'block';
-            document.getElementById('manageFriendFirstName').focus();
-            showStatus('This person isn\'t on Gatherly. Please add their name.', 'error');
         } else {
             showStatus(data.error || 'Error adding friend', 'error');
         }

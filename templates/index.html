@@ -73,36 +73,6 @@
         </button>
     </div>
 
-    <!-- Add Friend Modal -->
-    <div class="modal" id="addFriendModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Add Friend</h2>
-                <button class="close-btn" onclick="closeAddFriendModal()">×</button>
-            </div>
-            <form onsubmit="addFriend(event)">
-                <div class="form-group">
-                    <label class="form-label">Phone Number</label>
-                    <input type="tel" class="form-input" id="friendPhone" placeholder="+1234567890" required>
-                    <p class="form-hint">Enter their phone number to find them</p>
-                </div>
-                <!-- Name fields shown only if person isn't on the app -->
-                <div id="nameFieldsContainer" style="display: none;">
-                    <p class="form-hint not-found-hint">This person isn't on Gatherly yet. Add their name:</p>
-                    <div class="form-group">
-                        <label class="form-label">First Name</label>
-                        <input type="text" class="form-input" id="friendFirstName">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Last Name</label>
-                        <input type="text" class="form-input" id="friendLastName">
-                    </div>
-                </div>
-                <button type="submit" class="btn-primary">Add Friend</button>
-            </form>
-        </div>
-    </div>
-
     <!-- Setup Modal -->
     <div class="modal active" id="setupModal">
         <div class="modal-content">
@@ -156,18 +126,6 @@
                         <label class="form-label">Phone Number</label>
                         <input type="tel" class="form-input" id="manageFriendPhone" placeholder="+1234567890" required>
                         <p class="form-hint">Enter their phone number to find them</p>
-                    </div>
-                    <!-- Name fields shown only if person isn't on the app -->
-                    <div id="manageNameFieldsContainer" style="display: none;">
-                        <p class="form-hint not-found-hint">This person isn't on Gatherly yet. Add their name:</p>
-                        <div class="form-group">
-                            <label class="form-label">First Name</label>
-                            <input type="text" class="form-input" id="manageFriendFirstName">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Last Name</label>
-                            <input type="text" class="form-input" id="manageFriendLastName">
-                        </div>
                     </div>
                     <button type="submit" class="btn-primary">Add Friend</button>
                 </form>
