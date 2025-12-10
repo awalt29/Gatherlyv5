@@ -464,21 +464,35 @@ def contacts():
         if existing_contact:
             return jsonify(existing_contact.to_dict()), 200
         
+        # Check if this phone number belongs to a registered user on the platform
+        existing_user = find_user_by_phone(data['phone_number'])
+        
+        # Determine the name to use
+        if existing_user and existing_user.id != int(data['owner_id']):
+            # Use the platform user's name
+            contact_name = existing_user.name
+        elif data.get('name') and data['name'].strip():
+            # Use the provided name
+            contact_name = data['name'].strip()
+        else:
+            # No name provided and not on platform - return error asking for name
+            return jsonify({
+                'error': 'name_required',
+                'message': 'This person isn\'t on Gatherly. Please provide their name.'
+            }), 400
+        
         # Get max display_order for this owner to append new contact at the end
         max_order = db.session.query(db.func.max(Contact.display_order)).filter_by(owner_id=data['owner_id']).scalar() or 0
         
         # Create new contact
         contact = Contact(
             owner_id=data['owner_id'],
-            name=data['name'],
+            name=contact_name,
             phone_number=data['phone_number'],
             display_order=max_order + 1
         )
         db.session.add(contact)
         db.session.commit()
-        
-        # Check if this phone number belongs to a registered user on the platform
-        existing_user = find_user_by_phone(data['phone_number'])
         if existing_user and existing_user.id != int(data['owner_id']):
             # Check if there's already a pending/accepted friend request
             existing_request = FriendRequest.query.filter(

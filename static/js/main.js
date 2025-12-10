@@ -260,13 +260,6 @@ function renderFriends() {
         
         friendsList.appendChild(avatar);
     });
-    
-    // Add the "+" button at the end
-    const addBtn = document.createElement('div');
-    addBtn.className = 'friend-avatar add-btn';
-    addBtn.textContent = '+';
-    addBtn.onclick = openAddFriendModal;
-    friendsList.appendChild(addBtn);
 }
 
 // Get initials from name
@@ -510,6 +503,8 @@ function closeAddFriendModal() {
     document.getElementById('friendFirstName').value = '';
     document.getElementById('friendLastName').value = '';
     document.getElementById('friendPhone').value = '';
+    // Hide name fields for next time
+    document.getElementById('nameFieldsContainer').style.display = 'none';
 }
 
 // Open manage friends modal
@@ -677,10 +672,16 @@ async function sendInvite(contactId, contactName) {
 async function addFriend(event) {
     event.preventDefault();
     
+    const phone = document.getElementById('friendPhone').value.trim();
     const firstName = document.getElementById('friendFirstName').value.trim();
     const lastName = document.getElementById('friendLastName').value.trim();
-    const name = `${firstName} ${lastName}`;
-    const phone = document.getElementById('friendPhone').value;
+    const nameFieldsContainer = document.getElementById('nameFieldsContainer');
+    
+    // Build name if provided
+    let name = '';
+    if (firstName || lastName) {
+        name = `${firstName} ${lastName}`.trim();
+    }
     
     if (!plannerInfo || !plannerInfo.id) {
         showStatus('Planner not set up', 'error');
@@ -694,25 +695,26 @@ async function addFriend(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 owner_id: plannerInfo.id,
-                name, 
+                name: name || null, 
                 phone_number: phone 
             })
         });
         
+        const data = await response.json();
+        
         if (response.ok) {
-            const contact = await response.json();
+            const contact = data;
             
             // Add to local array if not already there
             if (!allFriends.find(f => f.id === contact.id)) {
                 allFriends.push(contact);
             }
-            if (!selectedFriends.find(f => f.id === contact.id)) {
+            if (!selectedFriends.find(f => f.id === contact.id) && contact.is_linked) {
                 selectedFriends.push(contact);
             }
             
             renderFriends();
             closeAddFriendModal();
-            updatePlanButton();
             
             // Check if friend is on the platform
             if (contact.is_on_platform === false) {
@@ -725,8 +727,13 @@ async function addFriend(event) {
             } else {
                 showStatus('Friend added!', 'success');
             }
+        } else if (data.error === 'name_required') {
+            // Show name fields and prompt user
+            nameFieldsContainer.style.display = 'block';
+            document.getElementById('friendFirstName').focus();
+            showStatus('This person isn\'t on Gatherly. Please add their name.', 'error');
         } else {
-            showStatus('Error adding friend', 'error');
+            showStatus(data.error || 'Error adding friend', 'error');
         }
     } catch (error) {
         console.error('Error adding friend:', error);

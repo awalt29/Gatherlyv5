@@ -1206,6 +1206,46 @@ h1 {
     color: var(--primary-bg);
 }
 
+/* Add Friend button in Manage Friends modal */
+.btn-add-friend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 15px;
+    background: transparent;
+    border: 2px dashed var(--accent-mint);
+    border-radius: 12px;
+    color: var(--accent-mint);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-add-friend:hover {
+    background: rgba(125, 211, 192, 0.1);
+}
+
+.btn-add-friend .plus-icon {
+    font-size: 20px;
+    font-weight: 300;
+}
+
+/* Form hints */
+.form-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+.not-found-hint {
+    color: var(--accent-mint);
+    margin-bottom: 10px;
+}
+
 .friend-manage-actions {
     display: flex;
     gap: 8px;
