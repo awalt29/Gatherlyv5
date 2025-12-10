@@ -143,7 +143,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
             
             document.getElementById('setupModal').classList.remove('active');
-            loadFriends();
+            // Load friends first (populates selectedFriends), then load availability
+            await loadFriends();
             loadMyAvailability();
             loadFriendsAvailability();
             loadNotifications();
@@ -188,7 +189,8 @@ async function setupPlanner(event) {
             
             document.getElementById('setupModal').classList.remove('active');
             showStatus('Welcome, ' + name + '!', 'success');
-            loadFriends();
+            // Load friends first (populates selectedFriends), then load availability
+            await loadFriends();
             loadMyAvailability();
             loadFriendsAvailability();
             loadNotifications();
@@ -1202,7 +1204,7 @@ async function loadNotifications() {
         if (lastNotificationCount !== null && currentCount > lastNotificationCount) {
             console.log('New notification detected, refreshing data');
             // Refresh friends list (updates status badges like pending -> connected)
-            loadFriends();
+            await loadFriends();
             // Refresh the calendar when new notifications arrive
             loadFriendsAvailability();
         }
@@ -1307,7 +1309,7 @@ async function acceptFriendRequest(requestId) {
         if (response.ok) {
             showStatus('Friend request accepted!', 'success');
             loadNotifications();
-            loadFriends();  // Reload contacts (includes new reciprocal contact)
+            await loadFriends();  // Reload contacts (includes new reciprocal contact)
             loadLinkedFriends();  // Reload linked friends
             loadFriendsAvailability();
         } else {
