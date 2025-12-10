@@ -245,6 +245,63 @@ def auth_signup():
     db.session.add(user)
     db.session.commit()
     
+    # Auto-connect with anyone who has this user as a contact (invited them)
+    # Find contacts with matching phone number
+    new_user_phone_normalized = normalize_phone(data['phone_number'])
+    new_user_digits = re.sub(r'\D', '', data['phone_number'])[-10:] if data['phone_number'] else ''
+    
+    all_contacts = Contact.query.all()
+    for contact in all_contacts:
+        # Check if this contact matches the new user's phone
+        contact_normalized = normalize_phone(contact.phone_number)
+        contact_digits = re.sub(r'\D', '', contact.phone_number)[-10:] if contact.phone_number else ''
+        
+        if (contact.phone_number == data['phone_number'] or 
+            contact_normalized == new_user_phone_normalized or 
+            (contact_digits and contact_digits == new_user_digits)):
+            
+            inviter = User.query.get(contact.owner_id)
+            if inviter and inviter.id != user.id:
+                # Check if friendship doesn't already exist
+                existing_friendship = Friendship.query.filter(
+                    ((Friendship.user_id_1 == inviter.id) & (Friendship.user_id_2 == user.id)) |
+                    ((Friendship.user_id_1 == user.id) & (Friendship.user_id_2 == inviter.id))
+                ).first()
+                
+                if not existing_friendship:
+                    # Create mutual friendship
+                    friendship = Friendship(user_id_1=inviter.id, user_id_2=user.id)
+                    db.session.add(friendship)
+                    
+                    # Update the contact name to the user's actual name
+                    contact.name = user.name
+                    
+                    # Create reciprocal contact for new user
+                    reciprocal_exists = Contact.query.filter_by(
+                        owner_id=user.id,
+                        phone_number=inviter.phone_number
+                    ).first()
+                    
+                    if not reciprocal_exists:
+                        reciprocal_contact = Contact(
+                            owner_id=user.id,
+                            name=inviter.name,
+                            phone_number=inviter.phone_number
+                        )
+                        db.session.add(reciprocal_contact)
+                    
+                    # Notify the inviter
+                    notification = Notification(
+                        planner_id=inviter.id,
+                        contact_id=None,
+                        message=f"{user.name} joined Gatherly! You're now connected."
+                    )
+                    db.session.add(notification)
+                    
+                    print(f"[AUTO-CONNECT] {user.name} auto-connected with {inviter.name} (inviter)")
+    
+    db.session.commit()
+    
     # Log the user in
     session['user_id'] = user.id
     session['user_email'] = user.email
