@@ -687,6 +687,9 @@ def invite_contact(contact_id):
             to=contact.phone_number
         )
         
+        # Mark contact as invited
+        contact.invited_at = datetime.utcnow()
+        
         # Create notification for sender
         notification = Notification(
             planner_id=user.id,
@@ -696,7 +699,7 @@ def invite_contact(contact_id):
         db.session.add(notification)
         db.session.commit()
         
-        return jsonify({'message': 'Invite sent successfully'}), 200
+        return jsonify({'message': 'Invite sent successfully', 'contact': contact.to_dict()}), 200
     except Exception as e:
         print(f"Error sending invite SMS: {e}")
         return jsonify({'error': 'Failed to send invite'}), 500

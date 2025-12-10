@@ -1378,6 +1378,11 @@ h1 {
     color: #FACC15;
 }
 
+.friend-status.invited {
+    background: rgba(91, 163, 255, 0.15);
+    color: #7EB8FF;
+}
+
 .friend-status.not-on-app {
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-muted);

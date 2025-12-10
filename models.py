@@ -71,6 +71,7 @@ class Contact(db.Model):
     name = db.Column(db.String(100), nullable=False)
     phone_number = db.Column(db.String(20), nullable=False)
     display_order = db.Column(db.Integer, default=0)  # Order for displaying contacts
+    invited_at = db.Column(db.DateTime, nullable=True)  # When invite SMS was sent
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # A user can't have duplicate contacts
@@ -134,6 +135,7 @@ class Contact(db.Model):
             'is_linked': is_linked,
             'is_pending': is_pending,
             'linked_user_id': linked_user_id,
+            'invited_at': self.invited_at.isoformat() if self.invited_at else None,
             'created_at': self.created_at.isoformat()
         }
 

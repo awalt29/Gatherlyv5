@@ -622,6 +622,8 @@ function renderManageFriends() {
             statusBadge = '<span class="friend-status linked">✓ Connected</span>';
         } else if (friend.is_pending) {
             statusBadge = '<span class="friend-status pending">⏳ Pending</span>';
+        } else if (friend.invited_at) {
+            statusBadge = '<span class="friend-status invited">✉ Invited</span>';
         } else {
             statusBadge = '<span class="friend-status not-on-app">Not on app</span>';
             showInviteBtn = true;
@@ -734,7 +736,17 @@ async function sendInvite(contactId, contactName) {
         });
         
         if (response.ok) {
+            const data = await response.json();
             showStatus(`Invite sent to ${contactName}!`, 'success');
+            
+            // Update local friend data with invited_at
+            const friendIndex = allFriends.findIndex(f => f.id === contactId);
+            if (friendIndex !== -1 && data.contact) {
+                allFriends[friendIndex] = data.contact;
+            }
+            
+            // Re-render manage friends to hide invite button
+            renderManageFriends();
             loadNotifications();
         } else {
             const data = await response.json();
