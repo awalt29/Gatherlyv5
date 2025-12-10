@@ -509,6 +509,94 @@ function closeAddFriendModal() {
     document.getElementById('nameFieldsContainer').style.display = 'none';
 }
 
+// Show add friend view in manage modal
+function showAddFriendView() {
+    document.getElementById('manageFriendsListView').style.display = 'none';
+    document.getElementById('manageFriendsAddView').style.display = 'block';
+}
+
+// Show friends list view in manage modal
+function showFriendsListView() {
+    document.getElementById('manageFriendsAddView').style.display = 'none';
+    document.getElementById('manageFriendsListView').style.display = 'block';
+    // Clear the add form
+    document.getElementById('manageFriendPhone').value = '';
+    document.getElementById('manageFriendFirstName').value = '';
+    document.getElementById('manageFriendLastName').value = '';
+    document.getElementById('manageNameFieldsContainer').style.display = 'none';
+}
+
+// Add friend from manage modal
+async function addFriendFromManage(event) {
+    event.preventDefault();
+    
+    const phone = document.getElementById('manageFriendPhone').value.trim();
+    const firstName = document.getElementById('manageFriendFirstName').value.trim();
+    const lastName = document.getElementById('manageFriendLastName').value.trim();
+    const nameFieldsContainer = document.getElementById('manageNameFieldsContainer');
+    
+    // Build name if provided
+    let name = '';
+    if (firstName || lastName) {
+        name = `${firstName} ${lastName}`.trim();
+    }
+    
+    if (!plannerInfo || !plannerInfo.id) {
+        showStatus('Planner not set up', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/contacts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                owner_id: plannerInfo.id,
+                name: name || null, 
+                phone_number: phone 
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            const contact = data;
+            
+            // Add to local array if not already there
+            if (!allFriends.find(f => f.id === contact.id)) {
+                allFriends.push(contact);
+            }
+            if (!selectedFriends.find(f => f.id === contact.id) && contact.is_linked) {
+                selectedFriends.push(contact);
+            }
+            
+            renderFriends();
+            renderManageFriends();
+            showFriendsListView();  // Go back to list view
+            
+            // Check if friend is on the platform
+            if (contact.is_on_platform === false) {
+                showInvitePrompt(contact);
+            } else if (contact.is_pending) {
+                showStatus('Friend added! Waiting for them to accept your request.', 'success');
+            } else if (contact.is_linked) {
+                showStatus('Friend added! You\'re already connected.', 'success');
+            } else {
+                showStatus('Friend added!', 'success');
+            }
+        } else if (data.error === 'name_required') {
+            nameFieldsContainer.style.display = 'block';
+            document.getElementById('manageFriendFirstName').focus();
+            showStatus('This person isn\'t on Gatherly. Please add their name.', 'error');
+        } else {
+            showStatus(data.error || 'Error adding friend', 'error');
+        }
+    } catch (error) {
+        console.error('Error adding friend:', error);
+        showStatus('Error adding friend', 'error');
+    }
+}
+
 // Open manage friends modal
 function openManageFriendsModal() {
     renderManageFriends();
@@ -518,6 +606,8 @@ function openManageFriendsModal() {
 // Close manage friends modal
 function closeManageFriendsModal() {
     document.getElementById('manageFriendsModal').classList.remove('active');
+    // Reset to list view for next time
+    showFriendsListView();
 }
 
 // Render manage friends list

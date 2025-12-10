@@ -130,15 +130,47 @@
     <!-- Manage Friends Modal -->
     <div class="modal" id="manageFriendsModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Manage Friends</h2>
-                <button class="close-btn" onclick="closeManageFriendsModal()">×</button>
+            <!-- List View -->
+            <div id="manageFriendsListView">
+                <div class="modal-header">
+                    <h2 class="modal-title">Manage Friends</h2>
+                    <button class="close-btn" onclick="closeManageFriendsModal()">×</button>
+                </div>
+                <button class="btn-add-friend" onclick="showAddFriendView()">
+                    <span class="plus-icon">+</span> Add New Friend
+                </button>
+                <div class="friends-manage-list" id="friendsManageList">
+                    <!-- Friends will be populated here -->
+                </div>
             </div>
-            <button class="btn-add-friend" onclick="closeManageFriendsModal(); openAddFriendModal();">
-                <span class="plus-icon">+</span> Add New Friend
-            </button>
-            <div class="friends-manage-list" id="friendsManageList">
-                <!-- Friends will be populated here -->
+            
+            <!-- Add Friend View -->
+            <div id="manageFriendsAddView" style="display: none;">
+                <div class="modal-header">
+                    <button class="back-btn" onclick="showFriendsListView()">←</button>
+                    <h2 class="modal-title">Add Friend</h2>
+                    <button class="close-btn" onclick="closeManageFriendsModal()">×</button>
+                </div>
+                <form onsubmit="addFriendFromManage(event)">
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" class="form-input" id="manageFriendPhone" placeholder="+1234567890" required>
+                        <p class="form-hint">Enter their phone number to find them</p>
+                    </div>
+                    <!-- Name fields shown only if person isn't on the app -->
+                    <div id="manageNameFieldsContainer" style="display: none;">
+                        <p class="form-hint not-found-hint">This person isn't on Gatherly yet. Add their name:</p>
+                        <div class="form-group">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-input" id="manageFriendFirstName">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-input" id="manageFriendLastName">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Add Friend</button>
+                </form>
             </div>
         </div>
     </div>
