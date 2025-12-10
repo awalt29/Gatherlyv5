@@ -875,9 +875,10 @@ function updateActiveStatus(isActive, daysRemaining) {
     if (!statusEl) return;
     
     if (isActive && daysRemaining > 0) {
-        statusEl.innerHTML = `<span class="active-indicator"><span class="green-dot"></span> Active</span>`;
-        statusEl.style.display = 'block';
+        // Hide when active
+        statusEl.style.display = 'none';
     } else {
+        // Only show when inactive
         statusEl.innerHTML = `<span class="inactive-indicator">Save availability to see friends</span>`;
         statusEl.style.display = 'block';
     }
