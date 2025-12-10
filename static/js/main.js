@@ -871,24 +871,15 @@ async function loadMyAvailability() {
 
 // Update the page title based on active status
 function updateActiveStatus(isActive, daysRemaining) {
-    const titleEl = document.getElementById('pageTitle');
-    if (!titleEl) return;
+    const statusEl = document.getElementById('activeStatus');
+    if (!statusEl) return;
     
     if (isActive && daysRemaining > 0) {
-        let colorClass = 'green';  // 7, 6, 5 days
-        let emoji = '🟢';
-        
-        if (daysRemaining <= 1) {
-            colorClass = 'red';
-            emoji = '🔴';
-        } else if (daysRemaining <= 4) {
-            colorClass = 'yellow';
-            emoji = '🟡';
-        }
-        
-        titleEl.innerHTML = `<span class="status-badge active ${colorClass}">${emoji} ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining</span>`;
+        statusEl.innerHTML = `<span class="active-indicator"><span class="green-dot"></span> Active</span>`;
+        statusEl.style.display = 'block';
     } else {
-        titleEl.innerHTML = `<span class="status-badge inactive">⚪ Not active - save to unlock</span>`;
+        statusEl.innerHTML = `<span class="inactive-indicator">Save availability to see friends</span>`;
+        statusEl.style.display = 'block';
     }
 }
 
