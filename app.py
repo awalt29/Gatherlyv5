@@ -512,13 +512,8 @@ def contacts():
                 )
                 db.session.add(friend_request)
                 
-                # Create notification for the recipient
-                notification = Notification(
-                    planner_id=existing_user.id,
-                    contact_id=None,
-                    message=f"{owner.name} sent you a friend request"
-                )
-                db.session.add(notification)
+                # Note: No separate notification needed for recipient - 
+                # the FriendRequest itself shows as a notification with Accept/Decline
                 
                 # Create notification for the sender
                 sender_notification = Notification(
