@@ -1710,8 +1710,8 @@ async function confirmDeleteAccount() {
             // Show success message
             alert('Your account has been deleted successfully.');
             
-            // Reload page to show setup modal
-            window.location.reload();
+            // Redirect to login page
+            window.location.href = '/login';
         } else {
             showStatus('Error deleting account', 'error');
         }

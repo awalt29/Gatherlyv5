@@ -466,6 +466,22 @@ def get_user(user_id):
         return jsonify(user.to_dict()), 200
     
     if request.method == 'DELETE':
+        # Delete notifications for this user
+        Notification.query.filter_by(planner_id=user_id).delete()
+        
+        # Delete friendships involving this user
+        Friendship.query.filter(
+            (Friendship.user_id_1 == user_id) | (Friendship.user_id_2 == user_id)
+        ).delete()
+        
+        # Delete friend requests involving this user
+        FriendRequest.query.filter(
+            (FriendRequest.from_user_id == user_id) | (FriendRequest.to_user_id == user_id)
+        ).delete()
+        
+        # Delete availabilities for this user
+        Availability.query.filter_by(user_id=user_id).delete()
+        
         # Delete all contacts owned by this user
         Contact.query.filter_by(owner_id=user_id).delete()
         
@@ -480,6 +496,10 @@ def get_user(user_id):
         # Finally delete the user
         db.session.delete(user)
         db.session.commit()
+        
+        # Clear the session
+        session.clear()
+        
         return jsonify({'message': 'User deleted successfully'}), 200
     
     return jsonify(user.to_dict())
