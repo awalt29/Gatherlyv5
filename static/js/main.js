@@ -1564,8 +1564,8 @@ async function loadNotificationFriends() {
     
     if (!container) return;
     
-    // Get linked friends (friends with accepted status)
-    const linkedFriends = allFriends.filter(f => f.status === 'accepted');
+    // Get linked friends (friends with accepted friendship)
+    const linkedFriends = allFriends.filter(f => f.is_linked);
     
     if (linkedFriends.length === 0) {
         container.innerHTML = '';
