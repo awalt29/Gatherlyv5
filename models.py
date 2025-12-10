@@ -23,7 +23,8 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     phone_number = db.Column(db.String(20), nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    reminder_days = db.Column(db.JSON, default=lambda: ["monday", "tuesday", "wednesday", "thursday"])  # List of days to send reminders
+    reminder_days = db.Column(db.JSON, default=lambda: ["monday", "tuesday", "wednesday", "thursday"])  # Legacy - kept for compatibility
+    notification_friend_ids = db.Column(db.JSON, default=list)  # List of friend user IDs to notify about availability updates
     timezone = db.Column(db.String(50), default='America/New_York')  # User's timezone
     weekly_availability_date = db.Column(db.Date)  # Date of the Monday when user submitted availability this week
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

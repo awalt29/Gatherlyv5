@@ -444,6 +444,22 @@ def user_reminders(user_id):
     return jsonify({'reminder_days': user.reminder_days or []}), 200
 
 
+@app.route('/api/users/<int:user_id>/notification-friends', methods=['GET', 'PUT'])
+def notification_friends(user_id):
+    """Get or update which friends to notify about availability updates"""
+    user = User.query.get_or_404(user_id)
+    
+    if request.method == 'PUT':
+        data = request.json
+        friend_ids = data.get('friend_ids', [])
+        user.notification_friend_ids = friend_ids
+        db.session.commit()
+        return jsonify({'message': 'Notification preferences updated', 'friend_ids': user.notification_friend_ids}), 200
+    
+    # GET request - return friend IDs
+    return jsonify({'friend_ids': user.notification_friend_ids or []}), 200
+
+
 # API Routes - Contacts
 @app.route('/api/contacts', methods=['GET', 'POST'])
 def contacts():
@@ -894,6 +910,24 @@ def my_availability():
         db.session.commit()
         
         print(f"[AVAILABILITY] {user.name} saved availability with {len(time_slots)} slots, active until {today + timedelta(days=7)}")
+        
+        # Notify friends who are watching this user
+        # Find users who have this user in their notification_friend_ids
+        all_users = User.query.filter(User.notification_friend_ids.isnot(None)).all()
+        
+        for watcher in all_users:
+            # Check if this user is in their notification list
+            if watcher.notification_friend_ids and user_id in watcher.notification_friend_ids:
+                # Check if they're actually linked friends
+                if Friendship.are_friends(watcher.id, user_id):
+                    notification = Notification(
+                        planner_id=watcher.id,
+                        contact_id=None,
+                        message=f"{user.name} updated their availability"
+                    )
+                    db.session.add(notification)
+        
+        db.session.commit()
         
         return jsonify({
             'message': 'Availability saved',

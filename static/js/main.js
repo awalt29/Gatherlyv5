@@ -1495,9 +1495,9 @@ async function openSettings() {
         </div>
     `;
     
-    // Load timezone and reminder preferences
+    // Load timezone and notification preferences
     await loadTimezone();
-    await loadReminderPreferences();
+    await loadNotificationFriends();
     
     document.getElementById('settingsModal').classList.add('active');
 }
@@ -1555,56 +1555,79 @@ async function updateAccount(event) {
     }
 }
 
-// Reminder preferences functions
-async function loadReminderPreferences() {
-    try {
-        const response = await fetch(`/api/users/${plannerInfo.id}/reminders`);
-        const data = await response.json();
-        
-        // Uncheck all checkboxes first
-        document.querySelectorAll('input[name="reminder-day"]').forEach(cb => {
-            cb.checked = false;
-        });
-        
-        // Check the boxes for selected days
-        if (data.reminder_days && Array.isArray(data.reminder_days)) {
-            data.reminder_days.forEach(day => {
-                const checkbox = document.querySelector(`input[name="reminder-day"][value="${day}"]`);
-                if (checkbox) {
-                    checkbox.checked = true;
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Error loading reminder preferences:', error);
+// Notification friends functions
+let selectedNotificationFriends = [];
+
+async function loadNotificationFriends() {
+    const container = document.getElementById('notificationFriendsList');
+    const noFriendsHint = document.getElementById('noLinkedFriendsHint');
+    
+    if (!container) return;
+    
+    // Get linked friends (friends with accepted status)
+    const linkedFriends = allFriends.filter(f => f.status === 'accepted');
+    
+    if (linkedFriends.length === 0) {
+        container.innerHTML = '';
+        noFriendsHint.style.display = 'block';
+        return;
     }
+    
+    noFriendsHint.style.display = 'none';
+    
+    // Load saved notification preferences
+    try {
+        const response = await fetch(`/api/users/${plannerInfo.id}/notification-friends`);
+        const data = await response.json();
+        selectedNotificationFriends = data.friend_ids || [];
+    } catch (error) {
+        console.error('Error loading notification preferences:', error);
+        selectedNotificationFriends = [];
+    }
+    
+    // Render friend bubbles
+    container.innerHTML = linkedFriends.map(friend => {
+        const initials = getInitials(friend.name);
+        const isSelected = selectedNotificationFriends.includes(friend.linked_user_id);
+        return `
+            <div class="notification-friend-bubble ${isSelected ? 'selected' : ''}" 
+                 data-friend-id="${friend.linked_user_id}"
+                 title="${friend.name}"
+                 onclick="toggleNotificationFriend(${friend.linked_user_id})">
+                ${initials}
+            </div>
+        `;
+    }).join('');
 }
 
-async function saveReminderPreferences() {
+async function toggleNotificationFriend(friendId) {
+    const bubble = document.querySelector(`.notification-friend-bubble[data-friend-id="${friendId}"]`);
+    
+    if (selectedNotificationFriends.includes(friendId)) {
+        // Remove from list
+        selectedNotificationFriends = selectedNotificationFriends.filter(id => id !== friendId);
+        bubble.classList.remove('selected');
+    } else {
+        // Add to list
+        selectedNotificationFriends.push(friendId);
+        bubble.classList.add('selected');
+    }
+    
+    // Auto-save preferences
     try {
-        // Get selected days
-        const selectedDays = [];
-        document.querySelectorAll('input[name="reminder-day"]:checked').forEach(cb => {
-            selectedDays.push(cb.value);
-        });
-        
-        const response = await fetch(`/api/users/${plannerInfo.id}/reminders`, {
+        const response = await fetch(`/api/users/${plannerInfo.id}/notification-friends`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ reminder_days: selectedDays })
+            body: JSON.stringify({ friend_ids: selectedNotificationFriends })
         });
         
-        if (response.ok) {
-            showStatus('Reminder preferences saved!', 'success');
-            closeSettings(); // Auto-close modal after saving
-        } else {
-            showStatus('Error saving preferences', 'error');
+        if (!response.ok) {
+            console.error('Error saving notification preferences');
         }
     } catch (error) {
-        console.error('Error saving reminder preferences:', error);
-        showStatus('Error saving preferences', 'error');
+        console.error('Error saving notification preferences:', error);
     }
 }
 
