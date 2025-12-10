@@ -687,9 +687,6 @@ def invite_contact(contact_id):
             to=contact.phone_number
         )
         
-        # Mark contact as invited
-        contact.invited_at = datetime.utcnow()
-        
         # Create notification for sender
         notification = Notification(
             planner_id=user.id,
