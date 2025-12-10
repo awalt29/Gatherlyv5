@@ -617,16 +617,12 @@ function renderManageFriends() {
         
         // Determine status badge
         let statusBadge = '';
-        let showInviteBtn = false;
         if (friend.is_linked) {
             statusBadge = '<span class="friend-status linked">✓ Connected</span>';
         } else if (friend.is_pending) {
             statusBadge = '<span class="friend-status pending">⏳ Pending</span>';
-        } else if (friend.invited_at) {
-            statusBadge = '<span class="friend-status invited">✉ Invited</span>';
         } else {
             statusBadge = '<span class="friend-status not-on-app">Not on app</span>';
-            showInviteBtn = true;
         }
         
         item.innerHTML = `
@@ -640,7 +636,6 @@ function renderManageFriends() {
                 </div>
             </div>
             <div class="friend-manage-actions">
-                ${showInviteBtn ? '<button class="btn-invite">Invite</button>' : ''}
                 <button class="btn-delete">Delete</button>
             </div>
         `;
@@ -648,12 +643,6 @@ function renderManageFriends() {
         // Add delete handler
         const deleteBtn = item.querySelector('.btn-delete');
         deleteBtn.onclick = () => deleteFriend(friend.id);
-        
-        // Add invite handler if applicable
-        if (showInviteBtn) {
-            const inviteBtn = item.querySelector('.btn-invite');
-            inviteBtn.onclick = () => sendInvite(friend.id, friend.name);
-        }
         
         // Get the drag handle
         const dragHandle = item.querySelector('.friend-manage-drag-handle');
@@ -729,35 +718,6 @@ function showInvitePrompt(contact) {
 }
 
 // Send invite SMS to contact
-async function sendInvite(contactId, contactName) {
-    try {
-        const response = await fetch(`/api/contacts/${contactId}/invite`, {
-            method: 'POST'
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            showStatus(`Invite sent to ${contactName}!`, 'success');
-            
-            // Update local friend data with invited_at
-            const friendIndex = allFriends.findIndex(f => f.id === contactId);
-            if (friendIndex !== -1 && data.contact) {
-                allFriends[friendIndex] = data.contact;
-            }
-            
-            // Re-render manage friends to hide invite button
-            renderManageFriends();
-            loadNotifications();
-        } else {
-            const data = await response.json();
-            showStatus(data.error || 'Failed to send invite', 'error');
-        }
-    } catch (error) {
-        console.error('Error sending invite:', error);
-        showStatus('Error sending invite', 'error');
-    }
-}
-
 // Add contact (friend)
 async function addFriend(event) {
     event.preventDefault();
