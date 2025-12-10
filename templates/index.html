@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="container">
+    <div class="container" style="opacity: 0; transition: opacity 0.2s ease;">
         <!-- Header -->
         <div class="header">
             <div class="app-name">
@@ -74,7 +74,7 @@
     </div>
 
     <!-- Setup Modal -->
-    <div class="modal active" id="setupModal">
+    <div class="modal" id="setupModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Welcome to Gatherly!</h2>

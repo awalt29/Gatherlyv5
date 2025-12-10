@@ -142,6 +142,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 email: data.user.email
             };
             
+            // Show the main content now that we're authenticated
+            document.querySelector('.container').style.opacity = '1';
             document.getElementById('setupModal').classList.remove('active');
             // Load friends first (populates selectedFriends), then load availability
             await loadFriends();
