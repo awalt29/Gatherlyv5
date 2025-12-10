@@ -212,6 +212,10 @@ async function loadFriends() {
         const contacts = await response.json();
         
         allFriends = contacts;
+        
+        // Auto-select all linked friends by default (so their availability shows)
+        selectedFriends = contacts.filter(c => c.is_linked);
+        
         renderFriends();
     } catch (error) {
         console.error('Error loading contacts:', error);
@@ -483,13 +487,16 @@ function toggleFriend(friend) {
     const index = selectedFriends.findIndex(f => f.id === friend.id);
     
     if (index > -1) {
+        // Deselecting - hide their availability
         selectedFriends.splice(index, 1);
     } else {
+        // Selecting - show their availability
         selectedFriends.push(friend);
     }
     
     renderFriends();
-    updatePlanButton();
+    // Re-display friends availability with the new filter
+    displayFriendsAvailability();
 }
 
 // Open add friend modal
@@ -891,9 +898,21 @@ function displayFriendsAvailability() {
     
     if (friendsAvailability.length === 0) return;
     
+    // Get selected friend user IDs (linked_user_id from contacts)
+    const selectedUserIds = selectedFriends
+        .filter(f => f.linked_user_id)
+        .map(f => f.linked_user_id);
+    
+    // Filter availability to only selected friends
+    const filteredAvailability = friendsAvailability.filter(avail => 
+        selectedUserIds.includes(avail.user_id)
+    );
+    
+    if (filteredAvailability.length === 0) return;
+    
     // Group friends by slot
     const slotFriends = {};
-    friendsAvailability.forEach(avail => {
+    filteredAvailability.forEach(avail => {
         avail.time_slots.forEach(slot => {
             const key = `${slot.date}-${slot.slot}`;
             if (!slotFriends[key]) slotFriends[key] = [];
