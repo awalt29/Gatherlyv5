@@ -534,7 +534,7 @@ def contacts():
                     contact_id=None,
                     message=f"Friend request sent to {existing_user.name}"
                 )
-                db.session.add(notification)
+                db.session.add(sender_notification)
                 db.session.commit()
                 
                 print(f"[FRIEND REQUEST] {owner.name} sent friend request to {existing_user.name}")
