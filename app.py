@@ -1000,6 +1000,21 @@ def my_availability():
             week_start_date=monday
         ).first()
         
+        # Check if there are NEW slots being added (for notifications)
+        old_slots = set()
+        if availability:
+            # Get existing slots as a set for comparison
+            for slot in availability.time_slots:
+                old_slots.add(f"{slot['date']}_{slot['slot']}")
+        
+        new_slots = set()
+        for slot in time_slots:
+            new_slots.add(f"{slot['date']}_{slot['slot']}")
+        
+        # Check if any genuinely new slots were added
+        added_slots = new_slots - old_slots
+        has_new_availability = len(added_slots) > 0
+        
         if availability:
             # Update existing
             availability.time_slots = time_slots
@@ -1019,31 +1034,33 @@ def my_availability():
         db.session.commit()
         
         print(f"[AVAILABILITY] {user.name} saved availability with {len(time_slots)} slots, active until {today + timedelta(days=7)}")
+        print(f"[AVAILABILITY] New slots added: {len(added_slots)}, will notify: {has_new_availability}")
         
-        # Notify friends who are watching this user
-        # Find users who have this user in their notification_friend_ids
-        all_users = User.query.filter(User.notification_friend_ids.isnot(None)).all()
-        
-        for watcher in all_users:
-            # Check if this user is in their notification list
-            if watcher.notification_friend_ids and user_id in watcher.notification_friend_ids:
-                # Check if they're actually linked friends
-                if Friendship.are_friends(watcher.id, user_id):
-                    # In-app notification
-                    notification = Notification(
-                        planner_id=watcher.id,
-                        contact_id=None,
-                        message=f"{user.name} updated their availability"
-                    )
-                    db.session.add(notification)
-                    
-                    # Send SMS notification
-                    base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
-                    sms_message = f"{user.name} just updated their availability on Gatherly! Check it out: {base_url}"
-                    send_sms(watcher.phone_number, sms_message)
-                    print(f"[AVAILABILITY NOTIFY] Sent SMS to {watcher.name} about {user.name}'s availability")
-        
-        db.session.commit()
+        # Only notify friends if NEW availability was added (not just removed)
+        if has_new_availability:
+            # Find users who have this user in their notification_friend_ids
+            all_users = User.query.filter(User.notification_friend_ids.isnot(None)).all()
+            
+            for watcher in all_users:
+                # Check if this user is in their notification list
+                if watcher.notification_friend_ids and user_id in watcher.notification_friend_ids:
+                    # Check if they're actually linked friends
+                    if Friendship.are_friends(watcher.id, user_id):
+                        # In-app notification
+                        notification = Notification(
+                            planner_id=watcher.id,
+                            contact_id=None,
+                            message=f"{user.name} added new availability"
+                        )
+                        db.session.add(notification)
+                        
+                        # Send SMS notification
+                        base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
+                        sms_message = f"{user.name} just added availability on Gatherly! Check it out: {base_url}"
+                        send_sms(watcher.phone_number, sms_message)
+                        print(f"[AVAILABILITY NOTIFY] Sent SMS to {watcher.name} about {user.name}'s new availability")
+            
+            db.session.commit()
         
         return jsonify({
             'message': 'Availability saved',
