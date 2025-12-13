@@ -245,15 +245,8 @@ function renderFriends() {
             avatar.classList.add('selected');
         }
         
-        // Show linked badge for friends who are on the platform
-        if (friend.is_linked) {
-            avatar.classList.add('linked');
-            const badge = document.createElement('span');
-            badge.className = 'linked-badge';
-            badge.textContent = '✓';
-            avatar.appendChild(badge);
-        } else if (friend.is_pending) {
-            // Show pending badge for awaiting response
+        // Show pending badge for awaiting response
+        if (friend.is_pending) {
             avatar.classList.add('pending');
             const badge = document.createElement('span');
             badge.className = 'pending-badge';
