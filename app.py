@@ -661,15 +661,22 @@ def contacts():
 @app.route('/api/contacts/<int:contact_id>/invite', methods=['POST'])
 def invite_contact(contact_id):
     """Send an SMS invite to a contact who isn't on the platform"""
+    print(f"[INVITE] Starting invite for contact {contact_id}")
+    
     if 'user_id' not in session:
+        print(f"[INVITE] Not authenticated")
         return jsonify({'error': 'Not authenticated'}), 401
     
     contact = Contact.query.get_or_404(contact_id)
     user = User.query.get(session['user_id'])
     
+    print(f"[INVITE] Contact: {contact.name}, Phone: {contact.phone_number}")
+    print(f"[INVITE] User: {user.name}")
+    
     # Check if contact is already on platform
     existing_user = find_user_by_phone(contact.phone_number)
     if existing_user:
+        print(f"[INVITE] Contact already on platform")
         return jsonify({'error': 'This person is already on Gatherly'}), 400
     
     # Send invite SMS
@@ -677,18 +684,26 @@ def invite_contact(contact_id):
     if not app_url.startswith('http'):
         app_url = f'https://{app_url}'
     
-    message = f"Hey {contact.name.split()[0]}! {user.name} wants to plan hangouts with you on Gatherly. Join here: {app_url}"
+    # Get first name - if name is just a phone number, use "there" instead
+    first_name = contact.name.split()[0] if contact.name else "there"
+    if first_name.isdigit():
+        first_name = "there"
+    
+    message = f"Hey {first_name}! {user.name} wants to plan hangouts with you on Gatherly. Join here: {app_url}"
+    print(f"[INVITE] Message: {message}")
+    print(f"[INVITE] Sending to: {contact.phone_number}")
     
     try:
         twilio_client = Client(
             os.getenv('TWILIO_ACCOUNT_SID'),
             os.getenv('TWILIO_AUTH_TOKEN')
         )
-        twilio_client.messages.create(
+        result = twilio_client.messages.create(
             body=message,
             from_=os.getenv('TWILIO_PHONE_NUMBER'),
             to=contact.phone_number
         )
+        print(f"[INVITE] SMS sent successfully, SID: {result.sid}")
         
         # Create notification for sender
         notification = Notification(
@@ -701,8 +716,10 @@ def invite_contact(contact_id):
         
         return jsonify({'message': 'Invite sent successfully', 'contact': contact.to_dict()}), 200
     except Exception as e:
-        print(f"Error sending invite SMS: {e}")
-        return jsonify({'error': 'Failed to send invite'}), 500
+        print(f"[INVITE] Error sending invite SMS: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to send invite: {str(e)}'}), 500
 
 
 @app.route('/api/contacts/<int:contact_id>', methods=['DELETE'])
