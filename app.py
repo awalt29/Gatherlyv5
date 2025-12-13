@@ -730,7 +730,7 @@ def invite_contact(contact_id):
     if first_name.isdigit():
         first_name = "there"
     
-    message = f"Hey {first_name}! {user.name} wants to plan hangouts with you on Gatherly. Join here: {app_url}"
+    message = f"Hey {first_name}! {user.name} wants to share availability with you on Gatherly. Join here: {app_url}"
     print(f"[INVITE] Message: {message}")
     print(f"[INVITE] Sending to: {contact.phone_number}")
     
