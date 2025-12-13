@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from flask_cors import CORS
 from flask_migrate import Migrate
 from models import db, User, Contact, Plan, PlanGuest, Availability, Notification, PasswordReset, FriendRequest, Friendship, UserAvailability
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from twilio.rest import Client
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, To, Content
