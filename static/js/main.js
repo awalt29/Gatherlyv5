@@ -718,6 +718,25 @@ function showInvitePrompt(contact) {
 }
 
 // Send invite SMS to contact
+async function sendInvite(contactId, contactName) {
+    try {
+        const response = await fetch(`/api/contacts/${contactId}/invite`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            showStatus(`Invite sent to ${contactName}!`, 'success');
+            loadNotifications();
+        } else {
+            const data = await response.json();
+            showStatus(data.error || 'Failed to send invite', 'error');
+        }
+    } catch (error) {
+        console.error('Error sending invite:', error);
+        showStatus('Error sending invite', 'error');
+    }
+}
+
 // Add contact (friend)
 async function addFriend(event) {
     event.preventDefault();
