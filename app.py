@@ -725,12 +725,7 @@ def invite_contact(contact_id):
     if not app_url.startswith('http'):
         app_url = f'https://{app_url}'
     
-    # Get first name - if name is just a phone number, use "there" instead
-    first_name = contact.name.split()[0] if contact.name else "there"
-    if first_name.isdigit():
-        first_name = "there"
-    
-    message = f"Hey {first_name}! {user.name} wants to share availability with you on Gatherly. Join here: {app_url}"
+    message = f"Hey! {user.name} wants to share availability with you on Gatherly. Join here: {app_url}"
     print(f"[INVITE] Message: {message}")
     print(f"[INVITE] Sending to: {contact.phone_number}")
     
