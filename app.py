@@ -505,6 +505,34 @@ def get_user(user_id):
             ).delete(synchronize_session='fetch')
             print(f"[DELETE ACCOUNT] Deleted friend requests")
             
+            # Remove this user from everyone's notification_friend_ids
+            all_users = User.query.filter(User.notification_friend_ids.isnot(None)).all()
+            for other_user in all_users:
+                if other_user.notification_friend_ids and user_id in other_user.notification_friend_ids:
+                    other_user.notification_friend_ids = [uid for uid in other_user.notification_friend_ids if uid != user_id]
+            print(f"[DELETE ACCOUNT] Removed from notification lists")
+            
+            # Delete contacts in OTHER users' lists that reference this user (by phone number)
+            user_phone = user.phone_number
+            user_phone_normalized = normalize_phone(user_phone)
+            user_digits = re.sub(r'\D', '', user_phone)[-10:] if user_phone else ''
+            
+            # Find all contacts that match this user's phone number
+            all_contacts = Contact.query.filter(Contact.owner_id != user_id).all()
+            for contact in all_contacts:
+                contact_normalized = normalize_phone(contact.phone_number)
+                contact_digits = re.sub(r'\D', '', contact.phone_number)[-10:] if contact.phone_number else ''
+                
+                if (contact.phone_number == user_phone or 
+                    contact_normalized == user_phone_normalized or 
+                    (contact_digits and contact_digits == user_digits)):
+                    # Delete related data first
+                    Notification.query.filter_by(contact_id=contact.id).delete()
+                    PlanGuest.query.filter_by(contact_id=contact.id).delete()
+                    Availability.query.filter_by(contact_id=contact.id).delete()
+                    db.session.delete(contact)
+            print(f"[DELETE ACCOUNT] Deleted contacts from other users' lists")
+            
             # Delete old-style availabilities where this user is the planner
             Availability.query.filter_by(planner_id=user_id).delete()
             print(f"[DELETE ACCOUNT] Deleted planner availabilities")
