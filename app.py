@@ -293,6 +293,19 @@ def auth_signup():
                         )
                         db.session.add(reciprocal_contact)
                     
+                    # Auto-enable availability notifications for both users
+                    # Add inviter to new user's notification list
+                    if user.notification_friend_ids is None:
+                        user.notification_friend_ids = []
+                    if inviter.id not in user.notification_friend_ids:
+                        user.notification_friend_ids = user.notification_friend_ids + [inviter.id]
+                    
+                    # Add new user to inviter's notification list
+                    if inviter.notification_friend_ids is None:
+                        inviter.notification_friend_ids = []
+                    if user.id not in inviter.notification_friend_ids:
+                        inviter.notification_friend_ids = inviter.notification_friend_ids + [user.id]
+                    
                     # Notify the inviter
                     notification = Notification(
                         planner_id=inviter.id,
@@ -873,6 +886,19 @@ def accept_friend_request(request_id):
             display_order=max_order + 1
         )
         db.session.add(new_contact)
+    
+    # Auto-enable availability notifications for both users
+    # Add from_user to current_user's notification list
+    if current_user.notification_friend_ids is None:
+        current_user.notification_friend_ids = []
+    if from_user.id not in current_user.notification_friend_ids:
+        current_user.notification_friend_ids = current_user.notification_friend_ids + [from_user.id]
+    
+    # Add current_user to from_user's notification list
+    if from_user.notification_friend_ids is None:
+        from_user.notification_friend_ids = []
+    if current_user.id not in from_user.notification_friend_ids:
+        from_user.notification_friend_ids = from_user.notification_friend_ids + [current_user.id]
     
     # Create notification for the person who sent the request
     notification = Notification(
