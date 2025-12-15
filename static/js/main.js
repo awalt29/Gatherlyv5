@@ -3,6 +3,7 @@ let plannerInfo = null;
 let selectedFriends = [];
 let allFriends = [];
 let selectedTimeSlots = [];
+let originalTimeSlots = []; // Track the saved state to detect changes
 let currentPlanId = null;
 let planningMode = 'setup'; // setup, selecting, planning, viewing
 let weekDays = []; // Store the 7 days of current week starting from today
@@ -831,13 +832,27 @@ function setupCalendar() {
     });
 }
 
+// Check if user has made changes from the saved state
+function hasAvailabilityChanges() {
+    // Create sets for comparison (date_slot format)
+    const currentSet = new Set(selectedTimeSlots.map(s => `${s.date}_${s.slot}`));
+    const originalSet = new Set(originalTimeSlots.map(s => `${s.date}_${s.slot}`));
+    
+    // Check if sets are different
+    if (currentSet.size !== originalSet.size) return true;
+    for (const slot of currentSet) {
+        if (!originalSet.has(slot)) return true;
+    }
+    return false;
+}
+
 // Update plan button state
 function updatePlanButton() {
     const button = document.getElementById('planButton');
-    // Only require time slots to be selected (no longer need friends selected)
-    const hasTimeSlots = selectedTimeSlots.length > 0;
+    // Button should only be active when user has made changes from saved state
+    const hasChanges = hasAvailabilityChanges();
     
-    if (hasTimeSlots) {
+    if (hasChanges) {
         button.classList.remove('inactive');
         button.disabled = false;
     } else {
@@ -859,6 +874,8 @@ async function loadMyAvailability() {
             if (data.availability && data.availability.time_slots) {
                 // Populate selectedTimeSlots with saved data
                 selectedTimeSlots = data.availability.time_slots;
+                // Store original state to track changes
+                originalTimeSlots = JSON.parse(JSON.stringify(data.availability.time_slots));
                 
                 // Update the calendar display
                 selectedTimeSlots.forEach(slot => {
@@ -870,10 +887,14 @@ async function loadMyAvailability() {
                     }
                 });
                 
-                // Update button state
+                // Update button state (will be inactive since no changes yet)
                 updatePlanButton();
                 
                 console.log('Loaded my availability:', selectedTimeSlots.length, 'slots');
+            } else {
+                // No saved availability - reset original state
+                originalTimeSlots = [];
+                updatePlanButton();
             }
         }
     } catch (error) {
@@ -915,9 +936,11 @@ async function saveMyAvailability() {
         if (response.ok) {
             const data = await response.json();
             showStatus('Availability saved! Your friends can now see when you\'re free.', 'success');
+            // Update original state to match current (no more "changes")
+            originalTimeSlots = JSON.parse(JSON.stringify(selectedTimeSlots));
             updateActiveStatus(true, 7);  // Just saved = 7 days remaining
             loadFriendsAvailability();
-            updatePlanButton();
+            updatePlanButton();  // Will now be inactive since no changes
         } else {
             const data = await response.json();
             showStatus(data.error || 'Error saving availability', 'error');
