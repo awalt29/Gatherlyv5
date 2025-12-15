@@ -994,20 +994,16 @@ def get_friends():
 
 @app.route('/api/friends/availability', methods=['GET'])
 def get_friends_availability():
-    """Get availability of all linked friends for the current week (only if user is active)"""
+    """Get availability of all linked friends (only if user is active within rolling 7-day window)"""
     if 'user_id' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
     
     user_id = session['user_id']
     user = User.query.get(user_id)
     
-    # Check if user is active this week (has submitted availability)
+    # Check if user is active (has submitted availability within last 7 days)
     if not user.is_active_this_week():
         return jsonify({'error': 'You must save your availability to see friends\' availability', 'active': False}), 403
-    
-    # Get current week's Monday
-    today = datetime.utcnow().date()
-    monday = today - timedelta(days=today.weekday())
     
     # Find all friendships
     friendships = Friendship.query.filter(
@@ -1019,16 +1015,15 @@ def get_friends_availability():
         friend_id = f.user_id_2 if f.user_id_1 == user_id else f.user_id_1
         friend_ids.append(friend_id)
     
-    # Get availability for all friends who are also active this week
+    # Get availability for all friends who are also active (saved within last 7 days)
     availabilities = []
     for friend_id in friend_ids:
         friend = User.query.get(friend_id)
         if friend and friend.is_active_this_week():
-            # Get their availability for this week
+            # Get their most recent availability (not filtered by week)
             avail = UserAvailability.query.filter_by(
-                user_id=friend_id,
-                week_start_date=monday
-            ).first()
+                user_id=friend_id
+            ).order_by(UserAvailability.updated_at.desc()).first()
             if avail:
                 availabilities.append({
                     'user_id': friend.id,
@@ -1135,7 +1130,7 @@ def my_availability():
             'days_remaining': 7
         })
     
-    # GET - return user's availability (get most recent if active)
+    # GET - return user's availability (get most recent)
     # Calculate days remaining based on when they last saved
     days_remaining = 0
     is_active = False
@@ -1144,21 +1139,10 @@ def my_availability():
         days_remaining = max(0, 7 - days_since)
         is_active = days_remaining > 0
     
-    # Query by the Monday of the week when they saved (not current Monday)
-    availability = None
-    if user.weekly_availability_date:
-        saved_monday = user.weekly_availability_date - timedelta(days=user.weekly_availability_date.weekday())
-        availability = UserAvailability.query.filter_by(
-            user_id=user_id,
-            week_start_date=saved_monday
-        ).first()
-    
-    # Also check current Monday in case they just saved
-    if not availability:
-        availability = UserAvailability.query.filter_by(
-            user_id=user_id,
-            week_start_date=monday
-        ).first()
+    # Get the most recent availability for this user
+    availability = UserAvailability.query.filter_by(
+        user_id=user_id
+    ).order_by(UserAvailability.updated_at.desc()).first()
     
     if availability and is_active:
         return jsonify({
