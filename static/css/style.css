@@ -833,7 +833,7 @@ h1 {
 
 .calendar-header {
     display: grid;
-    grid-template-columns: 30px repeat(14, 43px);
+    grid-template-columns: 25px repeat(14, 43px);
     gap: 4px;
     margin-bottom: 4px;
     width: fit-content;
@@ -865,7 +865,7 @@ h1 {
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: 30px repeat(14, 43px);
+    grid-template-columns: 25px repeat(14, 43px);
     gap: 4px;
     width: fit-content;
 }
