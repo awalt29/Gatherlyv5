@@ -735,8 +735,9 @@ h1 {
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     position: relative;
+    padding-left: 20px;
 }
 
 /* Scroll hint gradient on right edge */
@@ -746,10 +747,10 @@ h1 {
     right: 0;
     top: 40px;
     bottom: 0;
-    width: 30px;
+    width: 40px;
     background: linear-gradient(to right, transparent, var(--primary-bg));
     pointer-events: none;
-    opacity: 0.8;
+    opacity: 0.9;
     transition: opacity 0.3s;
 }
 
@@ -823,6 +824,9 @@ h1 {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
+    max-width: calc(100vw - 40px);
+    touch-action: pan-x;
+    user-select: none;
 }
 
 .calendar::-webkit-scrollbar {
@@ -831,11 +835,10 @@ h1 {
 
 .calendar-header {
     display: grid;
-    grid-template-columns: 20px repeat(14, 43px);
+    grid-template-columns: 40px repeat(14, 43px);
     gap: 4px;
     margin-bottom: 4px;
-    width: max-content;
-    min-width: 100%;
+    width: fit-content;
 }
 
 .day-label {
@@ -864,10 +867,9 @@ h1 {
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: 20px repeat(14, 43px);
+    grid-template-columns: 40px repeat(14, 43px);
     gap: 4px;
-    width: max-content;
-    min-width: 100%;
+    width: fit-content;
 }
 
 .time-label {
