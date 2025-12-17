@@ -74,6 +74,30 @@
         </button>
     </div>
 
+    <!-- Slot Popup Menu -->
+    <div class="slot-popup" id="slotPopup">
+        <button class="slot-popup-option" id="popupToggleAvailability" onclick="toggleSlotFromPopup()">
+            <span id="popupToggleText">Add availability</span>
+        </button>
+        <button class="slot-popup-option" id="popupPlan" onclick="openPlanModal()">
+            Plan
+        </button>
+    </div>
+
+    <!-- Plan Modal -->
+    <div class="modal" id="planModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="planModalTitle">Who's Free?</h2>
+                <button class="close-btn" onclick="closePlanModal()">&times;</button>
+            </div>
+            <div class="plan-modal-body">
+                <div class="plan-slot-info" id="planSlotInfo"></div>
+                <div class="plan-friends-list" id="planFriendsList"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Setup Modal -->
     <div class="modal" id="setupModal">
         <div class="modal-content">

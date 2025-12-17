@@ -8,6 +8,7 @@ let currentPlanId = null;
 let planningMode = 'setup'; // setup, selecting, planning, viewing
 let weekDays = []; // Store the 7 days of current week starting from today
 let lastNotificationCount = null; // Track notification count to detect new ones (null = not initialized)
+let currentPopupSlot = null; // Track the slot the popup is open for
 
 // Get today's date as YYYY-MM-DD string (no timezone conversion)
 function getTodayString() {
@@ -809,27 +810,170 @@ function setupCalendar() {
     const slots = document.querySelectorAll('.time-slot');
     
     slots.forEach(slot => {
-        slot.addEventListener('click', () => {
+        slot.addEventListener('click', (e) => {
             if (planningMode === 'viewing') return;
             
-            const date = slot.dataset.date; // Use actual date instead of day index
+            const date = slot.dataset.date;
             const timeSlot = slot.dataset.slot;
+            const hasFriends = slot.classList.contains('has-friends');
+            const isSelected = slot.classList.contains('selected');
             
-            slot.classList.toggle('selected');
-            
-            const slotIndex = selectedTimeSlots.findIndex(
-                s => s.date === date && s.slot === timeSlot
-            );
-            
-            if (slotIndex > -1) {
-                selectedTimeSlots.splice(slotIndex, 1);
+            // If cell has friends, show popup menu
+            if (hasFriends) {
+                showSlotPopup(e, slot, date, timeSlot, isSelected);
             } else {
-                selectedTimeSlots.push({ date, slot: timeSlot });
+                // No friends - just toggle availability directly
+                toggleSlotAvailability(slot, date, timeSlot);
             }
-            
-            updatePlanButton();
         });
     });
+    
+    // Close popup when clicking outside
+    document.addEventListener('click', (e) => {
+        const popup = document.getElementById('slotPopup');
+        if (popup.classList.contains('active') && !popup.contains(e.target)) {
+            // Check if click was on a time-slot (which we handle separately)
+            if (!e.target.closest('.time-slot')) {
+                closeSlotPopup();
+            }
+        }
+    });
+}
+
+// Toggle slot availability (add/remove)
+function toggleSlotAvailability(slot, date, timeSlot) {
+    slot.classList.toggle('selected');
+    
+    const slotIndex = selectedTimeSlots.findIndex(
+        s => s.date === date && s.slot === timeSlot
+    );
+    
+    if (slotIndex > -1) {
+        selectedTimeSlots.splice(slotIndex, 1);
+    } else {
+        selectedTimeSlots.push({ date, slot: timeSlot });
+    }
+    
+    updatePlanButton();
+}
+
+// Show slot popup menu
+function showSlotPopup(e, slot, date, timeSlot, isSelected) {
+    e.stopPropagation();
+    
+    const popup = document.getElementById('slotPopup');
+    const toggleText = document.getElementById('popupToggleText');
+    
+    // Store current slot info
+    currentPopupSlot = { element: slot, date, timeSlot, isSelected };
+    
+    // Update toggle button text based on current state
+    toggleText.textContent = isSelected ? 'Remove availability' : 'Add availability';
+    
+    // Position popup near the clicked cell
+    const rect = slot.getBoundingClientRect();
+    const popupWidth = 160;
+    
+    // Position to the right of the cell, or left if not enough space
+    let left = rect.right + 8;
+    if (left + popupWidth > window.innerWidth - 16) {
+        left = rect.left - popupWidth - 8;
+    }
+    
+    // Ensure popup stays within viewport
+    left = Math.max(16, Math.min(left, window.innerWidth - popupWidth - 16));
+    
+    // Position vertically centered with the cell
+    let top = rect.top + (rect.height / 2) - 40;
+    top = Math.max(16, Math.min(top, window.innerHeight - 120));
+    
+    popup.style.left = `${left}px`;
+    popup.style.top = `${top}px`;
+    popup.classList.add('active');
+}
+
+// Close slot popup
+function closeSlotPopup() {
+    document.getElementById('slotPopup').classList.remove('active');
+    currentPopupSlot = null;
+}
+
+// Toggle availability from popup
+function toggleSlotFromPopup() {
+    if (!currentPopupSlot) return;
+    
+    const { element, date, timeSlot } = currentPopupSlot;
+    toggleSlotAvailability(element, date, timeSlot);
+    closeSlotPopup();
+}
+
+// Open plan modal from popup
+function openPlanModal() {
+    if (!currentPopupSlot) return;
+    
+    const { date, timeSlot } = currentPopupSlot;
+    closeSlotPopup();
+    
+    // Find friends available at this slot
+    const availableFriends = getAvailableFriendsForSlot(date, timeSlot);
+    
+    // Get the day info for display
+    const dayInfo = weekDays.find(d => d.dateString === date);
+    const dayName = dayInfo ? `${dayInfo.dayName}, ${dayInfo.month}/${dayInfo.dayDate}` : date;
+    
+    // Update modal content
+    document.getElementById('planSlotInfo').innerHTML = `
+        <div class="slot-day">${dayName}</div>
+        <div class="slot-time">${timeSlot}</div>
+    `;
+    
+    const friendsList = document.getElementById('planFriendsList');
+    if (availableFriends.length > 0) {
+        friendsList.innerHTML = availableFriends.map(friend => `
+            <div class="plan-friend-item">
+                <div class="friend-avatar">${friend.initials}</div>
+                <div class="friend-name">${friend.name}</div>
+            </div>
+        `).join('');
+    } else {
+        friendsList.innerHTML = '<div class="plan-friends-empty">No friends available at this time</div>';
+    }
+    
+    document.getElementById('planModal').classList.add('active');
+}
+
+// Close plan modal
+function closePlanModal() {
+    document.getElementById('planModal').classList.remove('active');
+}
+
+// Get friends available for a specific slot
+function getAvailableFriendsForSlot(date, timeSlot) {
+    const friends = [];
+    
+    // Get selected friend user IDs
+    const selectedUserIds = selectedFriends
+        .filter(f => f.linked_user_id)
+        .map(f => f.linked_user_id);
+    
+    // Filter availability to only selected friends
+    const filteredAvailability = friendsAvailability.filter(avail => 
+        selectedUserIds.includes(avail.user_id)
+    );
+    
+    filteredAvailability.forEach(avail => {
+        const hasSlot = avail.time_slots.some(
+            s => s.date === date && s.slot === timeSlot
+        );
+        if (hasSlot) {
+            friends.push({
+                name: avail.user_name,
+                initials: getInitials(avail.user_name)
+            });
+        }
+    });
+    
+    return friends;
 }
 
 // Check if user has made changes from the saved state

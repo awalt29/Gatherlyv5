@@ -1603,3 +1603,107 @@ body:has(.guest-info) .container {
     text-decoration: underline;
 }
 
+/* Slot Popup Menu */
+.slot-popup {
+    display: none;
+    position: fixed;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 8px;
+    z-index: 1100;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    min-width: 160px;
+}
+
+.slot-popup.active {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.slot-popup-option {
+    background: transparent;
+    border: none;
+    padding: 12px 16px;
+    color: var(--text-light);
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.slot-popup-option:hover {
+    background: rgba(91, 163, 255, 0.15);
+}
+
+.slot-popup-option:active {
+    background: rgba(91, 163, 255, 0.25);
+}
+
+/* Plan Modal */
+#planModal .modal-content {
+    max-width: 360px;
+}
+
+.plan-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.plan-slot-info {
+    text-align: center;
+    padding: 16px;
+    background: rgba(91, 163, 255, 0.1);
+    border-radius: 12px;
+}
+
+.plan-slot-info .slot-day {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 4px;
+}
+
+.plan-slot-info .slot-time {
+    font-size: 14px;
+    color: var(--text-muted);
+    text-transform: capitalize;
+}
+
+.plan-friends-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.plan-friend-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.plan-friend-item .friend-avatar {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    font-size: 14px;
+}
+
+.plan-friend-item .friend-name {
+    font-size: 16px;
+    color: var(--text-light);
+}
+
+.plan-friends-empty {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
