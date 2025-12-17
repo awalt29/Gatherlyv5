@@ -52,13 +52,12 @@ function addDaysToDateString(dateStr, daysToAdd) {
 // Generate calendar for the next 7 days (starting tomorrow)
 function generateCalendar() {
     const todayStr = getTodayString();
-    const tomorrowStr = addDaysToDateString(todayStr, 1); // Start from tomorrow
-    console.log('📅 STARTING FROM:', tomorrowStr);
+    console.log('📅 STARTING FROM:', todayStr);
     weekDays = [];
     
-    // Generate 14 days starting from tomorrow (2 weeks)
+    // Generate 14 days starting from today (2 weeks)
     for (let i = 0; i < 14; i++) {
-        const dateStr = addDaysToDateString(tomorrowStr, i);
+        const dateStr = addDaysToDateString(todayStr, i);
         const [year, month, day] = dateStr.split('-').map(Number);
         
         // Create date at noon local time to avoid any timezone issues
