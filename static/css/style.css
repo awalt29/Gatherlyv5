@@ -736,6 +736,25 @@ h1 {
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
+}
+
+/* Scroll hint gradient on right edge */
+.calendar-section::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 40px;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(to right, transparent, var(--primary-bg));
+    pointer-events: none;
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+.calendar-section.scrolled-end::after {
+    opacity: 0;
 }
 
 .message-section {
@@ -799,13 +818,24 @@ h1 {
     border-radius: 15px;
     padding: 0;
     margin-left: -25px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+.calendar::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
 }
 
 .calendar-header {
     display: grid;
-    grid-template-columns: 20px repeat(7, 43px);
+    grid-template-columns: 20px repeat(14, 43px);
     gap: 4px;
     margin-bottom: 4px;
+    width: max-content;
+    min-width: 100%;
 }
 
 .day-label {
@@ -834,8 +864,10 @@ h1 {
 
 .calendar-grid {
     display: grid;
-    grid-template-columns: 20px repeat(7, 43px);
+    grid-template-columns: 20px repeat(14, 43px);
     gap: 4px;
+    width: max-content;
+    min-width: 100%;
 }
 
 .time-label {

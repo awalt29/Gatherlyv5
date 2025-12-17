@@ -56,8 +56,8 @@ function generateCalendar() {
     console.log('📅 STARTING FROM:', tomorrowStr);
     weekDays = [];
     
-    // Generate 7 days starting from tomorrow
-    for (let i = 0; i < 7; i++) {
+    // Generate 14 days starting from tomorrow (2 weeks)
+    for (let i = 0; i < 14; i++) {
         const dateStr = addDaysToDateString(tomorrowStr, i);
         const [year, month, day] = dateStr.split('-').map(Number);
         
@@ -167,7 +167,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Set up calendar click handlers
     setupCalendar();
     updatePlanButton();
+    
+    // Set up scroll hint for calendar
+    setupCalendarScrollHint();
 });
+
+// Setup scroll hint for 2-week calendar
+function setupCalendarScrollHint() {
+    const calendar = document.querySelector('.calendar');
+    const calendarSection = document.querySelector('.calendar-section');
+    
+    if (!calendar || !calendarSection) return;
+    
+    calendar.addEventListener('scroll', () => {
+        // Check if scrolled to the end (with small buffer)
+        const isAtEnd = calendar.scrollLeft + calendar.clientWidth >= calendar.scrollWidth - 10;
+        
+        if (isAtEnd) {
+            calendarSection.classList.add('scrolled-end');
+        } else {
+            calendarSection.classList.remove('scrolled-end');
+        }
+    });
+}
 
 // Setup planner
 async function setupPlanner(event) {
