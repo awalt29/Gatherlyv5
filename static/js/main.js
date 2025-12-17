@@ -811,12 +811,30 @@ function setupCalendar() {
     
     slots.forEach(slot => {
         slot.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
             if (planningMode === 'viewing') return;
             
             const date = slot.dataset.date;
             const timeSlot = slot.dataset.slot;
             const hasFriends = slot.classList.contains('has-friends');
             const isSelected = slot.classList.contains('selected');
+            
+            // Check if popup is already open for this slot
+            const popup = document.getElementById('slotPopup');
+            const isPopupOpen = popup.classList.contains('active');
+            const isSameSlot = currentPopupSlot && 
+                currentPopupSlot.date === date && 
+                currentPopupSlot.timeSlot === timeSlot;
+            
+            // If clicking on same slot with popup open, close it
+            if (isPopupOpen && isSameSlot) {
+                closeSlotPopup();
+                return;
+            }
+            
+            // Close any open popup first
+            closeSlotPopup();
             
             // If cell has friends, show popup menu
             if (hasFriends) {
@@ -832,10 +850,7 @@ function setupCalendar() {
     document.addEventListener('click', (e) => {
         const popup = document.getElementById('slotPopup');
         if (popup.classList.contains('active') && !popup.contains(e.target)) {
-            // Check if click was on a time-slot (which we handle separately)
-            if (!e.target.closest('.time-slot')) {
-                closeSlotPopup();
-            }
+            closeSlotPopup();
         }
     });
 }
@@ -859,8 +874,6 @@ function toggleSlotAvailability(slot, date, timeSlot) {
 
 // Show slot popup menu
 function showSlotPopup(e, slot, date, timeSlot, isSelected) {
-    e.stopPropagation();
-    
     const popup = document.getElementById('slotPopup');
     const toggleText = document.getElementById('popupToggleText');
     

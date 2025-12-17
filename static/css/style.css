@@ -1607,13 +1607,14 @@ body:has(.guest-info) .container {
 .slot-popup {
     display: none;
     position: fixed;
-    background: var(--card-bg);
+    background: rgba(30, 45, 70, 0.98);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 8px;
     z-index: 1100;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
     min-width: 160px;
+    backdrop-filter: blur(10px);
 }
 
 .slot-popup.active {
