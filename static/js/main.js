@@ -1610,6 +1610,8 @@ async function loadNotifications() {
             await loadFriends();
             // Refresh the calendar when new notifications arrive
             loadFriendsAvailability();
+            // Refresh hangout statuses (updates bubble colors for RSVPs)
+            loadHangoutStatuses();
         }
         lastNotificationCount = currentCount;
         
