@@ -155,6 +155,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Check for new notifications every 10 seconds (which will auto-refresh calendar)
             setInterval(loadNotifications, 10000);
+            
+            // Check for #notifications hash to auto-open notifications modal
+            if (window.location.hash === '#notifications') {
+                openNotifications();
+                // Clear the hash so it doesn't keep opening on refresh
+                history.replaceState(null, null, ' ');
+            }
         } else {
             // Not authenticated, redirect to login
             window.location.href = '/login';
