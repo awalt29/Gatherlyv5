@@ -1841,6 +1841,12 @@ body:has(.guest-info) .container {
     border-radius: 8px;
 }
 
+.notification-invitees {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 4px 0;
+}
+
 .hangout-response-status {
     font-size: 12px;
     padding: 6px 12px;

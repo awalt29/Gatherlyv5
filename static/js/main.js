@@ -1336,6 +1336,17 @@ async function loadHangoutStatuses() {
                 });
             });
             
+            // Process hangouts user is invited to (to see creator's status based on own response)
+            data.invited.forEach(hangout => {
+                // Find my invite status
+                const myInvite = hangout.invitees.find(inv => inv.user_id === plannerInfo?.id);
+                if (myInvite && myInvite.status === 'accepted') {
+                    // Mark the creator's bubble as green on my calendar
+                    const key = `${hangout.date}-${hangout.time_slot}-${hangout.creator_id}`;
+                    hangoutStatuses[key] = 'accepted';
+                }
+            });
+            
             // Refresh the calendar display
             displayFriendsAvailability();
         }
@@ -1657,12 +1668,20 @@ function renderNotifications(notifications, friendRequests = []) {
                 const myInvite = hangout?.invitees?.find(inv => inv.user_id === plannerInfo?.id);
                 const hasResponded = myInvite && myInvite.status !== 'pending';
                 
+                // Get list of other invitees (excluding self)
+                const otherInvitees = hangout?.invitees?.filter(inv => inv.user_id !== plannerInfo?.id) || [];
+                const inviteeNames = otherInvitees.map(inv => inv.user_name);
+                const inviteeList = inviteeNames.length > 0 
+                    ? `Also invited: ${inviteeNames.join(', ')}` 
+                    : '';
+                
                 return `
                     <div class="notification-item ${notif.read ? '' : 'unread'} hangout-invite" data-hangout-id="${notif.hangout_id}">
                         <div class="notification-avatar">📅</div>
                         <div class="notification-content">
                             <div class="notification-text">${notif.message}</div>
                             ${hangout?.description ? `<div class="notification-description">"${hangout.description}"</div>` : ''}
+                            ${inviteeList ? `<div class="notification-invitees">${inviteeList}</div>` : ''}
                             <div class="notification-time">${timeAgo}</div>
                             ${hasResponded ? `
                                 <div class="hangout-response-status ${myInvite.status}">
