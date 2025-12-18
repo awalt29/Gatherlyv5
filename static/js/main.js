@@ -156,15 +156,42 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Check for new notifications every 10 seconds (which will auto-refresh calendar)
             setInterval(loadNotifications, 10000);
             
-            // Check for #notifications hash to auto-open notifications modal
-            if (window.location.hash === '#notifications') {
-                // Small delay to ensure everything is rendered
-                setTimeout(() => {
+            // Check for pending hangout invites or #notifications hash - auto-open modal (once per invite)
+            setTimeout(async () => {
+                // Check if URL has #notifications hash
+                const hasHash = window.location.hash === '#notifications';
+                
+                // Check if there are NEW pending hangout invites we haven't shown yet
+                const response = await fetch(`/api/notifications/${plannerInfo.id}`);
+                const notifications = await response.json();
+                
+                // Get list of invite IDs we've already auto-opened for
+                const seenInvites = JSON.parse(localStorage.getItem('seenHangoutInvites') || '[]');
+                
+                // Find pending invites we haven't shown yet
+                const newPendingInvites = notifications.filter(n => {
+                    if (n.notification_type === 'hangout_invite' && n.hangout) {
+                        const myInvite = n.hangout.invitees?.find(inv => inv.user_id === plannerInfo.id);
+                        const isPending = myInvite && myInvite.status === 'pending';
+                        const isNew = !seenInvites.includes(n.hangout_id);
+                        return isPending && isNew;
+                    }
+                    return false;
+                });
+                
+                if (hasHash || newPendingInvites.length > 0) {
                     openNotifications();
-                    // Clear the hash so it doesn't keep opening on refresh
-                    history.replaceState(null, null, ' ');
-                }, 300);
-            }
+                    
+                    // Mark these invites as seen
+                    const newSeenIds = newPendingInvites.map(n => n.hangout_id);
+                    localStorage.setItem('seenHangoutInvites', JSON.stringify([...seenInvites, ...newSeenIds]));
+                    
+                    // Clear the hash if present
+                    if (hasHash) {
+                        history.replaceState(null, null, ' ');
+                    }
+                }
+            }, 300);
         } else {
             // Not authenticated, redirect to login
             window.location.href = '/login';
