@@ -1719,8 +1719,8 @@ function renderNotifications(notifications, friendRequests = []) {
                         <div class="notification-avatar">📅</div>
                         <div class="notification-content">
                             <div class="notification-text">${notif.message}</div>
-                            ${hangout?.description ? `<div class="notification-description">"${hangout.description}"</div>` : ''}
                             ${inviteeList ? `<div class="notification-invitees">${inviteeList}</div>` : ''}
+                            ${hangout?.description ? `<div class="notification-description">"${hangout.description}"</div>` : ''}
                             <div class="notification-time">${timeAgo}</div>
                             ${hasResponded ? `
                                 <div class="hangout-response-status ${myInvite.status}">
