@@ -1616,12 +1616,16 @@ def create_hangout():
         # Create notification for the invitee
         invitee_user = User.query.get(user_id)
         if invitee_user:
-            # Format the time slot nicely
-            time_display = time_slot.capitalize()
+            # Format the date and time nicely (e.g., "Sunday afternoon (12/21)")
+            from datetime import datetime as dt
+            date_obj = dt.strptime(date, '%Y-%m-%d')
+            day_name = date_obj.strftime('%A')  # e.g., "Sunday"
+            month_day = date_obj.strftime('%-m/%-d')  # e.g., "12/21"
+            time_display = time_slot.lower()  # e.g., "afternoon"
             
             notification = Notification(
                 planner_id=user_id,  # The invitee receives the notification
-                message=f"{creator.name} invited you to hang out on {date} ({time_display})",
+                message=f"{creator.name} invited you to hang out {day_name} {time_display} ({month_day})",
                 notification_type='hangout_invite',
                 hangout_id=hangout.id,
                 from_user_id=creator_id
@@ -1652,9 +1656,14 @@ def create_hangout():
     # Create notification for the creator (confirmation)
     invitee_names = [User.query.get(uid).name for uid in invitee_ids if User.query.get(uid)]
     names_str = ', '.join(invitee_names)
+    # Format the date nicely
+    from datetime import datetime as dt
+    date_obj = dt.strptime(date, '%Y-%m-%d')
+    day_name = date_obj.strftime('%A')
+    month_day = date_obj.strftime('%-m/%-d')
     creator_notification = Notification(
         planner_id=creator_id,
-        message=f"You invited {names_str} to hang out on {date} ({time_slot.capitalize()})",
+        message=f"You invited {names_str} to hang out {day_name} {time_slot.lower()} ({month_day})",
         notification_type='hangout_invite',
         hangout_id=hangout.id,
         from_user_id=creator_id
@@ -1704,9 +1713,14 @@ def respond_to_hangout(hangout_id):
     
     # Create notification for the hangout creator
     response_text = 'accepted' if response == 'accepted' else 'declined'
+    # Format the date nicely
+    from datetime import datetime as dt
+    date_obj = dt.strptime(hangout.date, '%Y-%m-%d')
+    day_name = date_obj.strftime('%A')
+    month_day = date_obj.strftime('%-m/%-d')
     creator_notification = Notification(
         planner_id=hangout.creator_id,
-        message=f"{user.name} {response_text} your hangout invite for {hangout.date} ({hangout.time_slot.capitalize()})",
+        message=f"{user.name} {response_text} your hangout invite for {day_name} {hangout.time_slot.lower()} ({month_day})",
         notification_type='hangout_response',
         hangout_id=hangout_id,
         from_user_id=user_id
