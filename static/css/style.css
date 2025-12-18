@@ -1677,7 +1677,7 @@ body:has(.guest-info) .container {
 
 /* Plan Modal */
 #planModal .modal-content {
-    max-width: 360px;
+    max-width: 400px;
 }
 
 .plan-modal-body {
@@ -1706,10 +1706,24 @@ body:has(.guest-info) .container {
     text-transform: capitalize;
 }
 
-.plan-friends-list {
+.plan-section {
     display: flex;
     flex-direction: column;
     gap: 12px;
+}
+
+.plan-section-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.plan-friends-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .plan-friend-item {
@@ -1719,18 +1733,55 @@ body:has(.guest-info) .container {
     padding: 12px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+
+.plan-friend-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.plan-friend-item.selected {
+    background: rgba(91, 163, 255, 0.15);
+    border-color: var(--accent-mint);
+}
+
+.plan-friend-item .friend-checkbox {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.plan-friend-item.selected .friend-checkbox {
+    background: var(--accent-mint);
+    border-color: var(--accent-mint);
+}
+
+.plan-friend-item.selected .friend-checkbox::after {
+    content: '✓';
+    color: var(--primary-bg);
+    font-size: 12px;
+    font-weight: bold;
 }
 
 .plan-friend-item .friend-avatar {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    font-size: 14px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    font-size: 13px;
 }
 
 .plan-friend-item .friend-name {
-    font-size: 16px;
+    font-size: 15px;
     color: var(--text-light);
+    flex: 1;
 }
 
 .plan-friends-empty {
@@ -1738,5 +1789,73 @@ body:has(.guest-info) .container {
     padding: 20px;
     color: var(--text-muted);
     font-size: 14px;
+}
+
+.plan-message {
+    min-height: 80px;
+    resize: vertical;
+}
+
+#sendInviteBtn {
+    margin-top: 8px;
+}
+
+#sendInviteBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Hangout RSVP status colors on avatars */
+.slot-avatar.rsvp-accepted {
+    background: #22c55e !important;
+    border-color: #16a34a !important;
+}
+
+.slot-avatar.rsvp-declined {
+    background: #ef4444 !important;
+    border-color: #dc2626 !important;
+}
+
+/* Hangout notification styles */
+.notification-item.hangout-invite .notification-avatar,
+.notification-item.hangout-response .notification-avatar {
+    background: var(--accent-mint);
+    color: var(--primary-bg);
+}
+
+.notification-item.hangout-response .notification-avatar.accepted {
+    background: #22c55e;
+}
+
+.notification-item.hangout-response .notification-avatar.declined {
+    background: #ef4444;
+}
+
+.notification-description {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin: 4px 0;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+.hangout-response-status {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    display: inline-block;
+}
+
+.hangout-response-status.accepted {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.hangout-response-status.declined {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
 }
 

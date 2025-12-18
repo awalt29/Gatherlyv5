@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
 from flask_migrate import Migrate
-from models import db, User, Contact, Plan, PlanGuest, Availability, Notification, PasswordReset, FriendRequest, Friendship, UserAvailability
+from models import db, User, Contact, Plan, PlanGuest, Availability, Notification, PasswordReset, FriendRequest, Friendship, UserAvailability, Hangout, HangoutInvitee
 from datetime import datetime, timedelta, date
 from twilio.rest import Client
 from sendgrid import SendGridAPIClient
@@ -1568,6 +1568,219 @@ def mark_notifications_read(planner_id):
     Notification.query.filter_by(planner_id=planner_id, read=False).update({'read': True})
     db.session.commit()
     return jsonify({'message': 'Notifications marked as read'}), 200
+
+
+# ============================================
+# HANGOUT API ENDPOINTS
+# ============================================
+
+@app.route('/api/hangouts', methods=['POST'])
+def create_hangout():
+    """Create a new hangout invitation"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    creator_id = session['user_id']
+    creator = User.query.get(creator_id)
+    data = request.json
+    
+    date = data.get('date')
+    time_slot = data.get('time_slot')
+    description = data.get('description', '')
+    invitee_ids = data.get('invitee_ids', [])
+    
+    if not date or not time_slot:
+        return jsonify({'error': 'Date and time slot are required'}), 400
+    
+    if not invitee_ids:
+        return jsonify({'error': 'At least one invitee is required'}), 400
+    
+    # Create the hangout
+    hangout = Hangout(
+        creator_id=creator_id,
+        date=date,
+        time_slot=time_slot,
+        description=description
+    )
+    db.session.add(hangout)
+    db.session.flush()  # Get the hangout ID
+    
+    # Add invitees
+    for user_id in invitee_ids:
+        invitee = HangoutInvitee(
+            hangout_id=hangout.id,
+            user_id=user_id
+        )
+        db.session.add(invitee)
+        
+        # Create notification for the invitee
+        invitee_user = User.query.get(user_id)
+        if invitee_user:
+            # Format the time slot nicely
+            time_display = time_slot.capitalize()
+            
+            notification = Notification(
+                planner_id=user_id,  # The invitee receives the notification
+                message=f"{creator.name} invited you to hang out on {date} ({time_display})",
+                notification_type='hangout_invite',
+                hangout_id=hangout.id,
+                from_user_id=creator_id
+            )
+            db.session.add(notification)
+            
+            # Send SMS to invitee
+            try:
+                app_url = os.getenv('APP_BASE_URL', 'https://trygatherly.com')
+                if not app_url.startswith('http'):
+                    app_url = f'https://{app_url}'
+                
+                sms_message = f"{creator.name} sent you a hangout invite! RSVP here: {app_url}/#notifications"
+                
+                twilio_client = Client(
+                    os.getenv('TWILIO_ACCOUNT_SID'),
+                    os.getenv('TWILIO_AUTH_TOKEN')
+                )
+                twilio_client.messages.create(
+                    body=sms_message,
+                    from_=os.getenv('TWILIO_PHONE_NUMBER'),
+                    to=invitee_user.phone_number
+                )
+                print(f"[HANGOUT] SMS sent to {invitee_user.name}")
+            except Exception as e:
+                print(f"[HANGOUT] Error sending SMS to {invitee_user.name}: {e}")
+    
+    # Create notification for the creator (confirmation)
+    invitee_names = [User.query.get(uid).name for uid in invitee_ids if User.query.get(uid)]
+    names_str = ', '.join(invitee_names)
+    creator_notification = Notification(
+        planner_id=creator_id,
+        message=f"You invited {names_str} to hang out on {date} ({time_slot.capitalize()})",
+        notification_type='hangout_invite',
+        hangout_id=hangout.id,
+        from_user_id=creator_id
+    )
+    db.session.add(creator_notification)
+    
+    db.session.commit()
+    
+    print(f"[HANGOUT] Created hangout {hangout.id} by {creator.name} for {date} {time_slot}")
+    
+    return jsonify({
+        'message': 'Hangout invitation sent!',
+        'hangout': hangout.to_dict()
+    }), 201
+
+
+@app.route('/api/hangouts/<int:hangout_id>/respond', methods=['POST'])
+def respond_to_hangout(hangout_id):
+    """Accept or decline a hangout invitation"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    data = request.json
+    
+    response = data.get('response')  # 'accepted' or 'declined'
+    if response not in ['accepted', 'declined']:
+        return jsonify({'error': 'Invalid response. Must be "accepted" or "declined"'}), 400
+    
+    # Find the invitation
+    invitee = HangoutInvitee.query.filter_by(
+        hangout_id=hangout_id,
+        user_id=user_id
+    ).first()
+    
+    if not invitee:
+        return jsonify({'error': 'Invitation not found'}), 404
+    
+    hangout = Hangout.query.get(hangout_id)
+    if not hangout:
+        return jsonify({'error': 'Hangout not found'}), 404
+    
+    # Update the response
+    invitee.status = response
+    invitee.responded_at = datetime.utcnow()
+    
+    # Create notification for the hangout creator
+    response_text = 'accepted' if response == 'accepted' else 'declined'
+    creator_notification = Notification(
+        planner_id=hangout.creator_id,
+        message=f"{user.name} {response_text} your hangout invite for {hangout.date} ({hangout.time_slot.capitalize()})",
+        notification_type='hangout_response',
+        hangout_id=hangout_id,
+        from_user_id=user_id
+    )
+    db.session.add(creator_notification)
+    
+    db.session.commit()
+    
+    print(f"[HANGOUT] {user.name} {response_text} hangout {hangout_id}")
+    
+    return jsonify({
+        'message': f'You have {response_text} the hangout invitation',
+        'hangout': hangout.to_dict()
+    }), 200
+
+
+@app.route('/api/hangouts', methods=['GET'])
+def get_user_hangouts():
+    """Get all hangouts for the current user (as creator or invitee)"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    
+    # Get hangouts created by user
+    created = Hangout.query.filter_by(creator_id=user_id, status='active').all()
+    
+    # Get hangouts user is invited to
+    invitations = HangoutInvitee.query.filter_by(user_id=user_id).all()
+    invited_hangout_ids = [inv.hangout_id for inv in invitations]
+    invited = Hangout.query.filter(
+        Hangout.id.in_(invited_hangout_ids),
+        Hangout.status == 'active'
+    ).all() if invited_hangout_ids else []
+    
+    return jsonify({
+        'created': [h.to_dict() for h in created],
+        'invited': [h.to_dict() for h in invited]
+    })
+
+
+@app.route('/api/hangouts/for-slot', methods=['GET'])
+def get_hangouts_for_slot():
+    """Get hangout invitee statuses for a specific date/time slot (for calendar display)"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    date = request.args.get('date')
+    time_slot = request.args.get('time_slot')
+    
+    if not date or not time_slot:
+        return jsonify({'error': 'Date and time_slot are required'}), 400
+    
+    # Find hangouts created by this user for this slot
+    hangouts = Hangout.query.filter_by(
+        creator_id=user_id,
+        date=date,
+        time_slot=time_slot,
+        status='active'
+    ).all()
+    
+    # Build response with invitee statuses
+    result = []
+    for hangout in hangouts:
+        for invitee in hangout.invitees:
+            result.append({
+                'hangout_id': hangout.id,
+                'user_id': invitee.user_id,
+                'user_name': invitee.user.name,
+                'status': invitee.status
+            })
+    
+    return jsonify(result)
 
 
 # Initialize database

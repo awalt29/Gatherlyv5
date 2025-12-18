@@ -342,20 +342,37 @@ class Notification(db.Model):
     read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Hangout-related fields
+    notification_type = db.Column(db.String(30), default='general')  # general, friend_request, hangout_invite, hangout_response
+    hangout_id = db.Column(db.Integer, db.ForeignKey('hangouts.id'), nullable=True)
+    from_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Who triggered this notification
+    
     # Relationships
     planner = db.relationship('User', foreign_keys=[planner_id])
     contact = db.relationship('Contact', foreign_keys=[contact_id])
+    hangout = db.relationship('Hangout', foreign_keys=[hangout_id])
+    from_user = db.relationship('User', foreign_keys=[from_user_id])
     
     def to_dict(self):
-        return {
+        result = {
             'id': self.id,
             'planner_id': self.planner_id,
             'contact_id': self.contact_id,
             'contact_name': self.contact.name if self.contact else None,
             'message': self.message,
             'read': self.read,
+            'notification_type': self.notification_type or 'general',
+            'hangout_id': self.hangout_id,
+            'from_user_id': self.from_user_id,
+            'from_user_name': self.from_user.name if self.from_user else None,
             'created_at': self.created_at.isoformat() + 'Z'  # Add Z to indicate UTC
         }
+        
+        # Include hangout details if this is a hangout notification
+        if self.hangout:
+            result['hangout'] = self.hangout.to_dict()
+        
+        return result
 
 
 class PasswordReset(db.Model):
@@ -379,4 +396,65 @@ class PasswordReset(db.Model):
             'created_at': self.created_at.isoformat(),
             'expires_at': self.expires_at.isoformat(),
             'used': self.used
+        }
+
+
+class Hangout(db.Model):
+    """A hangout invitation for a specific time slot"""
+    __tablename__ = 'hangouts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    date = db.Column(db.String(10), nullable=False)  # YYYY-MM-DD format
+    time_slot = db.Column(db.String(20), nullable=False)  # morning, afternoon, evening
+    description = db.Column(db.String(500))  # Optional message/description
+    status = db.Column(db.String(20), default='active')  # active, cancelled
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    creator = db.relationship('User', backref='hangouts_created')
+    invitees = db.relationship('HangoutInvitee', backref='hangout', lazy=True, cascade='all, delete-orphan')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'creator_id': self.creator_id,
+            'creator_name': self.creator.name,
+            'date': self.date,
+            'time_slot': self.time_slot,
+            'description': self.description,
+            'status': self.status,
+            'created_at': self.created_at.isoformat(),
+            'invitees': [inv.to_dict() for inv in self.invitees]
+        }
+
+
+class HangoutInvitee(db.Model):
+    """Tracks each invitee for a hangout and their response"""
+    __tablename__ = 'hangout_invitees'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    hangout_id = db.Column(db.Integer, db.ForeignKey('hangouts.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, accepted, declined
+    responded_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='hangout_invitations')
+    
+    # Each user can only be invited once per hangout
+    __table_args__ = (
+        db.UniqueConstraint('hangout_id', 'user_id', name='unique_invitee_per_hangout'),
+    )
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'hangout_id': self.hangout_id,
+            'user_id': self.user_id,
+            'user_name': self.user.name,
+            'status': self.status,
+            'responded_at': self.responded_at.isoformat() if self.responded_at else None,
+            'created_at': self.created_at.isoformat()
         }

@@ -88,12 +88,25 @@
     <div class="modal" id="planModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" id="planModalTitle">Who's Free?</h2>
+                <h2 class="modal-title" id="planModalTitle">Plan a Hangout</h2>
                 <button class="close-btn" onclick="closePlanModal()">&times;</button>
             </div>
             <div class="plan-modal-body">
                 <div class="plan-slot-info" id="planSlotInfo"></div>
-                <div class="plan-friends-list" id="planFriendsList"></div>
+                
+                <div class="plan-section">
+                    <div class="plan-section-header">Who's available?</div>
+                    <div class="plan-friends-list" id="planFriendsList"></div>
+                </div>
+                
+                <div class="plan-section">
+                    <div class="plan-section-header">Add a message (optional)</div>
+                    <textarea class="form-input plan-message" id="planMessage" placeholder="What's the plan? e.g., Grab dinner at 7pm"></textarea>
+                </div>
+                
+                <button class="btn-primary" id="sendInviteBtn" onclick="sendHangoutInvite()">
+                    Send Invite
+                </button>
             </div>
         </div>
     </div>

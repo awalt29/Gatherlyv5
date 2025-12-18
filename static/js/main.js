@@ -150,6 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await loadFriends();
             loadMyAvailability();
             loadFriendsAvailability();
+            loadHangoutStatuses();
             loadNotifications();
             
             // Check for new notifications every 10 seconds (which will auto-refresh calendar)
@@ -942,11 +943,19 @@ function toggleSlotFromPopup() {
 }
 
 // Open plan modal from popup
+// Track current plan modal state
+let currentPlanSlot = null;
+let selectedPlanFriends = [];
+
 function openPlanModal() {
     if (!currentPopupSlot) return;
     
     const { date, timeSlot } = currentPopupSlot;
     closeSlotPopup();
+    
+    // Store for sending invite
+    currentPlanSlot = { date, timeSlot };
+    selectedPlanFriends = [];
     
     // Find friends available at this slot
     const availableFriends = getAvailableFriendsForSlot(date, timeSlot);
@@ -961,10 +970,14 @@ function openPlanModal() {
         <div class="slot-time">${timeSlot}</div>
     `;
     
+    // Clear message field
+    document.getElementById('planMessage').value = '';
+    
     const friendsList = document.getElementById('planFriendsList');
     if (availableFriends.length > 0) {
         friendsList.innerHTML = availableFriends.map(friend => `
-            <div class="plan-friend-item">
+            <div class="plan-friend-item" data-user-id="${friend.userId}" onclick="togglePlanFriend(this, ${friend.userId})">
+                <div class="friend-checkbox"></div>
                 <div class="friend-avatar">${friend.initials}</div>
                 <div class="friend-name">${friend.name}</div>
             </div>
@@ -973,12 +986,84 @@ function openPlanModal() {
         friendsList.innerHTML = '<div class="plan-friends-empty">No friends available at this time</div>';
     }
     
+    updateSendInviteButton();
     document.getElementById('planModal').classList.add('active');
+}
+
+// Toggle friend selection in plan modal
+function togglePlanFriend(element, userId) {
+    element.classList.toggle('selected');
+    
+    if (element.classList.contains('selected')) {
+        if (!selectedPlanFriends.includes(userId)) {
+            selectedPlanFriends.push(userId);
+        }
+    } else {
+        selectedPlanFriends = selectedPlanFriends.filter(id => id !== userId);
+    }
+    
+    updateSendInviteButton();
+}
+
+// Update the send invite button state
+function updateSendInviteButton() {
+    const btn = document.getElementById('sendInviteBtn');
+    if (selectedPlanFriends.length > 0) {
+        btn.disabled = false;
+        btn.textContent = `Send Invite${selectedPlanFriends.length > 1 ? 's' : ''} (${selectedPlanFriends.length})`;
+    } else {
+        btn.disabled = true;
+        btn.textContent = 'Select friends to invite';
+    }
+}
+
+// Send hangout invite
+async function sendHangoutInvite() {
+    if (!currentPlanSlot || selectedPlanFriends.length === 0) return;
+    
+    const btn = document.getElementById('sendInviteBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    
+    const message = document.getElementById('planMessage').value.trim();
+    
+    try {
+        const response = await fetch('/api/hangouts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                date: currentPlanSlot.date,
+                time_slot: currentPlanSlot.timeSlot,
+                description: message,
+                invitee_ids: selectedPlanFriends
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            showStatus('Hangout invite sent!', 'success');
+            closePlanModal();
+            // Refresh to show updated hangout status
+            loadHangoutStatuses();
+        } else {
+            const data = await response.json();
+            showStatus(data.error || 'Error sending invite', 'error');
+            btn.disabled = false;
+            btn.textContent = `Send Invite${selectedPlanFriends.length > 1 ? 's' : ''} (${selectedPlanFriends.length})`;
+        }
+    } catch (error) {
+        console.error('Error sending hangout invite:', error);
+        showStatus('Error sending invite', 'error');
+        btn.disabled = false;
+        btn.textContent = `Send Invite${selectedPlanFriends.length > 1 ? 's' : ''} (${selectedPlanFriends.length})`;
+    }
 }
 
 // Close plan modal
 function closePlanModal() {
     document.getElementById('planModal').classList.remove('active');
+    currentPlanSlot = null;
+    selectedPlanFriends = [];
 }
 
 // Get friends available for a specific slot
@@ -1001,6 +1086,7 @@ function getAvailableFriendsForSlot(date, timeSlot) {
         );
         if (hasSlot) {
             friends.push({
+                userId: avail.user_id,
                 name: avail.user_name,
                 initials: getInitials(avail.user_name)
             });
@@ -1178,7 +1264,11 @@ function displayFriendsAvailability() {
         avail.time_slots.forEach(slot => {
             const key = `${slot.date}-${slot.slot}`;
             if (!slotFriends[key]) slotFriends[key] = [];
-            slotFriends[key].push({ name: avail.user_name, initials: getInitials(avail.user_name) });
+            slotFriends[key].push({ 
+                userId: avail.user_id,
+                name: avail.user_name, 
+                initials: getInitials(avail.user_name) 
+            });
         });
     });
     
@@ -1198,8 +1288,17 @@ function displayFriendsAvailability() {
             friends.slice(0, 3).forEach(friend => {
                 const avatar = document.createElement('div');
                 avatar.className = 'slot-avatar';
+                
+                // Check if this friend has an RSVP status for this slot
+                const hangoutStatus = getHangoutStatusForFriend(dateStr, slot, friend.userId);
+                if (hangoutStatus === 'accepted') {
+                    avatar.classList.add('rsvp-accepted');
+                } else if (hangoutStatus === 'declined') {
+                    avatar.classList.add('rsvp-declined');
+                }
+                
                 avatar.textContent = friend.initials;
-                avatar.title = friend.name + ' is free';
+                avatar.title = friend.name + (hangoutStatus ? ` (${hangoutStatus})` : ' is free');
                 avatarsContainer.appendChild(avatar);
             });
             
@@ -1216,6 +1315,39 @@ function displayFriendsAvailability() {
             slotElement.classList.add('has-friends');
         }
     });
+}
+
+// Track hangout RSVP statuses for calendar display
+let hangoutStatuses = {}; // key: "date-slot-userId", value: "pending" | "accepted" | "declined"
+
+// Load hangout statuses for calendar display
+async function loadHangoutStatuses() {
+    try {
+        const response = await fetch('/api/hangouts');
+        if (response.ok) {
+            const data = await response.json();
+            hangoutStatuses = {};
+            
+            // Process hangouts created by user (to see invitee responses)
+            data.created.forEach(hangout => {
+                hangout.invitees.forEach(invitee => {
+                    const key = `${hangout.date}-${hangout.time_slot}-${invitee.user_id}`;
+                    hangoutStatuses[key] = invitee.status;
+                });
+            });
+            
+            // Refresh the calendar display
+            displayFriendsAvailability();
+        }
+    } catch (error) {
+        console.error('Error loading hangout statuses:', error);
+    }
+}
+
+// Get hangout RSVP status for a specific friend/slot
+function getHangoutStatusForFriend(date, timeSlot, userId) {
+    const key = `${date}-${timeSlot}-${userId}`;
+    return hangoutStatuses[key] || null;
 }
 
 // Load linked friends (users who have accepted friend requests)
@@ -1518,6 +1650,49 @@ function renderNotifications(notifications, friendRequests = []) {
         const notificationsHtml = notifications.map(notif => {
             const timeAgo = getTimeAgo(new Date(notif.created_at));
             
+            // Hangout invite notification - show accept/decline buttons for invitees
+            if (notif.notification_type === 'hangout_invite' && notif.hangout_id && notif.from_user_id !== plannerInfo?.id) {
+                // Check if user already responded
+                const hangout = notif.hangout;
+                const myInvite = hangout?.invitees?.find(inv => inv.user_id === plannerInfo?.id);
+                const hasResponded = myInvite && myInvite.status !== 'pending';
+                
+                return `
+                    <div class="notification-item ${notif.read ? '' : 'unread'} hangout-invite" data-hangout-id="${notif.hangout_id}">
+                        <div class="notification-avatar">📅</div>
+                        <div class="notification-content">
+                            <div class="notification-text">${notif.message}</div>
+                            ${hangout?.description ? `<div class="notification-description">"${hangout.description}"</div>` : ''}
+                            <div class="notification-time">${timeAgo}</div>
+                            ${hasResponded ? `
+                                <div class="hangout-response-status ${myInvite.status}">
+                                    You ${myInvite.status} this invite
+                                </div>
+                            ` : `
+                                <div class="friend-request-actions">
+                                    <button class="btn-accept" onclick="respondToHangout(${notif.hangout_id}, 'accepted')">Accept</button>
+                                    <button class="btn-reject" onclick="respondToHangout(${notif.hangout_id}, 'declined')">Decline</button>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Hangout response notification (for creator)
+            if (notif.notification_type === 'hangout_response') {
+                const isAccepted = notif.message.includes('accepted');
+                return `
+                    <div class="notification-item ${notif.read ? '' : 'unread'} hangout-response">
+                        <div class="notification-avatar ${isAccepted ? 'accepted' : 'declined'}">${isAccepted ? '✓' : '✗'}</div>
+                        <div class="notification-content">
+                            <div class="notification-text">${notif.message}</div>
+                            <div class="notification-time">${timeAgo}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
             // System notifications (no contact) vs contact notifications
             if (!notif.contact_name) {
                 // System notification - show checkmark icon and just the message
@@ -1549,6 +1724,30 @@ function renderNotifications(notifications, friendRequests = []) {
         list.innerHTML = friendRequestsHtml + notificationsHtml;
     } catch (error) {
         console.error('Error rendering notifications:', error);
+    }
+}
+
+// Respond to a hangout invite
+async function respondToHangout(hangoutId, response) {
+    try {
+        const res = await fetch(`/api/hangouts/${hangoutId}/respond`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ response })
+        });
+        
+        if (res.ok) {
+            const data = await res.json();
+            showStatus(data.message, 'success');
+            loadNotifications(); // Refresh notifications
+            loadHangoutStatuses(); // Refresh calendar display
+        } else {
+            const data = await res.json();
+            showStatus(data.error || 'Error responding to invite', 'error');
+        }
+    } catch (error) {
+        console.error('Error responding to hangout:', error);
+        showStatus('Error responding to invite', 'error');
     }
 }
 
