@@ -152,6 +152,7 @@ body {
     justify-content: center;
     padding: 0 5px;
     border: 2px solid var(--primary-bg);
+    pointer-events: none; /* Allow clicks to pass through to button */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 

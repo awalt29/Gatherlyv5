@@ -158,9 +158,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Check for #notifications hash to auto-open notifications modal
             if (window.location.hash === '#notifications') {
-                openNotifications();
-                // Clear the hash so it doesn't keep opening on refresh
-                history.replaceState(null, null, ' ');
+                // Small delay to ensure everything is rendered
+                setTimeout(() => {
+                    openNotifications();
+                    // Clear the hash so it doesn't keep opening on refresh
+                    history.replaceState(null, null, ' ');
+                }, 300);
             }
         } else {
             // Not authenticated, redirect to login
