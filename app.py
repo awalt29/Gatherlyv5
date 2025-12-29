@@ -1157,17 +1157,10 @@ def my_availability():
         user_id=user_id
     ).order_by(UserAvailability.updated_at.desc()).first()
     
-    if availability and is_active:
-        return jsonify({
-            'availability': availability.to_dict(),
-            'is_active': True,
-            'days_remaining': days_remaining
-        })
-    
     return jsonify({
         'availability': availability.to_dict() if availability else None,
-        'is_active': False,
-        'days_remaining': 0
+        'is_active': is_active,
+        'days_remaining': days_remaining
     })
 
 
