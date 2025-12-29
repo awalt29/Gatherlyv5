@@ -1505,6 +1505,35 @@ h1 {
     .container {
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     }
+    
+    /* Show all 14 days on desktop without scrolling */
+    .calendar {
+        overflow-x: visible;
+        max-width: none;
+    }
+    
+    .calendar-header {
+        grid-template-columns: 25px repeat(14, 1fr);
+    }
+    
+    .calendar-grid {
+        grid-template-columns: 25px repeat(14, 1fr);
+    }
+    
+    .time-slot {
+        width: auto;
+        min-width: 35px;
+    }
+    
+    .day-label {
+        width: auto;
+        min-width: 35px;
+    }
+    
+    /* Hide scroll hint on desktop */
+    .calendar-section::after {
+        display: none;
+    }
 }
 
 /* Authentication Pages */
