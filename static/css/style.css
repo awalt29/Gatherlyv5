@@ -1504,6 +1504,12 @@ h1 {
     
     .container {
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        max-width: 720px;
+    }
+    
+    /* Hide scroll hint on desktop since all days fit */
+    .calendar-section::after {
+        display: none;
     }
 }
 
