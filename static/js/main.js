@@ -1212,16 +1212,16 @@ function updateActiveStatus(isActive, daysRemaining) {
         // Hide when active
         statusEl.style.display = 'none';
     } else {
-        // Count how many friends have availability
-        const friendsWithAvailability = friendsAvailability.length;
-        const friendText = friendsWithAvailability > 0 
-            ? `<div class="friends-waiting">${friendsWithAvailability} of your friends ${friendsWithAvailability === 1 ? 'is' : 'are'} free!</div>`
+        // Count linked friends (friends who are on the platform)
+        const linkedFriendsCount = allFriends.filter(f => f.is_linked).length;
+        const friendText = linkedFriendsCount > 0 
+            ? `<div class="friends-waiting">${linkedFriendsCount} ${linkedFriendsCount === 1 ? 'friend is' : 'friends are'} sharing availability!</div>`
             : '';
         
         statusEl.innerHTML = `
             <div class="inactive-prompt">
                 ${friendText}
-                <div class="inactive-cta">Save your availability to see when</div>
+                <div class="inactive-cta">Add your availability to see when they're free</div>
             </div>
         `;
         statusEl.style.display = 'block';
