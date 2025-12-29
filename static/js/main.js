@@ -1215,7 +1215,7 @@ function updateActiveStatus(isActive, daysRemaining) {
         // Count linked friends (friends who are on the platform)
         const linkedFriendsCount = allFriends.filter(f => f.is_linked).length;
         const friendText = linkedFriendsCount > 0 
-            ? `<div class="friends-waiting">${linkedFriendsCount} ${linkedFriendsCount === 1 ? 'friend is' : 'friends are'} sharing availability!</div>`
+            ? `<div class="friends-waiting">${linkedFriendsCount} ${linkedFriendsCount === 1 ? 'friend has' : 'friends have'} shared their availability!</div>`
             : '';
         
         statusEl.innerHTML = `
