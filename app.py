@@ -561,6 +561,19 @@ def get_user(user_id):
                 db.session.delete(plan)
             print(f"[DELETE ACCOUNT] Deleted plans")
             
+            # Delete hangout invitations where user is invitee
+            HangoutInvitee.query.filter_by(user_id=user_id).delete()
+            print(f"[DELETE ACCOUNT] Deleted hangout invitations (as invitee)")
+            
+            # Delete hangouts created by user (and their invitees)
+            hangouts = Hangout.query.filter_by(creator_id=user_id).all()
+            for hangout in hangouts:
+                HangoutInvitee.query.filter_by(hangout_id=hangout.id).delete()
+                # Also delete notifications referencing this hangout
+                Notification.query.filter_by(hangout_id=hangout.id).delete()
+                db.session.delete(hangout)
+            print(f"[DELETE ACCOUNT] Deleted hangouts (as creator)")
+            
             # Finally delete the user
             db.session.delete(user)
             db.session.commit()
