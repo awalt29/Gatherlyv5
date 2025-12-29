@@ -1212,8 +1212,18 @@ function updateActiveStatus(isActive, daysRemaining) {
         // Hide when active
         statusEl.style.display = 'none';
     } else {
-        // Only show when inactive
-        statusEl.innerHTML = `<span class="inactive-indicator">Save availability to see friends</span>`;
+        // Count how many friends have availability
+        const friendsWithAvailability = friendsAvailability.length;
+        const friendText = friendsWithAvailability > 0 
+            ? `<div class="friends-waiting">${friendsWithAvailability} of your friends ${friendsWithAvailability === 1 ? 'is' : 'are'} free!</div>`
+            : '';
+        
+        statusEl.innerHTML = `
+            <div class="inactive-prompt">
+                ${friendText}
+                <div class="inactive-cta">Save your availability to see when</div>
+            </div>
+        `;
         statusEl.style.display = 'block';
     }
 }
