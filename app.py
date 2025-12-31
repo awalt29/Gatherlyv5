@@ -1075,10 +1075,16 @@ def my_availability():
         ).first()
         
         # Check if there are NEW slots being added (for notifications)
+        # Get the MOST RECENT availability (regardless of week) to compare against
+        # This prevents false "new" notifications when the week changes
         old_slots = set()
-        if availability:
+        most_recent_availability = UserAvailability.query.filter_by(
+            user_id=user_id
+        ).order_by(UserAvailability.updated_at.desc()).first()
+        
+        if most_recent_availability:
             # Get existing slots as a set for comparison
-            for slot in availability.time_slots:
+            for slot in most_recent_availability.time_slots:
                 old_slots.add(f"{slot['date']}_{slot['slot']}")
         
         new_slots = set()
