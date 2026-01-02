@@ -631,10 +631,18 @@ h1 {
 .friends-list {
     display: flex;
     gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: 400px;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    max-width: 100%;
     width: 100%;
+    overflow-x: auto;
+    padding: 5px 10px;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+.friends-list::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
 }
 
 .active-status {
@@ -688,6 +696,7 @@ h1 {
 .friend-avatar {
     width: 50px;
     height: 50px;
+    min-width: 50px; /* Prevent shrinking in flex */
     border-radius: 50%;
     background: var(--slot-bg);
     border: 2px solid var(--border-color);
