@@ -785,18 +785,10 @@ h1 {
 .friend-avatar.inactive-friend::after {
     content: '👋';
     position: absolute;
-    top: -6px;
-    right: -6px;
-    font-size: 10px;
+    top: -4px;
+    right: -4px;
+    font-size: 14px;
     line-height: 1;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .pending-badge {
