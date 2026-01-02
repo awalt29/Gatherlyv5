@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 """
-Send weekly planning reminders to users via SMS on Sunday evening
-This script is run by Railway cron job
-Schedule: Run at 11 PM UTC Sunday (6 PM EST) and 2 AM UTC Monday (6 PM PST)
+Send weekly planning reminders to users via SMS
+This script is run by Railway cron job on Sunday evenings (0 23 * * 0)
 """
 
 import os
-from datetime import datetime
-import pytz
 from dotenv import load_dotenv
 from models import db, User
 from flask import Flask
@@ -56,24 +53,14 @@ def send_sms(to_number, message):
 def send_reminders():
     """Send Sunday evening reminders to all users who have weekly reminders enabled"""
     with app.app_context():
-        # Get current UTC time
-        utc_now = datetime.now(pytz.UTC)
-        print(f"🌍 Current UTC time: {utc_now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
-        
         # Find all users
         users = User.query.all()
+        print(f"📋 Found {len(users)} users")
         
         sent_count = 0
         
         for user in users:
-            # Get user's timezone (default to America/New_York if not set)
-            user_tz = pytz.timezone(user.timezone or 'America/New_York')
-            
-            # Convert current time to user's timezone
-            user_time = utc_now.astimezone(user_tz)
-            today_for_user = user_time.strftime('%A').lower()
-            
-            print(f"👤 {user.name}: {user_time.strftime('%Y-%m-%d %H:%M:%S %Z')} ({today_for_user})")
+            print(f"👤 {user.name}")
             
             # Check if user has weekly reminders enabled (default to True if not set)
             reminders_enabled = user.weekly_reminders_enabled if user.weekly_reminders_enabled is not None else True
@@ -82,19 +69,15 @@ def send_reminders():
                 print(f"   ⏭️  Skipped (weekly reminders disabled)")
                 continue
             
-            # Send reminders on Sunday evening only
-            if today_for_user == 'sunday':
-                # Send reminder to all users with reminders enabled
-                base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
-                message = f"Hi {user.name.split()[0]}! 👋 Share your availability for the week ahead: {base_url}"
-                
-                if send_sms(user.phone_number, message):
-                    sent_count += 1
-                    print(f"   📱 ✅ Sent reminder to {user.name} ({user.phone_number})")
-                else:
-                    print(f"   📱 ❌ Failed to send to {user.name}")
+            # Send reminder to all users with reminders enabled
+            base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
+            message = f"Hi {user.name.split()[0]}! 👋 Share your availability for the week ahead: {base_url}"
+            
+            if send_sms(user.phone_number, message):
+                sent_count += 1
+                print(f"   📱 ✅ Sent reminder to {user.name} ({user.phone_number})")
             else:
-                print(f"   ⏭️  Skipped (not Sunday for this user, it's {today_for_user})")
+                print(f"   📱 ❌ Failed to send to {user.name}")
         
         print(f"\n✅ Sent {sent_count} reminder(s)")
         return sent_count
