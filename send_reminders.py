@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Send planning reminders to users via SMS
+Send weekly planning reminders to users via SMS on Sunday evening
 This script is run by Railway cron job
+Schedule: Run at 11 PM UTC Sunday (6 PM EST) and 2 AM UTC Monday (6 PM PST)
 """
 
 import os
@@ -75,8 +76,8 @@ def send_reminders():
             
             print(f"👤 {user.name}: {user_time.strftime('%Y-%m-%d %H:%M:%S %Z')} ({today_for_user})")
             
-            # Check if it's Monday in the user's timezone (weekly reminder day)
-            if today_for_user == 'monday':
+            # Send reminders on Sunday evening only
+            if today_for_user == 'sunday':
                 # Check if user is no longer active (hasn't saved in 7+ days)
                 is_inactive = True
                 if user.weekly_availability_date:
@@ -87,7 +88,7 @@ def send_reminders():
                 if is_inactive:
                     # Send reminder to inactive users
                     base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
-                    message = f"Hi {user.name.split()[0]}! 👋 Share your availability to see when your friends are free this week: {base_url}"
+                    message = f"Hi {user.name.split()[0]}! 👋 Share your availability for the week ahead: {base_url}"
                     
                     if send_sms(user.phone_number, message):
                         sent_count += 1
@@ -97,7 +98,7 @@ def send_reminders():
                 else:
                     print(f"   ✅ Still active, no reminder needed")
             else:
-                print(f"   ⏭️  Skipped (not Monday for this user, it's {today_for_user})")
+                print(f"   ⏭️  Skipped (not Sunday for this user, it's {today_for_user})")
         
         print(f"\n✅ Sent {sent_count} reminder(s)")
         return sent_count
