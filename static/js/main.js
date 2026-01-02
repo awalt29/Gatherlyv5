@@ -290,6 +290,7 @@ async function loadFriends() {
 // Render friends list
 function renderFriends() {
     const friendsList = document.getElementById('friendsList');
+    const wrapper = document.getElementById('friendsListWrapper');
     friendsList.innerHTML = '';
     
     // Get display map with subscripts for duplicate initials
@@ -323,6 +324,41 @@ function renderFriends() {
         
         friendsList.appendChild(avatar);
     });
+    
+    // Check for overflow and setup scroll detection
+    setTimeout(() => {
+        checkFriendsListOverflow();
+        setupFriendsListScrollListener();
+    }, 0);
+}
+
+// Check if friends list has overflow (more than visible)
+function checkFriendsListOverflow() {
+    const friendsList = document.getElementById('friendsList');
+    const wrapper = document.getElementById('friendsListWrapper');
+    if (!friendsList || !wrapper) return;
+    
+    const hasOverflow = friendsList.scrollWidth > friendsList.clientWidth;
+    wrapper.classList.toggle('has-overflow', hasOverflow);
+    
+    // Check if already scrolled to end
+    const isAtEnd = friendsList.scrollLeft + friendsList.clientWidth >= friendsList.scrollWidth - 5;
+    wrapper.classList.toggle('scrolled-end', isAtEnd);
+}
+
+// Setup scroll listener to hide gradient when scrolled to end
+let friendsScrollListenerAdded = false;
+function setupFriendsListScrollListener() {
+    const friendsList = document.getElementById('friendsList');
+    const wrapper = document.getElementById('friendsListWrapper');
+    if (!friendsList || !wrapper || friendsScrollListenerAdded) return;
+    
+    friendsList.addEventListener('scroll', () => {
+        const isAtEnd = friendsList.scrollLeft + friendsList.clientWidth >= friendsList.scrollWidth - 5;
+        wrapper.classList.toggle('scrolled-end', isAtEnd);
+    });
+    
+    friendsScrollListenerAdded = true;
 }
 
 // Long press detection for nudge feature

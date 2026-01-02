@@ -628,6 +628,36 @@ h1 {
     text-align: center;
 }
 
+/* Wrapper for scroll fade effect */
+.friends-list-wrapper {
+    position: relative;
+    max-width: 340px; /* Fits ~5 bubbles (50px + 12px gap) * 5 + padding */
+    width: 100%;
+}
+
+/* Fade gradient on right when scrollable */
+.friends-list-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: 100%;
+    background: linear-gradient(to right, transparent, var(--primary-bg));
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.friends-list-wrapper.has-overflow::after {
+    opacity: 1;
+}
+
+/* Hide gradient when scrolled to end */
+.friends-list-wrapper.scrolled-end::after {
+    opacity: 0;
+}
+
 .friends-list {
     display: flex;
     gap: 12px;
@@ -636,7 +666,7 @@ h1 {
     max-width: 100%;
     width: 100%;
     overflow-x: auto;
-    padding: 5px 10px;
+    padding: 5px 10px 5px 5px;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
 }
