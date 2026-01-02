@@ -71,7 +71,7 @@ def send_reminders():
             
             # Send reminder to all users with reminders enabled
             base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
-            message = f"Hi {user.name.split()[0]}! 👋 Share your availability for the week ahead: {base_url}"
+            message = f"Hi {user.name.split()[0]}! 👋 Share your availability for the week: {base_url}\n\nTo turn off these reminders, visit Settings in the app."
             
             if send_sms(user.phone_number, message):
                 sent_count += 1
