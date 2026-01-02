@@ -654,13 +654,18 @@ h1 {
     display: flex;
     gap: 12px;
     flex-wrap: nowrap;
-    justify-content: flex-start;
+    justify-content: center;
     max-width: 100%;
     width: 100%;
     overflow-x: auto;
-    padding: 5px 10px 5px 5px;
+    padding: 5px 10px;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Left-align when scrollable so scroll starts from left */
+.has-overflow .friends-list {
+    justify-content: flex-start;
 }
 
 .friends-list::-webkit-scrollbar {

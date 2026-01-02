@@ -1414,10 +1414,6 @@ function updateActiveStatus(isActive, daysRemaining) {
 
 // Save my availability (new flow)
 async function saveMyAvailability() {
-    if (selectedTimeSlots.length === 0) {
-        showStatus('Please select at least one time slot', 'error');
-        return;
-    }
     
     try {
         const response = await fetch('/api/my-availability', {
