@@ -1079,10 +1079,26 @@ h1 {
         width: 100%;
         border-radius: 0;
         padding: 20px;
+        display: flex;
+        flex-direction: column;
     }
     
     #manageFriendsModal {
         padding: 0;
+    }
+    
+    #manageFriendsModal #manageFriendsListView {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+    }
+    
+    #manageFriendsModal .friends-manage-list {
+        flex: 1;
+        max-height: none;
+        overflow-y: auto;
+        padding-bottom: 20px;
     }
 }
 
