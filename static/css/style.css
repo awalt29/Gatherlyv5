@@ -624,7 +624,7 @@ h1 {
     font-size: 11px;
     color: var(--text-muted);
     opacity: 0.6;
-    margin-bottom: 8px;
+    margin: 4px 0 12px 0;
     text-align: center;
 }
 
