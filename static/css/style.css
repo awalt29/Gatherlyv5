@@ -620,14 +620,6 @@ h1 {
     align-items: center;
 }
 
-.friends-hint {
-    font-size: 11px;
-    color: var(--text-muted);
-    opacity: 0.6;
-    margin: 10px 0 0 0;
-    text-align: center;
-}
-
 /* Wrapper for scroll fade effect */
 .friends-list-wrapper {
     position: relative;
@@ -774,6 +766,22 @@ h1 {
 .friend-avatar.pending {
     position: relative;
     opacity: 0.8;
+}
+
+/* Inactive friend - hasn't shared availability */
+.friend-avatar.inactive-friend {
+    position: relative;
+    opacity: 0.6;
+    border-style: dashed;
+}
+
+.friend-avatar.inactive-friend::after {
+    content: '💤';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 12px;
+    line-height: 1;
 }
 
 .pending-badge {

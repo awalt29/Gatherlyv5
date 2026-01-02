@@ -300,8 +300,22 @@ function renderFriends() {
         const avatar = document.createElement('div');
         avatar.className = 'friend-avatar';
         avatar.textContent = displayMap[friend.id];
-        avatar.onclick = () => toggleFriend(friend);
         avatar.dataset.friendId = friend.id;
+        
+        // Check if this linked friend is active (has shared availability)
+        let isInactiveFriend = false;
+        if (friend.is_linked && friend.linked_user_id) {
+            const linkedFriendData = linkedFriends.find(lf => lf.id === friend.linked_user_id);
+            isInactiveFriend = linkedFriendData && !linkedFriendData.is_active_this_week;
+        }
+        
+        // For inactive linked friends: show indicator and prompt nudge on tap
+        if (isInactiveFriend) {
+            avatar.classList.add('inactive-friend');
+            avatar.onclick = () => promptNudge(friend);
+        } else {
+            avatar.onclick = () => toggleFriend(friend);
+        }
         
         if (selectedFriends.find(f => f.id === friend.id)) {
             avatar.classList.add('selected');
@@ -317,11 +331,6 @@ function renderFriends() {
             avatar.appendChild(badge);
         }
         
-        // Add long-press handler for nudge feature (only for linked friends)
-        if (friend.is_linked && friend.linked_user_id) {
-            setupLongPress(avatar, friend);
-        }
-        
         friendsList.appendChild(avatar);
     });
     
@@ -330,6 +339,14 @@ function renderFriends() {
         checkFriendsListOverflow();
         setupFriendsListScrollListener();
     }, 0);
+}
+
+// Prompt to nudge an inactive friend
+function promptNudge(friend) {
+    const shouldNudge = confirm(`${friend.name} hasn't shared their availability yet.\n\nSend them a nudge?`);
+    if (shouldNudge && friend.linked_user_id) {
+        sendNudge(friend.linked_user_id, friend.name);
+    }
 }
 
 // Check if friends list has overflow (more than visible)
