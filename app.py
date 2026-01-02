@@ -27,31 +27,40 @@ def normalize_phone(phone):
 def find_user_by_phone(phone):
     """Find a user by phone number, trying multiple formats"""
     if not phone:
+        print(f"[FIND_USER] No phone provided")
         return None
     
     normalized = normalize_phone(phone)
+    print(f"[FIND_USER] Searching for phone: {phone} (normalized: {normalized})")
     
     # Try exact match first
     user = User.query.filter_by(phone_number=phone).first()
     if user:
+        print(f"[FIND_USER] Found by exact match: {user.name}")
         return user
     
     # Try normalized match
     user = User.query.filter_by(phone_number=normalized).first()
     if user:
+        print(f"[FIND_USER] Found by normalized match: {user.name}")
         return user
     
     # Try matching just the digits (last 10)
     digits = re.sub(r'\D', '', phone)
     if len(digits) >= 10:
         last_10 = digits[-10:]
+        print(f"[FIND_USER] Trying last 10 digits match: {last_10}")
         # Search for any phone containing these last 10 digits
         users = User.query.all()
         for u in users:
+            if not u.phone_number:
+                continue
             u_digits = re.sub(r'\D', '', u.phone_number)
-            if u_digits[-10:] == last_10:
+            if len(u_digits) >= 10 and u_digits[-10:] == last_10:
+                print(f"[FIND_USER] Found by last 10 digits: {u.name} (phone: {u.phone_number})")
                 return u
     
+    print(f"[FIND_USER] No user found for phone: {phone}")
     return None
 
 app = Flask(__name__)
@@ -633,6 +642,7 @@ def contacts():
     
     if request.method == 'POST':
         data = request.json
+        print(f"[ADD CONTACT] Attempting to add contact with phone: {data.get('phone_number')}")
         
         # Check if contact already exists for this owner
         existing_contact = Contact.query.filter_by(
@@ -641,10 +651,12 @@ def contacts():
         ).first()
         
         if existing_contact:
+            print(f"[ADD CONTACT] Contact already exists: {existing_contact.name}")
             return jsonify(existing_contact.to_dict()), 200
         
         # Check if this phone number belongs to a registered user on the platform
         existing_user = find_user_by_phone(data['phone_number'])
+        print(f"[ADD CONTACT] find_user_by_phone result: {existing_user.name if existing_user else 'NOT FOUND'}")
         
         # Determine the name to use
         if existing_user and existing_user.id != int(data['owner_id']):

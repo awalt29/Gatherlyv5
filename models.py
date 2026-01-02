@@ -98,10 +98,12 @@ class Contact(db.Model):
             linked_user = User.query.filter_by(phone_number=normalized).first()
         if not linked_user:
             # Try matching last 10 digits
-            digits = re.sub(r'\D', '', self.phone_number)
+            digits = re.sub(r'\D', '', self.phone_number) if self.phone_number else ''
             if len(digits) >= 10:
                 last_10 = digits[-10:]
                 for u in User.query.all():
+                    if not u.phone_number:
+                        continue
                     u_digits = re.sub(r'\D', '', u.phone_number)
                     if len(u_digits) >= 10 and u_digits[-10:] == last_10:
                         linked_user = u
