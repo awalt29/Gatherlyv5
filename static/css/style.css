@@ -620,6 +620,14 @@ h1 {
     align-items: center;
 }
 
+.friends-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    opacity: 0.6;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
 .friends-list {
     display: flex;
     gap: 12px;
