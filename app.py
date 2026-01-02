@@ -1159,9 +1159,6 @@ def my_availability():
         data = request.json
         time_slots = data.get('time_slots', [])
         
-        if len(time_slots) == 0:
-            return jsonify({'error': 'Please select at least one time slot'}), 400
-        
         # Find or create availability for this week
         availability = UserAvailability.query.filter_by(
             user_id=user_id,
