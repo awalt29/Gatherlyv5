@@ -1054,8 +1054,16 @@ def send_nudge(friend_user_id):
     if not Friendship.are_friends(user_id, friend_user_id):
         return jsonify({'error': 'You can only nudge friends'}), 403
     
-    # Check if friend already has availability
-    if friend.is_active_this_week():
+    # Check if friend has ACTUAL availability saved (not just active status from signup)
+    # Look for real availability records, not just weekly_availability_date
+    friend_availability = UserAvailability.query.filter_by(user_id=friend_user_id).first()
+    has_actual_availability = (
+        friend_availability is not None and 
+        friend_availability.time_slots and 
+        len(friend_availability.time_slots) > 0
+    )
+    
+    if has_actual_availability and friend.is_active_this_week():
         return jsonify({
             'error': f'{friend.name} has already shared their availability!',
             'already_active': True
