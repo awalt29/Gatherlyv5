@@ -110,20 +110,25 @@ def get_monday_of_week(date=None):
 
 def send_sms(to_phone, message):
     """Send SMS via Twilio"""
+    # Normalize phone number for Twilio (E.164 format)
+    normalized_to = normalize_phone(to_phone)
+    
     if not twilio_client:
-        print(f"[SMS Mock] To: {to_phone}")
+        print(f"[SMS Mock] To: {normalized_to}")
         print(f"[SMS Mock] Message: {message}")
         return {'status': 'mocked', 'message': 'Twilio not configured'}
     
+    print(f"[SMS] Sending to: {to_phone} (normalized: {normalized_to})")
+    
     try:
-        message = twilio_client.messages.create(
+        result = twilio_client.messages.create(
             body=message,
             from_=TWILIO_PHONE_NUMBER,
-            to=to_phone
+            to=normalized_to
         )
-        return {'status': 'sent', 'sid': message.sid}
+        return {'status': 'sent', 'sid': result.sid}
     except Exception as e:
-        print(f"Error sending SMS: {e}")
+        print(f"[SMS] Error sending to {normalized_to}: {e}")
         return {'status': 'error', 'message': str(e)}
 
 
@@ -1033,6 +1038,57 @@ def get_friends():
             })
     
     return jsonify(friends)
+
+
+@app.route('/api/nudge/<int:friend_user_id>', methods=['POST'])
+def send_nudge(friend_user_id):
+    """Send a nudge to a friend asking them to share their availability"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    friend = User.query.get_or_404(friend_user_id)
+    
+    # Verify they are actually friends
+    if not Friendship.are_friends(user_id, friend_user_id):
+        return jsonify({'error': 'You can only nudge friends'}), 403
+    
+    # Check if friend already has availability
+    if friend.is_active_this_week():
+        return jsonify({
+            'error': f'{friend.name} has already shared their availability!',
+            'already_active': True
+        }), 400
+    
+    # Send SMS nudge
+    app_url = os.getenv('APP_BASE_URL', 'https://trygatherly.com')
+    if not app_url.startswith('http'):
+        app_url = f'https://{app_url}'
+    
+    sms_message = f"👋 {user.name} wants to make plans! Share your availability on Gatherly: {app_url}"
+    send_sms(friend.phone_number, sms_message)
+    print(f"[NUDGE] {user.name} nudged {friend.name}")
+    
+    # Create notification for the friend (recipient of nudge)
+    friend_notification = Notification(
+        planner_id=friend_user_id,
+        contact_id=None,
+        message=f"👋 {user.name} wants to see your availability! Add your times to connect."
+    )
+    db.session.add(friend_notification)
+    
+    # Create notification for the sender (confirmation)
+    sender_notification = Notification(
+        planner_id=user_id,
+        contact_id=None,
+        message=f"Nudge sent to {friend.name}"
+    )
+    db.session.add(sender_notification)
+    
+    db.session.commit()
+    
+    return jsonify({'message': f'Nudge sent to {friend.name}'}), 200
 
 
 @app.route('/api/friends/availability', methods=['GET'])

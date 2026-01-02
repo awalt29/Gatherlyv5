@@ -316,8 +316,139 @@ function renderFriends() {
             avatar.appendChild(badge);
         }
         
+        // Add long-press handler for nudge feature (only for linked friends)
+        if (friend.is_linked && friend.linked_user_id) {
+            setupLongPress(avatar, friend);
+        }
+        
         friendsList.appendChild(avatar);
     });
+}
+
+// Long press detection for nudge feature
+let longPressTimer = null;
+const LONG_PRESS_DURATION = 500; // ms
+
+function setupLongPress(element, friend) {
+    let pressStarted = false;
+    
+    // Mouse events
+    element.addEventListener('mousedown', (e) => {
+        pressStarted = true;
+        longPressTimer = setTimeout(() => {
+            if (pressStarted) {
+                e.preventDefault();
+                showNudgePopup(friend, e);
+            }
+        }, LONG_PRESS_DURATION);
+    });
+    
+    element.addEventListener('mouseup', () => {
+        pressStarted = false;
+        clearTimeout(longPressTimer);
+    });
+    
+    element.addEventListener('mouseleave', () => {
+        pressStarted = false;
+        clearTimeout(longPressTimer);
+    });
+    
+    // Touch events for mobile
+    element.addEventListener('touchstart', (e) => {
+        pressStarted = true;
+        longPressTimer = setTimeout(() => {
+            if (pressStarted) {
+                e.preventDefault();
+                showNudgePopup(friend, e);
+            }
+        }, LONG_PRESS_DURATION);
+    }, { passive: false });
+    
+    element.addEventListener('touchend', () => {
+        pressStarted = false;
+        clearTimeout(longPressTimer);
+    });
+    
+    element.addEventListener('touchmove', () => {
+        pressStarted = false;
+        clearTimeout(longPressTimer);
+    });
+}
+
+// Show nudge popup
+function showNudgePopup(friend, event) {
+    // Close any existing popup
+    closeNudgePopup();
+    
+    const popup = document.createElement('div');
+    popup.className = 'nudge-popup';
+    popup.id = 'nudgePopup';
+    
+    popup.innerHTML = `
+        <div class="nudge-popup-content">
+            <div class="nudge-popup-header">
+                <span class="nudge-friend-name">${friend.name}</span>
+            </div>
+            <button class="nudge-btn" onclick="sendNudge(${friend.linked_user_id}, '${friend.name.replace(/'/g, "\\'")}')">
+                👋 Send Nudge
+            </button>
+            <button class="nudge-cancel-btn" onclick="closeNudgePopup()">Cancel</button>
+        </div>
+    `;
+    
+    document.body.appendChild(popup);
+    
+    // Position near the element
+    const rect = event.target.getBoundingClientRect();
+    popup.style.position = 'fixed';
+    popup.style.top = `${rect.bottom + 10}px`;
+    popup.style.left = `${Math.max(10, rect.left - 50)}px`;
+    
+    // Close on outside click
+    setTimeout(() => {
+        document.addEventListener('click', closeNudgePopupOnOutsideClick);
+    }, 100);
+}
+
+function closeNudgePopupOnOutsideClick(e) {
+    const popup = document.getElementById('nudgePopup');
+    if (popup && !popup.contains(e.target)) {
+        closeNudgePopup();
+    }
+}
+
+function closeNudgePopup() {
+    const popup = document.getElementById('nudgePopup');
+    if (popup) {
+        popup.remove();
+    }
+    document.removeEventListener('click', closeNudgePopupOnOutsideClick);
+}
+
+// Send nudge to friend
+async function sendNudge(friendUserId, friendName) {
+    closeNudgePopup();
+    
+    try {
+        const response = await fetch(`/api/nudge/${friendUserId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showStatus(`Nudge sent to ${friendName}!`, 'success');
+        } else if (response.status === 400 && data.already_active) {
+            // Friend already has availability
+            alert(`${friendName} has already shared their availability!`);
+        } else {
+            showStatus(data.error || 'Error sending nudge', 'error');
+        }
+    } catch (error) {
+        console.error('Error sending nudge:', error);
+        showStatus('Error sending nudge', 'error');
+    }
 }
 
 // Get initials from name
