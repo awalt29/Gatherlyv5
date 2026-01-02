@@ -146,7 +146,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Show the main content now that we're authenticated
             document.querySelector('.container').style.opacity = '1';
             document.getElementById('setupModal').classList.remove('active');
-            // Load friends first (populates selectedFriends), then load availability
+            // Load linked friends first (for active status), then contacts, then availability
+            await loadLinkedFriends();
             await loadFriends();
             loadMyAvailability();
             loadFriendsAvailability();
@@ -252,7 +253,8 @@ async function setupPlanner(event) {
             
             document.getElementById('setupModal').classList.remove('active');
             showStatus('Welcome, ' + name + '!', 'success');
-            // Load friends first (populates selectedFriends), then load availability
+            // Load linked friends first (for active status), then contacts, then availability
+            await loadLinkedFriends();
             await loadFriends();
             loadMyAvailability();
             loadFriendsAvailability();
@@ -1826,7 +1828,8 @@ async function loadNotifications() {
         const currentCount = notifications.length + friendRequests.length;
         if (lastNotificationCount !== null && currentCount > lastNotificationCount) {
             console.log('New notification detected, refreshing data');
-            // Refresh friends list (updates status badges like pending -> connected)
+            // Refresh linked friends (for active status), then friends list
+            await loadLinkedFriends();
             await loadFriends();
             // Refresh the calendar when new notifications arrive
             loadFriendsAvailability();
