@@ -690,6 +690,10 @@ h1 {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+    /* Prevent text selection and copy menu on long press */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }
 
 .friend-avatar.selected {
