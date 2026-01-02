@@ -781,7 +781,7 @@ h1 {
 }
 
 .friend-avatar.inactive-friend::after {
-    content: '💤';
+    content: '👋';
     position: absolute;
     top: -6px;
     right: -6px;
