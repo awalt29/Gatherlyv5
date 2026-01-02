@@ -345,10 +345,47 @@ function renderFriends() {
 
 // Prompt to nudge an inactive friend
 function promptNudge(friend) {
-    const shouldNudge = confirm(`${friend.name} hasn't shared their availability yet.\n\nSend them a nudge?`);
-    if (shouldNudge && friend.linked_user_id) {
-        sendNudge(friend.linked_user_id, friend.name);
-    }
+    showNudgeConfirm(friend);
+}
+
+// Custom themed confirm dialog for nudge
+function showNudgeConfirm(friend) {
+    // Remove any existing dialog
+    const existing = document.getElementById('nudgeConfirmDialog');
+    if (existing) existing.remove();
+    
+    const dialog = document.createElement('div');
+    dialog.id = 'nudgeConfirmDialog';
+    dialog.className = 'nudge-confirm-overlay';
+    dialog.innerHTML = `
+        <div class="nudge-confirm-dialog">
+            <div class="nudge-confirm-message">
+                <strong>${friend.name}</strong> hasn't shared their availability yet.
+            </div>
+            <div class="nudge-confirm-question">Send them a nudge?</div>
+            <div class="nudge-confirm-buttons">
+                <button class="nudge-confirm-cancel" onclick="closeNudgeConfirm()">Cancel</button>
+                <button class="nudge-confirm-ok" onclick="confirmNudge(${friend.linked_user_id}, '${friend.name.replace(/'/g, "\\'")}')">Send Nudge</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(dialog);
+    
+    // Close on overlay click
+    dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) closeNudgeConfirm();
+    });
+}
+
+function closeNudgeConfirm() {
+    const dialog = document.getElementById('nudgeConfirmDialog');
+    if (dialog) dialog.remove();
+}
+
+function confirmNudge(friendUserId, friendName) {
+    closeNudgeConfirm();
+    sendNudge(friendUserId, friendName);
 }
 
 // Check if friends list has overflow (more than visible)

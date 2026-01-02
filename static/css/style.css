@@ -1861,6 +1861,86 @@ body:has(.guest-info) .container {
     color: var(--text-light);
 }
 
+/* Nudge Confirm Dialog */
+.nudge-confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.15s ease-out;
+}
+
+.nudge-confirm-dialog {
+    background: var(--secondary-bg);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 320px;
+    width: 90%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.nudge-confirm-message {
+    font-size: 16px;
+    color: var(--text-light);
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.nudge-confirm-message strong {
+    color: var(--accent-mint);
+}
+
+.nudge-confirm-question {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+.nudge-confirm-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.nudge-confirm-cancel {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nudge-confirm-cancel:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-light);
+}
+
+.nudge-confirm-ok {
+    background: var(--accent-mint);
+    border: none;
+    color: var(--primary-bg);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nudge-confirm-ok:hover {
+    background: var(--accent-mint-hover);
+    transform: scale(1.02);
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
