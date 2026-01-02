@@ -1042,11 +1042,19 @@ def get_friends():
         friend_id = f.user_id_2 if f.user_id_1 == user_id else f.user_id_1
         friend = User.query.get(friend_id)
         if friend:
+            # Check if friend has ACTUAL availability saved (not just signup active status)
+            friend_availability = UserAvailability.query.filter_by(user_id=friend_id).first()
+            has_actual_availability = (
+                friend_availability and 
+                len(friend_availability.time_slots) > 0 and 
+                friend.is_active_this_week()
+            )
+            
             friends.append({
                 'id': friend.id,
                 'name': friend.name,
                 'phone_number': friend.phone_number,
-                'is_active_this_week': friend.is_active_this_week(),
+                'is_active_this_week': has_actual_availability,
                 'friendship_created_at': f.created_at.isoformat()
             })
     
