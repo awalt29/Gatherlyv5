@@ -245,10 +245,15 @@ def auth_signup():
     # Create new user - set weekly_availability_date to today so they're "active" for 7 days
     # This lets them see friends' availability immediately without having to add their own first
     today = date.today()
+    
+    # Normalize phone number on save for consistent matching
+    normalized_phone = normalize_phone(data['phone_number'])
+    print(f"[SIGNUP] Normalizing phone: {data['phone_number']} → {normalized_phone}")
+    
     user = User(
         name=data['name'],
         email=data['email'],
-        phone_number=data['phone_number'],
+        phone_number=normalized_phone,  # Store normalized for consistent matching
         timezone=data.get('timezone', 'America/New_York'),  # Default to EST
         weekly_availability_date=today  # Start active so they can see friends' availability
     )
@@ -642,20 +647,29 @@ def contacts():
     
     if request.method == 'POST':
         data = request.json
-        print(f"[ADD CONTACT] Attempting to add contact with phone: {data.get('phone_number')}")
+        input_phone = data.get('phone_number', '')
+        normalized_input = normalize_phone(input_phone)
+        print(f"[ADD CONTACT] Attempting to add contact with phone: {input_phone} (normalized: {normalized_input})")
         
-        # Check if contact already exists for this owner
+        # Check if contact already exists for this owner (check both original and normalized)
         existing_contact = Contact.query.filter_by(
             owner_id=data['owner_id'],
-            phone_number=data['phone_number']
+            phone_number=normalized_input
         ).first()
+        
+        # Also check for old non-normalized format
+        if not existing_contact:
+            existing_contact = Contact.query.filter_by(
+                owner_id=data['owner_id'],
+                phone_number=input_phone
+            ).first()
         
         if existing_contact:
             print(f"[ADD CONTACT] Contact already exists: {existing_contact.name}")
             return jsonify(existing_contact.to_dict()), 200
         
         # Check if this phone number belongs to a registered user on the platform
-        existing_user = find_user_by_phone(data['phone_number'])
+        existing_user = find_user_by_phone(input_phone)
         print(f"[ADD CONTACT] find_user_by_phone result: {existing_user.name if existing_user else 'NOT FOUND'}")
         
         # Determine the name to use
@@ -672,11 +686,15 @@ def contacts():
         # Get max display_order for this owner to append new contact at the end
         max_order = db.session.query(db.func.max(Contact.display_order)).filter_by(owner_id=data['owner_id']).scalar() or 0
         
+        # Normalize phone number for consistent matching
+        normalized_contact_phone = normalize_phone(data['phone_number'])
+        print(f"[ADD CONTACT] Normalizing phone: {data['phone_number']} → {normalized_contact_phone}")
+        
         # Create new contact
         contact = Contact(
             owner_id=data['owner_id'],
             name=contact_name,
-            phone_number=data['phone_number'],
+            phone_number=normalized_contact_phone,  # Store normalized
             display_order=max_order + 1
         )
         db.session.add(contact)
