@@ -54,11 +54,10 @@ def send_sms(to_number, message):
         return False
 
 def send_reminders():
-    """Send reminders to users who are no longer active (haven't saved availability in 7 days)"""
+    """Send Sunday evening reminders to all users who have weekly reminders enabled"""
     with app.app_context():
         # Get current UTC time
         utc_now = datetime.now(pytz.UTC)
-        today = utc_now.date()
         print(f"🌍 Current UTC time: {utc_now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         
         # Find all users
@@ -85,25 +84,15 @@ def send_reminders():
             
             # Send reminders on Sunday evening only
             if today_for_user == 'sunday':
-                # Check if user is no longer active (hasn't saved in 7+ days)
-                is_inactive = True
-                if user.weekly_availability_date:
-                    days_since_save = (today - user.weekly_availability_date).days
-                    is_inactive = days_since_save >= 7
-                    print(f"   📅 Last saved {days_since_save} days ago")
+                # Send reminder to all users with reminders enabled
+                base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
+                message = f"Hi {user.name.split()[0]}! 👋 Share your availability for the week ahead: {base_url}"
                 
-                if is_inactive:
-                    # Send reminder to inactive users
-                    base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
-                    message = f"Hi {user.name.split()[0]}! 👋 Share your availability for the week ahead: {base_url}"
-                    
-                    if send_sms(user.phone_number, message):
-                        sent_count += 1
-                        print(f"   📱 ✅ Sent reminder to {user.name} ({user.phone_number})")
-                    else:
-                        print(f"   📱 ❌ Failed to send to {user.name}")
+                if send_sms(user.phone_number, message):
+                    sent_count += 1
+                    print(f"   📱 ✅ Sent reminder to {user.name} ({user.phone_number})")
                 else:
-                    print(f"   ✅ Still active, no reminder needed")
+                    print(f"   📱 ❌ Failed to send to {user.name}")
             else:
                 print(f"   ⏭️  Skipped (not Sunday for this user, it's {today_for_user})")
         
