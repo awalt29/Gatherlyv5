@@ -25,6 +25,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(200), nullable=False)
     reminder_days = db.Column(db.JSON, default=lambda: ["monday", "tuesday", "wednesday", "thursday"])  # Legacy - kept for compatibility
     notification_friend_ids = db.Column(db.JSON, default=list)  # List of friend user IDs to notify about availability updates
+    weekly_reminders_enabled = db.Column(db.Boolean, default=True)  # Whether to receive Sunday evening reminders
     timezone = db.Column(db.String(50), default='America/New_York')  # User's timezone
     weekly_availability_date = db.Column(db.Date)  # Date of the Monday when user submitted availability this week
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -59,6 +60,7 @@ class User(db.Model):
             'phone_number': self.phone_number,
             'timezone': self.timezone,
             'is_active_this_week': self.is_active_this_week(),
+            'weekly_reminders_enabled': self.weekly_reminders_enabled if self.weekly_reminders_enabled is not None else True,
             'created_at': self.created_at.isoformat()
         }
 

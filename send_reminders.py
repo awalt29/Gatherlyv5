@@ -76,6 +76,13 @@ def send_reminders():
             
             print(f"👤 {user.name}: {user_time.strftime('%Y-%m-%d %H:%M:%S %Z')} ({today_for_user})")
             
+            # Check if user has weekly reminders enabled (default to True if not set)
+            reminders_enabled = user.weekly_reminders_enabled if user.weekly_reminders_enabled is not None else True
+            
+            if not reminders_enabled:
+                print(f"   ⏭️  Skipped (weekly reminders disabled)")
+                continue
+            
             # Send reminders on Sunday evening only
             if today_for_user == 'sunday':
                 # Check if user is no longer active (hasn't saved in 7+ days)

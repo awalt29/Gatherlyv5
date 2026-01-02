@@ -140,7 +140,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 id: data.user.id, 
                 name: data.user.name, 
                 phone: data.user.phone_number,
-                email: data.user.email
+                email: data.user.email,
+                weekly_reminders_enabled: data.user.weekly_reminders_enabled !== false
             };
             
             // Show the main content now that we're authenticated
@@ -248,7 +249,7 @@ async function setupPlanner(event) {
         
         if (response.ok) {
             const user = await response.json();
-            plannerInfo = { id: user.id, name: user.name, phone: user.phone_number, email: user.email };
+            plannerInfo = { id: user.id, name: user.name, phone: user.phone_number, email: user.email, weekly_reminders_enabled: user.weekly_reminders_enabled !== false };
             localStorage.setItem('gatherly_planner', JSON.stringify(plannerInfo));
             
             document.getElementById('setupModal').classList.remove('active');
@@ -2165,6 +2166,7 @@ async function openSettings() {
     // Load timezone and notification preferences
     await loadTimezone();
     await loadNotificationFriends();
+    loadWeeklyReminders();
     
     document.getElementById('settingsModal').classList.add('active');
 }
@@ -2207,7 +2209,7 @@ async function updateAccount(event) {
         
         if (response.ok) {
             const updatedUser = await response.json();
-            plannerInfo = { id: updatedUser.id, name: updatedUser.name, phone: updatedUser.phone_number, email: updatedUser.email };
+            plannerInfo = { id: updatedUser.id, name: updatedUser.name, phone: updatedUser.phone_number, email: updatedUser.email, weekly_reminders_enabled: updatedUser.weekly_reminders_enabled !== false };
             localStorage.setItem('gatherly_planner', JSON.stringify(plannerInfo));
             
             closeEditAccount();
@@ -2300,6 +2302,44 @@ async function saveNotificationPreferences() {
     } catch (error) {
         console.error('Error saving notification preferences:', error);
         showStatus('Error saving preferences', 'error');
+    }
+}
+
+// Weekly reminders functions
+function loadWeeklyReminders() {
+    const toggle = document.getElementById('weeklyRemindersToggle');
+    if (toggle && plannerInfo) {
+        // Default to true if not set
+        toggle.checked = plannerInfo.weekly_reminders_enabled !== false;
+    }
+}
+
+async function saveWeeklyReminders() {
+    const toggle = document.getElementById('weeklyRemindersToggle');
+    const enabled = toggle.checked;
+    
+    try {
+        const response = await fetch(`/api/users/${plannerInfo.id}/weekly-reminders`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ enabled: enabled })
+        });
+        
+        if (response.ok) {
+            // Update local plannerInfo
+            plannerInfo.weekly_reminders_enabled = enabled;
+            showStatus(enabled ? 'Weekly reminders enabled!' : 'Weekly reminders disabled', 'success');
+        } else {
+            showStatus('Error updating preferences', 'error');
+            // Revert toggle
+            toggle.checked = !enabled;
+        }
+    } catch (error) {
+        console.error('Error saving weekly reminders:', error);
+        showStatus('Error updating preferences', 'error');
+        toggle.checked = !enabled;
     }
 }
 

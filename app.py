@@ -642,6 +642,19 @@ def notification_friends(user_id):
     return jsonify({'friend_ids': user.notification_friend_ids or []}), 200
 
 
+@app.route('/api/users/<int:user_id>/weekly-reminders', methods=['PUT'])
+def update_weekly_reminders(user_id):
+    """Update whether user wants weekly Sunday reminders"""
+    user = User.query.get_or_404(user_id)
+    
+    data = request.json
+    enabled = data.get('enabled', True)
+    user.weekly_reminders_enabled = enabled
+    db.session.commit()
+    
+    return jsonify({'message': 'Weekly reminders updated', 'weekly_reminders_enabled': user.weekly_reminders_enabled}), 200
+
+
 # API Routes - Contacts
 @app.route('/api/contacts', methods=['GET', 'POST'])
 def contacts():
