@@ -1095,7 +1095,7 @@ def send_nudge(friend_user_id):
     if not app_url.startswith('http'):
         app_url = f'https://{app_url}'
     
-    sms_message = f"👋 {user.name} wants to make plans! Share your availability on Gatherly: {app_url}"
+    sms_message = f"👋 {user.name} wants to know when you're free! Share your availability on Gatherly: {app_url}"
     send_sms(friend.phone_number, sms_message)
     print(f"[NUDGE] {user.name} nudged {friend.name}")
     
