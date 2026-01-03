@@ -1436,10 +1436,10 @@ function updateActiveStatus(isActive, daysRemaining) {
         // Hide when active
         statusEl.style.display = 'none';
     } else {
-        // Count linked friends (friends who are on the platform)
-        const linkedFriendsCount = allFriends.filter(f => f.is_linked).length;
-        const friendText = linkedFriendsCount > 0 
-            ? `<div class="friends-waiting">${linkedFriendsCount} ${linkedFriendsCount === 1 ? 'friend has' : 'friends have'} shared their availability!</div>`
+        // Count friends who have actually shared availability (not just linked)
+        const friendsWithAvailability = linkedFriends.filter(f => f.is_active_this_week).length;
+        const friendText = friendsWithAvailability > 0 
+            ? `<div class="friends-waiting">${friendsWithAvailability} ${friendsWithAvailability === 1 ? 'friend has' : 'friends have'} shared their availability!</div>`
             : '';
         
         statusEl.innerHTML = `
