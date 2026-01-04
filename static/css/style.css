@@ -1525,25 +1525,28 @@ h1 {
     justify-content: center;
     gap: 8px;
     width: 100%;
-    padding: 14px;
+    padding: 16px;
     margin-bottom: 15px;
-    background: transparent;
-    border: 2px dashed var(--accent-mint);
-    border-radius: 12px;
-    color: var(--accent-mint);
-    font-size: 14px;
-    font-weight: 600;
+    background: var(--accent-mint);
+    border: 2px solid #5BA3FF;
+    border-radius: 25px;
+    color: var(--primary-bg);
+    font-size: 16px;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .btn-add-friend:hover {
-    background: rgba(125, 211, 192, 0.1);
+    background: var(--accent-mint-dark);
+    transform: translateY(-1px);
 }
 
 .btn-add-friend .plus-icon {
-    font-size: 20px;
-    font-weight: 300;
+    font-size: 18px;
+    font-weight: 700;
 }
 
 /* Form hints */
