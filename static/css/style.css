@@ -226,16 +226,9 @@ body {
     object-fit: contain;
 }
 
-.notification-avatar.icon-avatar.accepted {
-    background: rgba(34, 197, 94, 0.2);
-    border-radius: 50%;
-    padding: 4px;
-}
-
+.notification-avatar.icon-avatar.accepted,
 .notification-avatar.icon-avatar.declined {
-    background: rgba(239, 68, 68, 0.2);
-    border-radius: 50%;
-    padding: 4px;
+    background: transparent;
 }
 
 .friend-request-actions {
@@ -2167,18 +2160,9 @@ body:has(.guest-info) .container {
 }
 
 /* Hangout notification styles */
-.notification-item.hangout-invite .notification-avatar,
-.notification-item.hangout-response .notification-avatar {
-    background: var(--accent-mint);
-    color: var(--primary-bg);
-}
-
-.notification-item.hangout-response .notification-avatar.accepted {
-    background: #22c55e;
-}
-
-.notification-item.hangout-response .notification-avatar.declined {
-    background: #ef4444;
+.notification-item.hangout-invite .notification-avatar.icon-avatar,
+.notification-item.hangout-response .notification-avatar.icon-avatar {
+    background: transparent;
 }
 
 .notification-description {
