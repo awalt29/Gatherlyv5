@@ -1912,7 +1912,9 @@ function renderNotifications(notifications, friendRequests = []) {
             const timeAgo = getTimeAgo(new Date(req.created_at));
             return `
                 <div class="notification-item unread friend-request" data-request-id="${req.id}">
-                    <div class="notification-avatar friend-request-avatar">👤</div>
+                    <div class="notification-avatar icon-avatar">
+                        <img src="/static/icons/friend-request.png" alt="Friend request">
+                    </div>
                     <div class="notification-content">
                         <div class="notification-text">
                             <strong>${req.from_user_name}</strong> wants to be friends
@@ -1947,7 +1949,9 @@ function renderNotifications(notifications, friendRequests = []) {
                 
                 return `
                     <div class="notification-item ${notif.read ? '' : 'unread'} hangout-invite" data-hangout-id="${notif.hangout_id}">
-                        <div class="notification-avatar">📅</div>
+                        <div class="notification-avatar icon-avatar">
+                            <img src="/static/icons/event-invite.png" alt="Event invite">
+                        </div>
                         <div class="notification-content">
                             <div class="notification-text">${notif.message}</div>
                             ${inviteeList ? `<div class="notification-invitees">${inviteeList}</div>` : ''}
@@ -1973,7 +1977,9 @@ function renderNotifications(notifications, friendRequests = []) {
                 const isAccepted = notif.message.includes('accepted');
                 return `
                     <div class="notification-item ${notif.read ? '' : 'unread'} hangout-response">
-                        <div class="notification-avatar ${isAccepted ? 'accepted' : 'declined'}">${isAccepted ? '✓' : '✗'}</div>
+                        <div class="notification-avatar icon-avatar ${isAccepted ? 'accepted' : 'declined'}">
+                            <img src="/static/icons/event-invite.png" alt="Event response">
+                        </div>
                         <div class="notification-content">
                             <div class="notification-text">${notif.message}</div>
                             <div class="notification-time">${timeAgo}</div>
@@ -1984,10 +1990,23 @@ function renderNotifications(notifications, friendRequests = []) {
             
             // System notifications (no contact) vs contact notifications
             if (!notif.contact_name) {
-                // System notification - show checkmark icon and just the message
+                // Determine icon based on message content
+                let iconSrc = '/static/icons/availability.png'; // default
+                if (notif.message.toLowerCase().includes('nudge') || notif.message.includes('wants to see your availability') || notif.message.includes('wants to know when')) {
+                    iconSrc = '/static/icons/nudge.png';
+                } else if (notif.message.toLowerCase().includes('availability') || notif.message.includes('updated their schedule')) {
+                    iconSrc = '/static/icons/availability.png';
+                } else if (notif.message.toLowerCase().includes('accepted') && notif.message.toLowerCase().includes('friend')) {
+                    iconSrc = '/static/icons/friend-request.png';
+                } else if (notif.message.toLowerCase().includes('invite') || notif.message.toLowerCase().includes('joined')) {
+                    iconSrc = '/static/icons/invite.png';
+                }
+                
                 return `
                     <div class="notification-item ${notif.read ? '' : 'unread'}">
-                        <div class="notification-avatar system-notification">✓</div>
+                        <div class="notification-avatar icon-avatar">
+                            <img src="${iconSrc}" alt="Notification">
+                        </div>
                         <div class="notification-content">
                             <div class="notification-text">${notif.message}</div>
                             <div class="notification-time">${timeAgo}</div>

@@ -215,6 +215,29 @@ body {
     flex-shrink: 0;
 }
 
+.notification-avatar.icon-avatar {
+    background: transparent;
+    padding: 0;
+}
+
+.notification-avatar.icon-avatar img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.notification-avatar.icon-avatar.accepted {
+    background: rgba(34, 197, 94, 0.2);
+    border-radius: 50%;
+    padding: 4px;
+}
+
+.notification-avatar.icon-avatar.declined {
+    background: rgba(239, 68, 68, 0.2);
+    border-radius: 50%;
+    padding: 4px;
+}
+
 .friend-request-actions {
     display: flex;
     gap: 8px;
