@@ -717,8 +717,8 @@ h1 {
     content: '';
     position: absolute;
     top: 0;
-    right: -5px;
-    width: 50px;
+    right: 0;
+    width: 30px;
     height: 100%;
     background: linear-gradient(to right, transparent, var(--primary-bg));
     pointer-events: none;
@@ -731,8 +731,8 @@ h1 {
     content: '';
     position: absolute;
     top: 0;
-    left: -5px;
-    width: 50px;
+    left: 0;
+    width: 30px;
     height: 100%;
     background: linear-gradient(to left, transparent, var(--primary-bg));
     pointer-events: none;
