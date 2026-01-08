@@ -1202,6 +1202,8 @@ h1 {
 /* For notifications modal, let the list handle scrolling */
 #notificationsModal .modal-content {
     overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Manage Friends modal - full screen on mobile */
@@ -1255,8 +1257,9 @@ h1 {
     /* Notifications modal - scrollable list */
     #notificationsModal .notifications-list {
         flex: 1;
+        max-height: none;
         overflow-y: auto;
-        padding-bottom: 20px;
+        padding-bottom: 40px;
     }
 }
 
