@@ -1141,8 +1141,11 @@ function setupCalendar() {
                 return;
             }
             
-            // Close any open popup first
-            closeSlotPopup();
+            // If popup is open and clicking different cell, just close popup (don't select)
+            if (isPopupOpen && !isSameSlot) {
+                closeSlotPopup();
+                return;
+            }
             
             // If cell has friends, show popup menu
             if (hasFriends) {
