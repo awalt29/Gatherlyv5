@@ -1933,10 +1933,12 @@ function renderNotifications(notifications, friendRequests = []) {
                         <img src="/static/icons/friend-request.png" alt="Friend request">
                     </div>
                     <div class="notification-content">
-                        <div class="notification-text">
-                            <strong>${req.from_user_name}</strong> wants to be friends
+                        <div class="notification-header">
+                            <div class="notification-text">
+                                <strong>${req.from_user_name}</strong> wants to be friends
+                            </div>
+                            <div class="notification-time">${timeAgo}</div>
                         </div>
-                        <div class="notification-time">${timeAgo}</div>
                         <div class="friend-request-actions">
                             <button class="btn-accept" onclick="acceptFriendRequest(${req.id})">Accept</button>
                             <button class="btn-reject" onclick="rejectFriendRequest(${req.id})">Decline</button>
@@ -1970,10 +1972,12 @@ function renderNotifications(notifications, friendRequests = []) {
                             <img src="/static/icons/event-invite.png" alt="Event invite">
                         </div>
                         <div class="notification-content">
-                            <div class="notification-text">${notif.message}</div>
+                            <div class="notification-header">
+                                <div class="notification-text">${notif.message}</div>
+                                <div class="notification-time">${timeAgo}</div>
+                            </div>
                             ${inviteeList ? `<div class="notification-invitees">${inviteeList}</div>` : ''}
                             ${hangout?.description ? `<div class="notification-description">"${hangout.description}"</div>` : ''}
-                            <div class="notification-time">${timeAgo}</div>
                             ${hasResponded ? `
                                 <div class="hangout-response-status ${myInvite.status}">
                                     You ${myInvite.status} this invite
@@ -1998,8 +2002,10 @@ function renderNotifications(notifications, friendRequests = []) {
                             <img src="/static/icons/event-invite.png" alt="Event response">
                         </div>
                         <div class="notification-content">
-                            <div class="notification-text">${notif.message}</div>
-                            <div class="notification-time">${timeAgo}</div>
+                            <div class="notification-header">
+                                <div class="notification-text">${notif.message}</div>
+                                <div class="notification-time">${timeAgo}</div>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -2025,8 +2031,10 @@ function renderNotifications(notifications, friendRequests = []) {
                             <img src="${iconSrc}" alt="Notification">
                         </div>
                         <div class="notification-content">
-                            <div class="notification-text">${notif.message}</div>
-                            <div class="notification-time">${timeAgo}</div>
+                            <div class="notification-header">
+                                <div class="notification-text">${notif.message}</div>
+                                <div class="notification-time">${timeAgo}</div>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -2036,10 +2044,12 @@ function renderNotifications(notifications, friendRequests = []) {
                     <div class="notification-item ${notif.read ? '' : 'unread'}">
                         <div class="notification-avatar">${getInitials(notif.contact_name)}</div>
                         <div class="notification-content">
-                            <div class="notification-text">
-                                <strong>${notif.contact_name}</strong> ${notif.message}
+                            <div class="notification-header">
+                                <div class="notification-text">
+                                    <strong>${notif.contact_name}</strong> ${notif.message}
+                                </div>
+                                <div class="notification-time">${timeAgo}</div>
                             </div>
-                            <div class="notification-time">${timeAgo}</div>
                         </div>
                     </div>
                 `;
