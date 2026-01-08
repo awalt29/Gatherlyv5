@@ -1894,6 +1894,12 @@ body:has(.guest-info) .container {
     background: rgba(91, 163, 255, 0.25);
 }
 
+.slot-popup-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 4px 8px;
+}
+
 /* Nudge Popup */
 .nudge-popup {
     position: fixed;
