@@ -276,12 +276,21 @@ body {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    justify-content: center;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
 }
 
 .notification-text {
     font-size: 14px;
     color: var(--text-light);
     line-height: 1.4;
+    flex: 1;
 }
 
 .notification-text strong {
@@ -292,6 +301,8 @@ body {
 .notification-time {
     font-size: 12px;
     color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .no-notifications {
