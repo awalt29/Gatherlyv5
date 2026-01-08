@@ -316,7 +316,8 @@ def auth_signup():
                     notification = Notification(
                         planner_id=inviter.id,
                         contact_id=None,
-                        message=f"{user.name} joined Gatherly! You're now connected."
+                        message=f"{user.name} joined Gatherly! You're now connected.",
+                        from_user_id=user.id
                     )
                     db.session.add(notification)
                     
@@ -962,7 +963,8 @@ def accept_friend_request(request_id):
     notification = Notification(
         planner_id=friend_request.from_user_id,
         contact_id=None,
-        message=f"{current_user.name} accepted your friend request!"
+        message=f"{current_user.name} accepted your friend request!",
+        from_user_id=current_user.id
     )
     db.session.add(notification)
     
@@ -1077,7 +1079,8 @@ def send_nudge(friend_user_id):
     friend_notification = Notification(
         planner_id=friend_user_id,
         contact_id=None,
-        message=f"👋 {user.name} wants to see your availability! Add your times to connect."
+        message=f"👋 {user.name} wants to see your availability! Add your times to connect.",
+        from_user_id=user_id
     )
     db.session.add(friend_notification)
     
@@ -1085,7 +1088,8 @@ def send_nudge(friend_user_id):
     sender_notification = Notification(
         planner_id=user_id,
         contact_id=None,
-        message=f"Nudge sent to {friend.name}"
+        message=f"Nudge sent to {friend.name}",
+        from_user_id=friend_user_id
     )
     db.session.add(sender_notification)
     
@@ -1216,7 +1220,8 @@ def my_availability():
                         notification = Notification(
                             planner_id=watcher.id,
                             contact_id=None,
-                            message=f"{user.name} added new availability"
+                            message=f"{user.name} added new availability",
+                            from_user_id=user_id
                         )
                         db.session.add(notification)
                         
