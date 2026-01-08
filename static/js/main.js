@@ -1184,6 +1184,12 @@ function toggleSlotAvailability(slot, date, timeSlot) {
 function showSlotPopup(e, slot, date, timeSlot, isSelected) {
     const popup = document.getElementById('slotPopup');
     const toggleText = document.getElementById('popupToggleText');
+    const calendar = document.querySelector('.calendar');
+    
+    // Disable calendar scrolling while popup is open
+    if (calendar) {
+        calendar.style.overflowX = 'hidden';
+    }
     
     // Store current slot info
     currentPopupSlot = { element: slot, date, timeSlot, isSelected };
@@ -1217,6 +1223,12 @@ function showSlotPopup(e, slot, date, timeSlot, isSelected) {
 function closeSlotPopup() {
     document.getElementById('slotPopup').classList.remove('active');
     currentPopupSlot = null;
+    
+    // Re-enable calendar scrolling
+    const calendar = document.querySelector('.calendar');
+    if (calendar) {
+        calendar.style.overflowX = 'auto';
+    }
 }
 
 // Toggle availability from popup
