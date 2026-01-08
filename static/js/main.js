@@ -757,8 +757,14 @@ function getContactDisplayMap(contacts) {
     const displayMap = {};
     const initialsGroups = {};
     
-    // Group contacts by their initials
+    // Group contacts by their initials (only for linked/pending contacts)
     contacts.forEach(contact => {
+        // If contact is not on platform and not pending, show smiley
+        if (!contact.is_linked && !contact.is_pending) {
+            displayMap[contact.id] = '=)';
+            return;
+        }
+        
         const initials = getInitials(contact.name);
         if (!initialsGroups[initials]) {
             initialsGroups[initials] = [];
