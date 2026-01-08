@@ -425,7 +425,11 @@ function checkFriendsListOverflow() {
     const hasOverflow = friendsList.scrollWidth > friendsList.clientWidth;
     wrapper.classList.toggle('has-overflow', hasOverflow);
     
-    // Check if already scrolled to end
+    // Check if scrolled from start (show left gradient)
+    const isAtStart = friendsList.scrollLeft <= 5;
+    wrapper.classList.toggle('scrolled-start', !isAtStart && hasOverflow);
+    
+    // Check if already scrolled to end (hide right gradient)
     const isAtEnd = friendsList.scrollLeft + friendsList.clientWidth >= friendsList.scrollWidth - 5;
     wrapper.classList.toggle('scrolled-end', isAtEnd);
 }
@@ -438,6 +442,11 @@ function setupFriendsListScrollListener() {
     if (!friendsList || !wrapper || friendsScrollListenerAdded) return;
     
     friendsList.addEventListener('scroll', () => {
+        // Show left gradient when scrolled from start
+        const isAtStart = friendsList.scrollLeft <= 5;
+        wrapper.classList.toggle('scrolled-start', !isAtStart);
+        
+        // Hide right gradient when scrolled to end
         const isAtEnd = friendsList.scrollLeft + friendsList.clientWidth >= friendsList.scrollWidth - 5;
         wrapper.classList.toggle('scrolled-end', isAtEnd);
     });
