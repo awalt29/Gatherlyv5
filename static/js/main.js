@@ -19,6 +19,20 @@ function getTodayString() {
     return `${year}-${month}-${day}`;
 }
 
+// Format phone number for display: (XXX) XXX-XXXX
+function formatPhoneDisplay(phone) {
+    if (!phone) return '';
+    // Strip all non-digits
+    const digits = phone.replace(/\D/g, '');
+    // Get last 10 digits
+    const last10 = digits.slice(-10);
+    if (last10.length === 10) {
+        return `(${last10.slice(0, 3)}) ${last10.slice(3, 6)}-${last10.slice(6)}`;
+    }
+    // If not 10 digits, return original
+    return phone;
+}
+
 // Add days to a YYYY-MM-DD date string (pure math, no Date objects!)
 function addDaysToDateString(dateStr, daysToAdd) {
     const [year, month, day] = dateStr.split('-').map(Number);
@@ -909,7 +923,7 @@ function renderManageFriends() {
                 <div class="friend-manage-avatar">${displayMap[friend.id]}</div>
                 <div class="friend-manage-details">
                     <div class="friend-manage-name">${friend.name}</div>
-                    <div class="friend-manage-phone">${friend.phone_number}</div>
+                    <div class="friend-manage-phone">${formatPhoneDisplay(friend.phone_number)}</div>
                     ${statusBadge ? `<div class="friend-manage-status">${statusBadge}</div>` : ''}
                 </div>
             </div>
@@ -2178,7 +2192,7 @@ async function openSettings() {
         </div>
         <div class="account-info-item">
             <div class="account-info-label">Phone Number</div>
-            <div class="account-info-value">${plannerInfo.phone}</div>
+            <div class="account-info-value">${formatPhoneDisplay(plannerInfo.phone)}</div>
         </div>
     `;
     
