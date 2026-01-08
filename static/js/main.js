@@ -34,6 +34,18 @@ function formatPhoneDisplay(phone) {
     return phone;
 }
 
+// Bold a name in a notification message
+function formatNotificationMessage(message, fromUserName) {
+    if (!message) return '';
+    if (!fromUserName) return message;
+    
+    // Escape special regex characters in the name
+    const escapedName = fromUserName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    // Replace the name with a bolded version
+    return message.replace(new RegExp(escapedName, 'g'), `<strong>${fromUserName}</strong>`);
+}
+
 // Add days to a YYYY-MM-DD date string (pure math, no Date objects!)
 function addDaysToDateString(dateStr, daysToAdd) {
     const [year, month, day] = dateStr.split('-').map(Number);
@@ -1973,7 +1985,7 @@ function renderNotifications(notifications, friendRequests = []) {
                         </div>
                         <div class="notification-content">
                             <div class="notification-header">
-                                <div class="notification-text">${notif.message}</div>
+                                <div class="notification-text">${formatNotificationMessage(notif.message, notif.from_user_name)}</div>
                                 <div class="notification-time">${timeAgo}</div>
                             </div>
                             ${inviteeList ? `<div class="notification-invitees">${inviteeList}</div>` : ''}
@@ -2003,7 +2015,7 @@ function renderNotifications(notifications, friendRequests = []) {
                         </div>
                         <div class="notification-content">
                             <div class="notification-header">
-                                <div class="notification-text">${notif.message}</div>
+                                <div class="notification-text">${formatNotificationMessage(notif.message, notif.from_user_name)}</div>
                                 <div class="notification-time">${timeAgo}</div>
                             </div>
                         </div>
@@ -2032,7 +2044,7 @@ function renderNotifications(notifications, friendRequests = []) {
                         </div>
                         <div class="notification-content">
                             <div class="notification-header">
-                                <div class="notification-text">${notif.message}</div>
+                                <div class="notification-text">${formatNotificationMessage(notif.message, notif.from_user_name)}</div>
                                 <div class="notification-time">${timeAgo}</div>
                             </div>
                         </div>

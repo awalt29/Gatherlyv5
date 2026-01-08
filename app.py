@@ -316,7 +316,7 @@ def auth_signup():
                     notification = Notification(
                         planner_id=inviter.id,
                         contact_id=None,
-                        message=f"<strong>{user.name}</strong> joined Gatherly! You're now connected."
+                        message=f"{user.name} joined Gatherly! You're now connected."
                     )
                     db.session.add(notification)
                     
@@ -793,7 +793,7 @@ def invite_contact(contact_id):
         notification = Notification(
             planner_id=user.id,
             contact_id=None,
-            message=f"Invite sent to <strong>{contact.name}</strong>"
+            message=f"Invite sent to {contact.name}"
         )
         db.session.add(notification)
         db.session.commit()
@@ -962,7 +962,7 @@ def accept_friend_request(request_id):
     notification = Notification(
         planner_id=friend_request.from_user_id,
         contact_id=None,
-        message=f"<strong>{current_user.name}</strong> accepted your friend request!"
+        message=f"{current_user.name} accepted your friend request!"
     )
     db.session.add(notification)
     
@@ -1077,7 +1077,7 @@ def send_nudge(friend_user_id):
     friend_notification = Notification(
         planner_id=friend_user_id,
         contact_id=None,
-        message=f"👋 <strong>{user.name}</strong> wants to see your availability! Add your times to connect."
+        message=f"👋 {user.name} wants to see your availability! Add your times to connect."
     )
     db.session.add(friend_notification)
     
@@ -1085,7 +1085,7 @@ def send_nudge(friend_user_id):
     sender_notification = Notification(
         planner_id=user_id,
         contact_id=None,
-        message=f"Nudge sent to <strong>{friend.name}</strong>"
+        message=f"Nudge sent to {friend.name}"
     )
     db.session.add(sender_notification)
     
@@ -1216,7 +1216,7 @@ def my_availability():
                         notification = Notification(
                             planner_id=watcher.id,
                             contact_id=None,
-                            message=f"<strong>{user.name}</strong> added new availability"
+                            message=f"{user.name} added new availability"
                         )
                         db.session.add(notification)
                         
@@ -1723,7 +1723,7 @@ def create_hangout():
             
             notification = Notification(
                 planner_id=user_id,  # The invitee receives the notification
-                message=f"<strong>{creator.name}</strong> invited you to hang out {day_name} {time_display} ({month_day})",
+                message=f"{creator.name} invited you to hang out {day_name} {time_display} ({month_day})",
                 notification_type='hangout_invite',
                 hangout_id=hangout.id,
                 from_user_id=creator_id
@@ -1818,7 +1818,7 @@ def respond_to_hangout(hangout_id):
     month_day = date_obj.strftime('%-m/%-d')
     creator_notification = Notification(
         planner_id=hangout.creator_id,
-        message=f"<strong>{user.name}</strong> {response_text} your hangout invite for {day_name} {hangout.time_slot.lower()} ({month_day})",
+        message=f"{user.name} {response_text} your hangout invite for {day_name} {hangout.time_slot.lower()} ({month_day})",
         notification_type='hangout_response',
         hangout_id=hangout_id,
         from_user_id=user_id
