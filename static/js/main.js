@@ -907,13 +907,11 @@ function renderManageFriends() {
         item.dataset.friendId = friend.id;
         item.draggable = true;
         
-        // Determine status badge
+        // Determine status badge (only show for pending or not on app)
         let statusBadge = '';
-        if (friend.is_linked) {
-            statusBadge = '<span class="friend-status linked">✓ Connected</span>';
-        } else if (friend.is_pending) {
+        if (friend.is_pending) {
             statusBadge = '<span class="friend-status pending">⏳ Pending</span>';
-        } else {
+        } else if (!friend.is_linked) {
             statusBadge = '<span class="friend-status not-on-app">Not on app</span>';
         }
         
