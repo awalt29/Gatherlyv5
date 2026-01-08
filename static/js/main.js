@@ -8,6 +8,7 @@ let currentPlanId = null;
 let planningMode = 'setup'; // setup, selecting, planning, viewing
 let weekDays = []; // Store the 7 days of current week starting from today
 let lastNotificationCount = null; // Track notification count to detect new ones (null = not initialized)
+let lastNotificationData = null; // Track last rendered data to avoid unnecessary re-renders
 let currentPopupSlot = null; // Track the slot the popup is open for
 
 // Get today's date as YYYY-MM-DD string (no timezone conversion)
@@ -1898,8 +1899,12 @@ async function loadNotifications() {
             badge.style.display = 'none';
         }
         
-        // Render notifications with friend requests
-        renderNotifications(notifications, friendRequests);
+        // Only re-render if data has changed (prevents icon blinking)
+        const currentData = JSON.stringify({ notifications, friendRequests });
+        if (currentData !== lastNotificationData) {
+            lastNotificationData = currentData;
+            renderNotifications(notifications, friendRequests);
+        }
     } catch (error) {
         console.error('Error loading notifications:', error);
     }
