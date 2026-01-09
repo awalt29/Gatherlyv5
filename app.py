@@ -1018,12 +1018,12 @@ def get_friends():
         friend_id = f.user_id_2 if f.user_id_1 == user_id else f.user_id_1
         friend = User.query.get(friend_id)
         if friend:
-            # Check if friend has ACTUAL availability saved (not just signup active status)
+            # Check if friend has ACTUAL availability saved (regardless of when)
             friend_availability = UserAvailability.query.filter_by(user_id=friend_id).first()
             has_actual_availability = (
                 friend_availability and 
-                len(friend_availability.time_slots) > 0 and 
-                friend.is_active_this_week()
+                friend_availability.time_slots and
+                len(friend_availability.time_slots) > 0
             )
             
             friends.append({
@@ -1060,7 +1060,7 @@ def send_nudge(friend_user_id):
         len(friend_availability.time_slots) > 0
     )
     
-    if has_actual_availability and friend.is_active_this_week():
+    if has_actual_availability:
         return jsonify({
             'error': f'{friend.name} has already shared their availability!',
             'already_active': True
@@ -1121,16 +1121,16 @@ def get_friends_availability():
         friend_id = f.user_id_2 if f.user_id_1 == user_id else f.user_id_1
         friend_ids.append(friend_id)
     
-    # Get availability for all friends who are also active (saved within last 7 days)
+    # Get availability for all friends (show their availability regardless of when they saved)
     availabilities = []
     for friend_id in friend_ids:
         friend = User.query.get(friend_id)
-        if friend and friend.is_active_this_week():
-            # Get their most recent availability (not filtered by week)
+        if friend:
+            # Get their most recent availability (not filtered by week or active status)
             avail = UserAvailability.query.filter_by(
                 user_id=friend_id
             ).order_by(UserAvailability.updated_at.desc()).first()
-            if avail:
+            if avail and avail.time_slots and len(avail.time_slots) > 0:
                 availabilities.append({
                     'user_id': friend.id,
                     'user_name': friend.name,
