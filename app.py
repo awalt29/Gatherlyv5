@@ -1018,13 +1018,14 @@ def get_friends():
         friend_id = f.user_id_2 if f.user_id_1 == user_id else f.user_id_1
         friend = User.query.get(friend_id)
         if friend:
-            # Check if friend has ACTUAL availability saved (regardless of when)
-            friend_availability = UserAvailability.query.filter_by(user_id=friend_id).first()
-            has_actual_availability = (
-                friend_availability and 
-                friend_availability.time_slots and
-                len(friend_availability.time_slots) > 0
-            )
+            # Check if friend has ACTUAL future availability saved
+            friend_availability = UserAvailability.query.filter_by(user_id=friend_id).order_by(UserAvailability.updated_at.desc()).first()
+            has_actual_availability = False
+            if friend_availability and friend_availability.time_slots:
+                # Only count slots that are today or in the future
+                today_str = date.today().isoformat()
+                future_slots = [s for s in friend_availability.time_slots if s.get('date', '') >= today_str]
+                has_actual_availability = len(future_slots) > 0
             
             friends.append({
                 'id': friend.id,
@@ -1121,22 +1122,26 @@ def get_friends_availability():
         friend_id = f.user_id_2 if f.user_id_1 == user_id else f.user_id_1
         friend_ids.append(friend_id)
     
-    # Get availability for all friends (show their availability regardless of when they saved)
+    # Get availability for all friends (only future slots)
+    today_str = date.today().isoformat()
     availabilities = []
     for friend_id in friend_ids:
         friend = User.query.get(friend_id)
         if friend:
-            # Get their most recent availability (not filtered by week or active status)
+            # Get their most recent availability
             avail = UserAvailability.query.filter_by(
                 user_id=friend_id
             ).order_by(UserAvailability.updated_at.desc()).first()
-            if avail and avail.time_slots and len(avail.time_slots) > 0:
-                availabilities.append({
-                    'user_id': friend.id,
-                    'user_name': friend.name,
-                    'time_slots': avail.time_slots,
-                    'updated_at': avail.updated_at.isoformat()
-                })
+            if avail and avail.time_slots:
+                # Filter to only include future slots
+                future_slots = [s for s in avail.time_slots if s.get('date', '') >= today_str]
+                if len(future_slots) > 0:
+                    availabilities.append({
+                        'user_id': friend.id,
+                        'user_name': friend.name,
+                        'time_slots': future_slots,
+                        'updated_at': avail.updated_at.isoformat()
+                    })
     
     return jsonify({'active': True, 'availabilities': availabilities})
 
