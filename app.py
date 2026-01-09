@@ -1793,8 +1793,8 @@ def respond_to_hangout(hangout_id):
     user = User.query.get(user_id)
     data = request.json
     
-    response = data.get('response')  # 'accepted' or 'declined'
-    if response not in ['accepted', 'declined']:
+    response = data.get('response')  # 'accepted', 'declined', or 'maybe'
+    if response not in ['accepted', 'declined', 'maybe']:
         return jsonify({'error': 'Invalid response. Must be "accepted" or "declined"'}), 400
     
     # Find the invitation
@@ -1815,7 +1815,9 @@ def respond_to_hangout(hangout_id):
     invitee.responded_at = datetime.utcnow()
     
     # Create notification for the hangout creator
-    response_text = 'accepted' if response == 'accepted' else 'declined'
+    response_text = response  # 'accepted', 'declined', or 'maybe'
+    if response == 'maybe':
+        response_text = 'said maybe to'
     # Format the date nicely
     from datetime import datetime as dt
     date_obj = dt.strptime(hangout.date, '%Y-%m-%d')

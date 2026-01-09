@@ -271,6 +271,26 @@ body {
     color: #FF6464;
 }
 
+.friend-request-actions .btn-maybe {
+    padding: 6px 16px;
+    background: transparent;
+    color: #fbbf24;
+    border: 1px solid #fbbf24;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.friend-request-actions .btn-maybe:hover {
+    background: rgba(251, 191, 36, 0.15);
+}
+
+.friend-request-actions.hangout-actions {
+    gap: 8px;
+}
+
 .notification-content {
     flex: 1;
     display: flex;
@@ -2222,6 +2242,11 @@ body:has(.guest-info) .container {
     border-color: #dc2626 !important;
 }
 
+.slot-avatar.rsvp-maybe {
+    background: #fbbf24 !important;
+    border-color: #f59e0b !important;
+}
+
 /* Hangout notification styles */
 .notification-item.hangout-invite .notification-avatar.icon-avatar,
 .notification-item.hangout-response .notification-avatar.icon-avatar {
@@ -2261,5 +2286,10 @@ body:has(.guest-info) .container {
 .hangout-response-status.declined {
     background: rgba(239, 68, 68, 0.2);
     color: #ef4444;
+}
+
+.hangout-response-status.maybe {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
 }
 

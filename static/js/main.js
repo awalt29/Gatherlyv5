@@ -1617,6 +1617,8 @@ function displayFriendsAvailability() {
                     avatar.classList.add('rsvp-accepted');
                 } else if (hangoutStatus === 'declined') {
                     avatar.classList.add('rsvp-declined');
+                } else if (hangoutStatus === 'maybe') {
+                    avatar.classList.add('rsvp-maybe');
                 }
                 
                 avatar.textContent = friend.initials;
@@ -2022,11 +2024,12 @@ function renderNotifications(notifications, friendRequests = []) {
                             ${hangout?.description ? `<div class="notification-description">"${hangout.description}"</div>` : ''}
                             ${hasResponded ? `
                                 <div class="hangout-response-status ${myInvite.status}">
-                                    You ${myInvite.status} this invite
+                                    You ${myInvite.status === 'maybe' ? 'said maybe to' : myInvite.status} this invite
                                 </div>
                             ` : `
-                                <div class="friend-request-actions">
+                                <div class="friend-request-actions hangout-actions">
                                     <button class="btn-accept" onclick="respondToHangout(${notif.hangout_id}, 'accepted')">Accept</button>
+                                    <button class="btn-maybe" onclick="respondToHangout(${notif.hangout_id}, 'maybe')">Maybe</button>
                                     <button class="btn-reject" onclick="respondToHangout(${notif.hangout_id}, 'declined')">Decline</button>
                                 </div>
                             `}
