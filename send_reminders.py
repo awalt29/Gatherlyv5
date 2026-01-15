@@ -142,10 +142,8 @@ def send_wednesday_reminders():
                 print(f"   ⏭️  Skipped (no friends with availability)")
                 continue
             
-            base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
-            
             friend_text = f"{friends_with_avail} {'friend has' if friends_with_avail == 1 else 'friends have'}"
-            message = f"Time to plan your weekend! 🎉\n\n{friend_text} shared their availability.\n\nSee when everyone's free: {base_url}"
+            message = f"Time to plan your weekend! 🎉\n\n{friend_text} shared their availability.\n\nSee when everyone's free: https://trygatherly.com"
             
             if send_sms(user.phone_number, message):
                 sent_count += 1
