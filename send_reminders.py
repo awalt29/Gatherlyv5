@@ -122,6 +122,18 @@ def send_wednesday_reminders():
                 print(f"   ⏭️  Skipped (weekly reminders disabled)")
                 continue
             
+            # Check if user has added their own availability
+            today_str = date.today().isoformat()
+            user_avail = UserAvailability.query.filter_by(user_id=user.id).order_by(UserAvailability.updated_at.desc()).first()
+            has_own_availability = False
+            if user_avail and user_avail.time_slots:
+                future_slots = [s for s in user_avail.time_slots if s.get('date', '') >= today_str]
+                has_own_availability = len(future_slots) > 0
+            
+            if not has_own_availability:
+                print(f"   ⏭️  Skipped (user hasn't added availability)")
+                continue
+            
             # Count friends with availability
             friends_with_avail = get_friends_with_availability(user.id)
             
