@@ -125,15 +125,16 @@ def send_wednesday_reminders():
             # Count friends with availability
             friends_with_avail = get_friends_with_availability(user.id)
             
+            # Only send if friends have availability
+            if friends_with_avail == 0:
+                print(f"   ⏭️  Skipped (no friends with availability)")
+                continue
+            
             base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
             
-            # Build message based on friend count
             first_name = user.name.split()[0]
-            if friends_with_avail > 0:
-                friend_text = f"{friends_with_avail} {'friend has' if friends_with_avail == 1 else 'friends have'}"
-                message = f"Hi {first_name}! 🎉 Time to plan your weekend! {friend_text} shared their availability. See when everyone's free: {base_url}\n\nTo turn off reminders, visit Settings."
-            else:
-                message = f"Hi {first_name}! 🗓️ Time to plan your weekend! Share your availability and invite friends to coordinate: {base_url}\n\nTo turn off reminders, visit Settings."
+            friend_text = f"{friends_with_avail} {'friend has' if friends_with_avail == 1 else 'friends have'}"
+            message = f"Hi {first_name}! 🎉 Time to plan your weekend! {friend_text} shared their availability. See when everyone's free: {base_url}\n\nTo turn off reminders, visit Settings."
             
             if send_sms(user.phone_number, message):
                 sent_count += 1
