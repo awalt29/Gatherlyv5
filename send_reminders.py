@@ -143,7 +143,7 @@ def send_wednesday_reminders():
                 continue
             
             friend_text = f"{friends_with_avail} {'friend has' if friends_with_avail == 1 else 'friends have'}"
-            message = f"Time to plan your weekend! 🎉\n\n{friend_text} shared their availability.\n\nSee when everyone's free: https://trygatherly.com"
+            message = f"Time to plan your weekend! 🎉\n\n{friend_text} shared their availability!\n\nSee when they're free: https://trygatherly.com"
             
             if send_sms(user.phone_number, message):
                 sent_count += 1
