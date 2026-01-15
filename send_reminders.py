@@ -132,9 +132,8 @@ def send_wednesday_reminders():
             
             base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
             
-            first_name = user.name.split()[0]
             friend_text = f"{friends_with_avail} {'friend has' if friends_with_avail == 1 else 'friends have'}"
-            message = f"Hi {first_name}! 🎉 Time to plan your weekend! {friend_text} shared their availability. See when everyone's free: {base_url}\n\nTo turn off reminders, visit Settings."
+            message = f"Time to plan your weekend! 🎉\n\n{friend_text} shared their availability.\n\nSee when everyone's free: {base_url}"
             
             if send_sms(user.phone_number, message):
                 sent_count += 1
