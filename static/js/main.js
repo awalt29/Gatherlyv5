@@ -288,8 +288,7 @@ async function setupPlanner(event) {
             loadFriendsAvailability();
             loadNotifications();
             
-            // Clear install popup flag for new signups, then show it
-            localStorage.removeItem('gatherly_install_shown');
+            // Show "Add to Home Screen" prompt for iOS users
             setTimeout(() => showInstallPopup(), 1500);
         } else {
             showStatus('Error setting up. Please try again.', 'error');
@@ -1918,19 +1917,31 @@ function isIOSSafari() {
 
 // Show install popup for first-time iOS users
 function showInstallPopup() {
-    // Only show on iOS Safari and if not already shown
+    // Only show on iOS Safari
     if (!isIOSSafari()) return;
-    if (localStorage.getItem('gatherly_install_shown')) return;
+    
+    // Check database flag - only show if user hasn't seen it
+    if (plannerInfo && plannerInfo.has_seen_install_prompt) return;
     
     document.getElementById('installPopupOverlay').classList.add('active');
     document.getElementById('installPopup').classList.add('active');
 }
 
-// Close install popup
-function closeInstallPopup() {
+// Close install popup and mark as seen in database
+async function closeInstallPopup() {
     document.getElementById('installPopupOverlay').classList.remove('active');
     document.getElementById('installPopup').classList.remove('active');
-    localStorage.setItem('gatherly_install_shown', 'true');
+    
+    // Mark as seen in database
+    if (plannerInfo && plannerInfo.id) {
+        try {
+            await fetch(`/api/users/${plannerInfo.id}/install-prompt-seen`, { method: 'POST' });
+            plannerInfo.has_seen_install_prompt = true;
+            localStorage.setItem('gatherly_planner', JSON.stringify(plannerInfo));
+        } catch (error) {
+            console.error('Error marking install prompt as seen:', error);
+        }
+    }
 }
 
 // Notifications functions

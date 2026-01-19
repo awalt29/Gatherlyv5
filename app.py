@@ -643,6 +643,15 @@ def update_weekly_reminders(user_id):
     return jsonify({'message': 'Weekly reminders updated', 'weekly_reminders_enabled': user.weekly_reminders_enabled}), 200
 
 
+@app.route('/api/users/<int:user_id>/install-prompt-seen', methods=['POST'])
+def mark_install_prompt_seen(user_id):
+    """Mark that user has seen the 'Add to Home Screen' prompt"""
+    user = User.query.get_or_404(user_id)
+    user.has_seen_install_prompt = True
+    db.session.commit()
+    return jsonify({'message': 'Install prompt marked as seen'}), 200
+
+
 # API Routes - Contacts
 @app.route('/api/contacts', methods=['GET', 'POST'])
 def contacts():
