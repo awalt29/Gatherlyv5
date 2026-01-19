@@ -1917,12 +1917,24 @@ function isIOSSafari() {
 
 // Show install popup for first-time iOS users
 function showInstallPopup() {
+    console.log('showInstallPopup called');
+    console.log('isIOSSafari:', isIOSSafari());
+    console.log('plannerInfo:', plannerInfo);
+    console.log('has_seen_install_prompt:', plannerInfo?.has_seen_install_prompt);
+    
     // Only show on iOS Safari
-    if (!isIOSSafari()) return;
+    if (!isIOSSafari()) {
+        console.log('Not iOS Safari, skipping popup');
+        return;
+    }
     
     // Check database flag - only show if user hasn't seen it
-    if (plannerInfo && plannerInfo.has_seen_install_prompt) return;
+    if (plannerInfo && plannerInfo.has_seen_install_prompt) {
+        console.log('User already saw prompt, skipping');
+        return;
+    }
     
+    console.log('Showing install popup!');
     document.getElementById('installPopupOverlay').classList.add('active');
     document.getElementById('installPopup').classList.add('active');
 }
