@@ -168,7 +168,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 name: data.user.name, 
                 phone: data.user.phone_number,
                 email: data.user.email,
-                weekly_reminders_enabled: data.user.weekly_reminders_enabled !== false
+                weekly_reminders_enabled: data.user.weekly_reminders_enabled !== false,
+                has_seen_install_prompt: data.user.has_seen_install_prompt === true
             };
             
             // Show the main content now that we're authenticated
@@ -184,6 +185,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Check for new notifications every 10 seconds (which will auto-refresh calendar)
             setInterval(loadNotifications, 10000);
+            
+            // Show "Add to Home Screen" prompt for iOS users (also applies to existing users on login)
+            setTimeout(() => showInstallPopup(), 1500);
             
             // Check for pending hangout invites or #notifications hash - auto-open modal (once per invite)
             setTimeout(async () => {
@@ -276,7 +280,7 @@ async function setupPlanner(event) {
         
         if (response.ok) {
             const user = await response.json();
-            plannerInfo = { id: user.id, name: user.name, phone: user.phone_number, email: user.email, weekly_reminders_enabled: user.weekly_reminders_enabled !== false };
+            plannerInfo = { id: user.id, name: user.name, phone: user.phone_number, email: user.email, weekly_reminders_enabled: user.weekly_reminders_enabled !== false, has_seen_install_prompt: user.has_seen_install_prompt === true };
             localStorage.setItem('gatherly_planner', JSON.stringify(plannerInfo));
             
             document.getElementById('setupModal').classList.remove('active');
@@ -2349,7 +2353,7 @@ async function updateAccount(event) {
         
         if (response.ok) {
             const updatedUser = await response.json();
-            plannerInfo = { id: updatedUser.id, name: updatedUser.name, phone: updatedUser.phone_number, email: updatedUser.email, weekly_reminders_enabled: updatedUser.weekly_reminders_enabled !== false };
+            plannerInfo = { id: updatedUser.id, name: updatedUser.name, phone: updatedUser.phone_number, email: updatedUser.email, weekly_reminders_enabled: updatedUser.weekly_reminders_enabled !== false, has_seen_install_prompt: updatedUser.has_seen_install_prompt === true };
             localStorage.setItem('gatherly_planner', JSON.stringify(plannerInfo));
             
             closeEditAccount();
