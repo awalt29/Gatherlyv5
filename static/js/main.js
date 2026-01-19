@@ -1918,15 +1918,11 @@ function isIOSSafari() {
 // Show install popup for first-time iOS users
 function showInstallPopup() {
     console.log('showInstallPopup called');
-    console.log('isIOSSafari:', isIOSSafari());
     console.log('plannerInfo:', plannerInfo);
     console.log('has_seen_install_prompt:', plannerInfo?.has_seen_install_prompt);
     
-    // Only show on iOS Safari
-    if (!isIOSSafari()) {
-        console.log('Not iOS Safari, skipping popup');
-        return;
-    }
+    // TODO: Re-enable iOS check after testing
+    // if (!isIOSSafari()) return;
     
     // Check database flag - only show if user hasn't seen it
     if (plannerInfo && plannerInfo.has_seen_install_prompt) {
