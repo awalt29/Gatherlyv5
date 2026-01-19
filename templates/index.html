@@ -288,6 +288,29 @@
         </div>
     </div>
 
+    <!-- Add to Home Screen Popup (iOS) -->
+    <div class="install-popup-overlay" id="installPopupOverlay" onclick="closeInstallPopup()"></div>
+    <div class="install-popup" id="installPopup">
+        <button class="install-popup-close" onclick="closeInstallPopup()">&times;</button>
+        <h3 class="install-popup-title">Add Gatherly to Home Screen</h3>
+        <p class="install-popup-subtitle">For the best experience, add Gatherly to your home screen.</p>
+        <div class="install-steps">
+            <div class="install-step">
+                <span class="step-number">1.</span>
+                <span>Tap the <strong>Share</strong> button (⬆️) at the bottom of your screen</span>
+            </div>
+            <div class="install-step">
+                <span class="step-number">2.</span>
+                <span>Scroll down and tap <strong>Add to Home Screen</strong></span>
+            </div>
+            <div class="install-step">
+                <span class="step-number">3.</span>
+                <span>Tap <strong>Add</strong> in the top-right corner</span>
+            </div>
+        </div>
+        <button class="install-popup-btn" onclick="closeInstallPopup()">Got it!</button>
+    </div>
+
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

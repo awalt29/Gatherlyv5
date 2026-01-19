@@ -287,6 +287,9 @@ async function setupPlanner(event) {
             loadMyAvailability();
             loadFriendsAvailability();
             loadNotifications();
+            
+            // Show "Add to Home Screen" prompt for iOS users
+            setTimeout(() => showInstallPopup(), 1500);
         } else {
             showStatus('Error setting up. Please try again.', 'error');
         }
@@ -1901,6 +1904,32 @@ function showStatus(message, type) {
     setTimeout(() => {
         statusDiv.style.display = 'none';
     }, 5000);
+}
+
+// Check if running on iOS Safari (not in standalone mode)
+function isIOSSafari() {
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isStandalone = window.navigator.standalone === true;
+    const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua) && !/CriOS/.test(ua);
+    return isIOS && !isStandalone && isSafari;
+}
+
+// Show install popup for first-time iOS users
+function showInstallPopup() {
+    // Only show on iOS Safari and if not already shown
+    if (!isIOSSafari()) return;
+    if (localStorage.getItem('gatherly_install_shown')) return;
+    
+    document.getElementById('installPopupOverlay').classList.add('active');
+    document.getElementById('installPopup').classList.add('active');
+}
+
+// Close install popup
+function closeInstallPopup() {
+    document.getElementById('installPopupOverlay').classList.remove('active');
+    document.getElementById('installPopup').classList.remove('active');
+    localStorage.setItem('gatherly_install_shown', 'true');
 }
 
 // Notifications functions
