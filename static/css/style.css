@@ -2385,6 +2385,13 @@ body:has(.guest-info) .container {
     color: var(--text-light);
 }
 
+.share-icon {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    margin: 0 2px;
+}
+
 .step-number {
     font-weight: 700;
     color: var(--accent-mint);
