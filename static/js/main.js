@@ -288,7 +288,8 @@ async function setupPlanner(event) {
             loadFriendsAvailability();
             loadNotifications();
             
-            // Show "Add to Home Screen" prompt for iOS users
+            // Clear install popup flag for new signups, then show it
+            localStorage.removeItem('gatherly_install_shown');
             setTimeout(() => showInstallPopup(), 1500);
         } else {
             showStatus('Error setting up. Please try again.', 'error');
