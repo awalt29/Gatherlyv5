@@ -23,9 +23,9 @@ async function initPushNotifications() {
     }
     
     try {
-        // Register service worker
+        // Register service worker from root for proper scope
         console.log('[PUSH] Registering service worker...');
-        const registration = await navigator.serviceWorker.register('/static/sw.js');
+        const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
         console.log('[PUSH] Service worker registered, scope:', registration.scope);
         
         // Wait for service worker to be ready

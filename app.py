@@ -207,6 +207,16 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/sw.js')
+def service_worker():
+    """Serve service worker from root for proper scope"""
+    from flask import send_from_directory
+    response = send_from_directory('static', 'sw.js')
+    response.headers['Content-Type'] = 'application/javascript'
+    response.headers['Service-Worker-Allowed'] = '/'
+    return response
+
+
 @app.route('/login')
 def login():
     # If already logged in, redirect to main app
