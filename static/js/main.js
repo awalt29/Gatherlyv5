@@ -24,8 +24,13 @@ async function initPushNotifications() {
     
     try {
         // Register service worker
+        console.log('[PUSH] Registering service worker...');
         const registration = await navigator.serviceWorker.register('/static/sw.js');
-        console.log('[PUSH] Service worker registered');
+        console.log('[PUSH] Service worker registered, scope:', registration.scope);
+        
+        // Wait for service worker to be ready
+        await navigator.serviceWorker.ready;
+        console.log('[PUSH] Service worker is ready');
         
         // Listen for messages from service worker
         navigator.serviceWorker.addEventListener('message', (event) => {
@@ -39,6 +44,14 @@ async function initPushNotifications() {
         if (subscription) {
             pushSubscription = subscription;
             console.log('[PUSH] Already subscribed');
+            // Sync subscription with server (in case user cleared browser data)
+            fetch('/api/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(subscription.toJSON())
+            }).catch(e => console.log('[PUSH] Sync error:', e));
+        } else {
+            console.log('[PUSH] Not subscribed yet');
         }
     } catch (error) {
         console.error('[PUSH] Error initializing:', error);
@@ -99,12 +112,26 @@ async function requestPushPermission() {
         // Subscribe to push
         console.log('[PUSH] Subscribing to push manager...');
         const registration = await navigator.serviceWorker.ready;
-        console.log('[PUSH] Service worker ready');
+        console.log('[PUSH] Service worker ready, state:', registration.active?.state);
         
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(publicKey)
-        });
+        // Check if already subscribed
+        let subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+            console.log('[PUSH] Already have existing subscription');
+        } else {
+            console.log('[PUSH] Creating new subscription with key:', publicKey.substring(0, 20) + '...');
+            try {
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(publicKey)
+                });
+                console.log('[PUSH] Created new subscription');
+            } catch (subscribeError) {
+                console.error('[PUSH] Subscribe error:', subscribeError);
+                showStatus('Error subscribing: ' + subscribeError.message, 'error');
+                return false;
+            }
+        }
         console.log('[PUSH] Got subscription');
         
         // Send subscription to server
