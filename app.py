@@ -756,8 +756,13 @@ def contacts():
                 )
                 db.session.add(friend_request)
                 
-                # Note: No separate notification needed for recipient - 
-                # the FriendRequest itself shows as a notification with Accept/Decline
+                # Send push notification to the recipient
+                send_push_notification(
+                    existing_user.id,
+                    'New Friend Request! 👋',
+                    f'{owner.name} wants to be your friend',
+                    '/#notifications'
+                )
                 
                 # Create notification for the sender
                 sender_notification = Notification(
@@ -1113,8 +1118,9 @@ def send_nudge(friend_user_id):
     if not app_url.startswith('http'):
         app_url = f'https://{app_url}'
     
-    sms_message = f"👋 {user.name} wants to know when you're free! Share your availability on Gatherly: {app_url}"
-    send_sms(friend.phone_number, sms_message)
+    # SMS disabled - using push notifications instead
+    # sms_message = f"👋 {user.name} wants to know when you're free! Share your availability on Gatherly: {app_url}"
+    # send_sms(friend.phone_number, sms_message)
     print(f"[NUDGE] {user.name} nudged {friend.name}")
     
     # Create notification for the friend (recipient of nudge)
@@ -1285,11 +1291,11 @@ def my_availability():
                         )
                         db.session.add(notification)
                         
-                        # Send SMS notification
-                        base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
-                        sms_message = f"{user.name} just added availability on Gatherly! Check it out: {base_url}"
-                        send_sms(watcher.phone_number, sms_message)
-                        print(f"[AVAILABILITY NOTIFY] Sent SMS to {watcher.name} about {user.name}'s new availability")
+                        # SMS disabled - using push notifications instead
+                        # base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
+                        # sms_message = f"{user.name} just added availability on Gatherly! Check it out: {base_url}"
+                        # send_sms(watcher.phone_number, sms_message)
+                        print(f"[AVAILABILITY NOTIFY] Sent push to {watcher.name} about {user.name}'s new availability")
             
             db.session.commit()
         
@@ -1803,26 +1809,26 @@ def create_hangout():
                 '/#notifications'
             )
             
-            # Send SMS to invitee
-            try:
-                app_url = os.getenv('APP_BASE_URL', 'https://trygatherly.com')
-                if not app_url.startswith('http'):
-                    app_url = f'https://{app_url}'
-                
-                sms_message = f"{creator.name} sent you a hangout invite! RSVP here: {app_url}/#notifications"
-                
-                twilio_client = Client(
-                    os.getenv('TWILIO_ACCOUNT_SID'),
-                    os.getenv('TWILIO_AUTH_TOKEN')
-                )
-                twilio_client.messages.create(
-                    body=sms_message,
-                    from_=os.getenv('TWILIO_PHONE_NUMBER'),
-                    to=invitee_user.phone_number
-                )
-                print(f"[HANGOUT] SMS sent to {invitee_user.name}")
-            except Exception as e:
-                print(f"[HANGOUT] Error sending SMS to {invitee_user.name}: {e}")
+            # SMS disabled - using push notifications instead
+            # try:
+            #     app_url = os.getenv('APP_BASE_URL', 'https://trygatherly.com')
+            #     if not app_url.startswith('http'):
+            #         app_url = f'https://{app_url}'
+            #     
+            #     sms_message = f"{creator.name} sent you a hangout invite! RSVP here: {app_url}/#notifications"
+            #     
+            #     twilio_client = Client(
+            #         os.getenv('TWILIO_ACCOUNT_SID'),
+            #         os.getenv('TWILIO_AUTH_TOKEN')
+            #     )
+            #     twilio_client.messages.create(
+            #         body=sms_message,
+            #         from_=os.getenv('TWILIO_PHONE_NUMBER'),
+            #         to=invitee_user.phone_number
+            #     )
+            #     print(f"[HANGOUT] SMS sent to {invitee_user.name}")
+            # except Exception as e:
+            #     print(f"[HANGOUT] Error sending SMS to {invitee_user.name}: {e}")
     
     # Create notification for the creator (confirmation)
     invitee_names = [User.query.get(uid).name for uid in invitee_ids if User.query.get(uid)]
