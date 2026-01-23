@@ -464,3 +464,26 @@ class HangoutInvitee(db.Model):
             'responded_at': self.responded_at.isoformat() if self.responded_at else None,
             'created_at': self.created_at.isoformat()
         }
+
+
+class PushSubscription(db.Model):
+    """Stores push notification subscriptions for users"""
+    __tablename__ = 'push_subscriptions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    endpoint = db.Column(db.Text, nullable=False, unique=True)
+    p256dh_key = db.Column(db.Text, nullable=False)  # Public key for encryption
+    auth_key = db.Column(db.Text, nullable=False)  # Auth secret
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='push_subscriptions')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'endpoint': self.endpoint,
+            'created_at': self.created_at.isoformat()
+        }

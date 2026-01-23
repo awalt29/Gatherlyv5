@@ -1,11 +1,12 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
 from flask_migrate import Migrate
-from models import db, User, Contact, Plan, PlanGuest, Availability, Notification, PasswordReset, FriendRequest, Friendship, UserAvailability, Hangout, HangoutInvitee
+from models import db, User, Contact, Plan, PlanGuest, Availability, Notification, PasswordReset, FriendRequest, Friendship, UserAvailability, Hangout, HangoutInvitee, PushSubscription
 from datetime import datetime, timedelta, date
 from twilio.rest import Client
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, To, Content
+import json
 import os
 from dotenv import load_dotenv
 
@@ -94,6 +95,11 @@ if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
 # SendGrid setup
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
 SENDGRID_FROM_EMAIL = os.getenv('SENDGRID_FROM_EMAIL', os.getenv('MAIL_USERNAME'))
+
+# VAPID setup for web push notifications
+VAPID_PUBLIC_KEY = os.getenv('VAPID_PUBLIC_KEY')
+VAPID_PRIVATE_KEY = os.getenv('VAPID_PRIVATE_KEY')
+VAPID_EMAIL = os.getenv('VAPID_EMAIL', 'hello@trygatherly.com')
 
 sendgrid_client = None
 if SENDGRID_API_KEY:
@@ -318,6 +324,13 @@ def auth_signup():
                         contact_id=None,
                         message=f"{user.name} joined Gatherly! You're now connected.",
                         from_user_id=user.id
+                    )
+                    
+                    # Send push notification
+                    send_push_notification(
+                        inviter.id,
+                        f'{user.name} joined! 🎉',
+                        'Your friend is now on Gatherly. You\'re automatically connected!'
                     )
                     db.session.add(notification)
                     
@@ -975,6 +988,13 @@ def accept_friend_request(request_id):
         message=f"{current_user.name} accepted your friend request!",
         from_user_id=current_user.id
     )
+    
+    # Send push notification
+    send_push_notification(
+        friend_request.from_user_id,
+        'Friend Request Accepted! 🎉',
+        f'{current_user.name} accepted your friend request!'
+    )
     db.session.add(notification)
     
     db.session.commit()
@@ -1095,6 +1115,13 @@ def send_nudge(friend_user_id):
         from_user_id=user_id
     )
     db.session.add(friend_notification)
+    
+    # Send push notification
+    send_push_notification(
+        friend_user_id,
+        f'{user.name} nudged you 👋',
+        'Share your availability so you can connect!'
+    )
     
     # Create notification for the sender (confirmation)
     sender_notification = Notification(
@@ -1238,6 +1265,13 @@ def my_availability():
                             contact_id=None,
                             message=f"{user.name} added new availability",
                             from_user_id=user_id
+                        )
+                        
+                        # Send push notification
+                        send_push_notification(
+                            watcher.id,
+                            'New Availability! 📅',
+                            f'{user.name} added new availability. Check when they\'re free!'
                         )
                         db.session.add(notification)
                         
@@ -1751,6 +1785,14 @@ def create_hangout():
             )
             db.session.add(notification)
             
+            # Send push notification
+            send_push_notification(
+                user_id,
+                f'{creator.name} invited you! 🎉',
+                f'Hang out {day_name} {time_display}? Tap to respond.',
+                '/#notifications'
+            )
+            
             # Send SMS to invitee
             try:
                 app_url = os.getenv('APP_BASE_URL', 'https://trygatherly.com')
@@ -1847,6 +1889,14 @@ def respond_to_hangout(hangout_id):
         from_user_id=user_id
     )
     db.session.add(creator_notification)
+    
+    # Send push notification to creator
+    emoji = '✅' if response == 'accepted' else ('🤔' if response == 'maybe' else '❌')
+    send_push_notification(
+        hangout.creator_id,
+        f'{user.name} responded {emoji}',
+        f'{response_text.capitalize()} your {day_name} hangout invite'
+    )
     
     db.session.commit()
     
@@ -1949,6 +1999,153 @@ def get_hangouts_for_slot():
             })
     
     return jsonify(result)
+
+
+# =====================
+# Push Notification Endpoints
+# =====================
+
+def send_push_notification(user_id, title, body, url=None, notification_id=None):
+    """Send push notification to all subscriptions for a user"""
+    if not VAPID_PUBLIC_KEY or not VAPID_PRIVATE_KEY:
+        print("[PUSH] VAPID keys not configured, skipping push notification")
+        return False
+    
+    try:
+        from pywebpush import webpush, WebPushException
+    except ImportError:
+        print("[PUSH] pywebpush not installed")
+        return False
+    
+    subscriptions = PushSubscription.query.filter_by(user_id=user_id).all()
+    if not subscriptions:
+        print(f"[PUSH] No subscriptions for user {user_id}")
+        return False
+    
+    payload = json.dumps({
+        'title': title,
+        'body': body,
+        'url': url or '/#notifications',
+        'notificationId': notification_id
+    })
+    
+    vapid_claims = {
+        'sub': f'mailto:{VAPID_EMAIL}'
+    }
+    
+    success_count = 0
+    for sub in subscriptions:
+        try:
+            webpush(
+                subscription_info={
+                    'endpoint': sub.endpoint,
+                    'keys': {
+                        'p256dh': sub.p256dh_key,
+                        'auth': sub.auth_key
+                    }
+                },
+                data=payload,
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims=vapid_claims
+            )
+            success_count += 1
+            print(f"[PUSH] Sent to user {user_id}")
+        except Exception as e:
+            error_msg = str(e)
+            print(f"[PUSH] Error sending to user {user_id}: {error_msg}")
+            # Remove invalid subscriptions (410 Gone or 404 Not Found)
+            if '410' in error_msg or '404' in error_msg:
+                print(f"[PUSH] Removing invalid subscription {sub.id}")
+                db.session.delete(sub)
+                db.session.commit()
+    
+    return success_count > 0
+
+
+@app.route('/api/push/vapid-key', methods=['GET'])
+def get_vapid_key():
+    """Return the VAPID public key for push notification subscription"""
+    if not VAPID_PUBLIC_KEY:
+        return jsonify({'error': 'Push notifications not configured'}), 503
+    return jsonify({'publicKey': VAPID_PUBLIC_KEY})
+
+
+@app.route('/api/push/subscribe', methods=['POST'])
+def subscribe_push():
+    """Subscribe to push notifications"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    data = request.json
+    
+    endpoint = data.get('endpoint')
+    p256dh = data.get('keys', {}).get('p256dh')
+    auth = data.get('keys', {}).get('auth')
+    
+    if not endpoint or not p256dh or not auth:
+        return jsonify({'error': 'Invalid subscription data'}), 400
+    
+    # Check if subscription already exists
+    existing = PushSubscription.query.filter_by(endpoint=endpoint).first()
+    if existing:
+        # Update user_id if different (same browser, different account)
+        if existing.user_id != user_id:
+            existing.user_id = user_id
+            db.session.commit()
+        return jsonify({'message': 'Already subscribed'}), 200
+    
+    # Create new subscription
+    subscription = PushSubscription(
+        user_id=user_id,
+        endpoint=endpoint,
+        p256dh_key=p256dh,
+        auth_key=auth
+    )
+    db.session.add(subscription)
+    db.session.commit()
+    
+    print(f"[PUSH] User {user_id} subscribed to push notifications")
+    return jsonify({'message': 'Subscribed successfully'}), 201
+
+
+@app.route('/api/push/unsubscribe', methods=['POST'])
+def unsubscribe_push():
+    """Unsubscribe from push notifications"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.json
+    endpoint = data.get('endpoint')
+    
+    if endpoint:
+        PushSubscription.query.filter_by(endpoint=endpoint).delete()
+    else:
+        # Unsubscribe all for this user
+        PushSubscription.query.filter_by(user_id=session['user_id']).delete()
+    
+    db.session.commit()
+    print(f"[PUSH] User {session['user_id']} unsubscribed from push notifications")
+    return jsonify({'message': 'Unsubscribed successfully'}), 200
+
+
+@app.route('/api/push/test', methods=['POST'])
+def test_push():
+    """Send a test push notification to the current user"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    success = send_push_notification(
+        session['user_id'],
+        'Gatherly',
+        'Push notifications are working! 🎉',
+        '/'
+    )
+    
+    if success:
+        return jsonify({'message': 'Test notification sent'}), 200
+    else:
+        return jsonify({'error': 'Failed to send test notification'}), 500
 
 
 # Initialize database

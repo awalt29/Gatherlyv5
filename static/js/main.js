@@ -9,6 +9,181 @@ let planningMode = 'setup'; // setup, selecting, planning, viewing
 let weekDays = []; // Store the 7 days of current week starting from today
 let lastNotificationCount = null; // Track notification count to detect new ones (null = not initialized)
 let lastNotificationData = null; // Track last rendered data to avoid unnecessary re-renders
+let pushSubscription = null; // Store current push subscription
+
+// =====================
+// Push Notifications
+// =====================
+
+async function initPushNotifications() {
+    // Check if push is supported
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.log('[PUSH] Push notifications not supported');
+        return;
+    }
+    
+    try {
+        // Register service worker
+        const registration = await navigator.serviceWorker.register('/static/sw.js');
+        console.log('[PUSH] Service worker registered');
+        
+        // Listen for messages from service worker
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data.type === 'OPEN_NOTIFICATIONS') {
+                openNotifications();
+            }
+        });
+        
+        // Check if already subscribed
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+            pushSubscription = subscription;
+            console.log('[PUSH] Already subscribed');
+        }
+    } catch (error) {
+        console.error('[PUSH] Error initializing:', error);
+    }
+}
+
+async function requestPushPermission() {
+    // Check if push is supported
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.log('[PUSH] Push notifications not supported');
+        return false;
+    }
+    
+    // Check current permission
+    if (Notification.permission === 'denied') {
+        console.log('[PUSH] Notifications are blocked');
+        return false;
+    }
+    
+    if (Notification.permission === 'granted' && pushSubscription) {
+        console.log('[PUSH] Already have permission and subscription');
+        return true;
+    }
+    
+    try {
+        // Get VAPID public key from server
+        const keyResponse = await fetch('/api/push/vapid-key');
+        if (!keyResponse.ok) {
+            console.log('[PUSH] Server does not support push notifications');
+            return false;
+        }
+        const { publicKey } = await keyResponse.json();
+        
+        // Request permission
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+            console.log('[PUSH] Permission denied');
+            return false;
+        }
+        
+        // Subscribe to push
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+        
+        // Send subscription to server
+        const response = await fetch('/api/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(subscription.toJSON())
+        });
+        
+        if (response.ok) {
+            pushSubscription = subscription;
+            console.log('[PUSH] Successfully subscribed');
+            return true;
+        } else {
+            console.error('[PUSH] Failed to save subscription to server');
+            return false;
+        }
+    } catch (error) {
+        console.error('[PUSH] Error subscribing:', error);
+        return false;
+    }
+}
+
+// Helper function to convert VAPID key
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+    
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+// Show custom prompt before browser permission request
+function showPushPermissionPrompt() {
+    // Don't show if already subscribed or denied
+    if (pushSubscription || Notification.permission === 'denied') {
+        return;
+    }
+    
+    // Create custom prompt
+    const overlay = document.createElement('div');
+    overlay.className = 'push-prompt-overlay';
+    overlay.id = 'pushPromptOverlay';
+    
+    const prompt = document.createElement('div');
+    prompt.className = 'push-prompt';
+    prompt.innerHTML = `
+        <div class="push-prompt-icon">🔔</div>
+        <h3 class="push-prompt-title">Stay in the loop!</h3>
+        <p class="push-prompt-text">Get notified instantly when friends share their availability or send you hangout invites.</p>
+        <div class="push-prompt-buttons">
+            <button class="push-prompt-btn push-prompt-later" onclick="closePushPrompt()">Not now</button>
+            <button class="push-prompt-btn push-prompt-enable" onclick="enablePushFromPrompt()">Enable</button>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    document.body.appendChild(prompt);
+    
+    // Animate in
+    setTimeout(() => {
+        overlay.classList.add('active');
+        prompt.classList.add('active');
+    }, 10);
+}
+
+function closePushPrompt() {
+    const overlay = document.getElementById('pushPromptOverlay');
+    const prompt = document.querySelector('.push-prompt');
+    if (overlay) overlay.remove();
+    if (prompt) prompt.remove();
+}
+
+async function enablePushFromPrompt() {
+    closePushPrompt();
+    const success = await requestPushPermission();
+    if (success) {
+        showStatus('Notifications enabled! 🔔', 'success');
+    }
+}
+
+async function testPushNotification() {
+    try {
+        const response = await fetch('/api/push/test', { method: 'POST' });
+        if (response.ok) {
+            showStatus('Test notification sent!', 'success');
+        } else {
+            showStatus('Failed to send test notification', 'error');
+        }
+    } catch (error) {
+        console.error('Error testing push:', error);
+    }
+}
 let currentPopupSlot = null; // Track the slot the popup is open for
 
 // Get today's date as YYYY-MM-DD string (no timezone conversion)
@@ -186,6 +361,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Check for new notifications every 10 seconds (which will auto-refresh calendar)
             setInterval(loadNotifications, 10000);
             
+            // Initialize push notifications
+            initPushNotifications();
+            
             // Show "Add to Home Screen" prompt for iOS users (also applies to existing users on login)
             setTimeout(() => showInstallPopup(), 1500);
             
@@ -292,8 +470,14 @@ async function setupPlanner(event) {
             loadFriendsAvailability();
             loadNotifications();
             
+            // Initialize push notifications
+            initPushNotifications();
+            
             // Show "Add to Home Screen" prompt for iOS users
             setTimeout(() => showInstallPopup(), 1500);
+            
+            // Show push notification prompt for new users (after a delay)
+            setTimeout(() => showPushPermissionPrompt(), 3000);
         } else {
             showStatus('Error setting up. Please try again.', 'error');
         }
@@ -2560,8 +2744,46 @@ async function openSettings() {
     await loadTimezone();
     await loadNotificationFriends();
     loadWeeklyReminders();
+    updatePushNotificationStatus();
     
     document.getElementById('settingsModal').classList.add('active');
+}
+
+function updatePushNotificationStatus() {
+    const statusEl = document.getElementById('pushStatus');
+    const enableBtn = document.getElementById('enablePushBtn');
+    const testBtn = document.getElementById('testPushBtn');
+    const section = document.getElementById('pushNotificationSection');
+    
+    // Hide section if push not supported
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        section.style.display = 'none';
+        return;
+    }
+    
+    section.style.display = 'block';
+    
+    if (Notification.permission === 'denied') {
+        statusEl.innerHTML = '<p class="settings-hint" style="color: #ef4444;">⚠️ Notifications are blocked. Please enable them in your browser settings.</p>';
+        enableBtn.style.display = 'none';
+        testBtn.style.display = 'none';
+    } else if (Notification.permission === 'granted' && pushSubscription) {
+        statusEl.innerHTML = '<p class="settings-hint" style="color: #22c55e;">✓ Push notifications are enabled</p>';
+        enableBtn.style.display = 'none';
+        testBtn.style.display = 'inline-block';
+    } else {
+        statusEl.innerHTML = '<p class="settings-hint">Push notifications are not enabled</p>';
+        enableBtn.style.display = 'inline-block';
+        testBtn.style.display = 'none';
+    }
+}
+
+async function enablePushFromSettings() {
+    const success = await requestPushPermission();
+    if (success) {
+        showStatus('Push notifications enabled! 🔔', 'success');
+    }
+    updatePushNotificationStatus();
 }
 
 function closeSettings() {

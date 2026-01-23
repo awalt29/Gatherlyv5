@@ -2554,6 +2554,102 @@ body:has(.guest-info) .container {
     }
 }
 
+/* Push Permission Prompt */
+.push-prompt-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.push-prompt-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.push-prompt {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    background: rgba(30, 45, 70, 0.98);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 300px;
+    width: calc(100% - 40px);
+    text-align: center;
+    z-index: 2001;
+    opacity: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+}
+
+.push-prompt.active {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.push-prompt-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.push-prompt-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
+
+.push-prompt-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.push-prompt-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.push-prompt-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.push-prompt-later {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+}
+
+.push-prompt-later:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.push-prompt-enable {
+    background: var(--accent-mint);
+    color: var(--primary-bg);
+}
+
+.push-prompt-enable:hover {
+    background: #9fedd7;
+}
+
 /* Install Popup (Add to Home Screen) */
 .install-popup-overlay {
     display: none;

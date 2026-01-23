@@ -241,6 +241,15 @@
                         <button type="button" class="btn-primary" onclick="saveNotificationPreferences()">Save Preferences</button>
                     </div>
                 </div>
+                <div class="settings-section" id="pushNotificationSection">
+                    <h3 class="settings-section-title">Push Notifications</h3>
+                    <p class="settings-description">Get instant notifications when friends update their availability or invite you to hang out.</p>
+                    <div id="pushStatus"></div>
+                    <div class="form-buttons">
+                        <button type="button" class="btn-primary" id="enablePushBtn" onclick="enablePushFromSettings()" style="display: none;">Enable Notifications</button>
+                        <button type="button" class="btn-secondary" id="testPushBtn" onclick="testPushNotification()" style="display: none;">Send Test</button>
+                    </div>
+                </div>
                 <div class="settings-section">
                     <h3 class="settings-section-title">Weekly Reminders</h3>
                     <p class="settings-description">Get a Sunday evening reminder to share your availability for the week.</p>
