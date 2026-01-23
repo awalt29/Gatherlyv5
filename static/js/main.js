@@ -1937,7 +1937,13 @@ function displayFriendsAvailability() {
             avatarsContainer.className = 'slot-avatars';
             
             // Add avatar for each friend (max 3 shown)
-            friends.slice(0, 3).forEach(friend => {
+            // Determine how many bubbles to show
+            // If 4 or fewer friends, show all of them
+            // If 5+ friends, show 3 + a "+N" indicator (where N >= 2)
+            const maxBubbles = friends.length <= 4 ? friends.length : 3;
+            const overflow = friends.length - maxBubbles;
+            
+            friends.slice(0, maxBubbles).forEach(friend => {
                 const avatar = document.createElement('div');
                 avatar.className = 'slot-avatar';
                 
@@ -1956,12 +1962,12 @@ function displayFriendsAvailability() {
                 avatarsContainer.appendChild(avatar);
             });
             
-            // If more than 3, show count
-            if (friends.length > 3) {
+            // Only show +N if there are 2+ more friends
+            if (overflow >= 2) {
                 const moreAvatar = document.createElement('div');
                 moreAvatar.className = 'slot-avatar';
-                moreAvatar.textContent = `+${friends.length - 3}`;
-                moreAvatar.title = friends.slice(3).map(f => f.name).join(', ');
+                moreAvatar.textContent = `+${overflow}`;
+                moreAvatar.title = friends.slice(maxBubbles).map(f => f.name).join(', ');
                 avatarsContainer.appendChild(moreAvatar);
             }
             
