@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Send weekly planning reminders to users via SMS
+Send weekly planning reminders to users via push notifications
 This script is run by Railway cron jobs:
 - Sunday evening (0 23 * * 0): General weekly reminder
 - Wednesday evening (0 23 * * 3): Weekend planning reminder with friend count
@@ -8,11 +8,11 @@ This script is run by Railway cron jobs:
 
 import os
 import sys
+import json
 from datetime import date
 from dotenv import load_dotenv
-from models import db, User, Friendship, UserAvailability
+from models import db, User, Friendship, UserAvailability, PushSubscription
 from flask import Flask
-from twilio.rest import Client
 
 load_dotenv()
 
@@ -29,30 +29,64 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
-# Twilio setup
-TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
-TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
-APP_BASE_URL = os.getenv('APP_BASE_URL', 'https://trygatherly.com')
+# VAPID setup for push notifications
+VAPID_PUBLIC_KEY = os.getenv('VAPID_PUBLIC_KEY')
+VAPID_PRIVATE_KEY = os.getenv('VAPID_PRIVATE_KEY')
+VAPID_EMAIL = os.getenv('VAPID_EMAIL', 'hello@trygatherly.com')
 
-def send_sms(to_number, message):
-    """Send SMS via Twilio"""
-    if not all([TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER]):
-        print("⚠️  Twilio credentials not configured")
+
+def send_push_notification(user_id, title, body, url=None):
+    """Send push notification to all subscriptions for a user"""
+    if not VAPID_PUBLIC_KEY or not VAPID_PRIVATE_KEY:
+        print(f"   ⚠️  VAPID keys not configured")
         return False
     
     try:
-        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-        message = client.messages.create(
-            body=message,
-            from_=TWILIO_PHONE_NUMBER,
-            to=to_number
-        )
-        print(f"✅ SMS sent to {to_number}: {message.sid}")
-        return True
-    except Exception as e:
-        print(f"❌ Error sending SMS to {to_number}: {e}")
+        from pywebpush import webpush
+    except ImportError:
+        print(f"   ⚠️  pywebpush not installed")
         return False
+    
+    subscriptions = PushSubscription.query.filter_by(user_id=user_id).all()
+    if not subscriptions:
+        print(f"   ⚠️  No push subscriptions")
+        return False
+    
+    payload = json.dumps({
+        'title': title,
+        'body': body,
+        'url': url or '/'
+    })
+    
+    vapid_claims = {
+        'sub': f'mailto:{VAPID_EMAIL}'
+    }
+    
+    success_count = 0
+    for sub in subscriptions:
+        try:
+            webpush(
+                subscription_info={
+                    'endpoint': sub.endpoint,
+                    'keys': {
+                        'p256dh': sub.p256dh_key,
+                        'auth': sub.auth_key
+                    }
+                },
+                data=payload,
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims=vapid_claims
+            )
+            success_count += 1
+        except Exception as e:
+            error_msg = str(e)
+            # Remove invalid subscriptions (410 Gone or 404 Not Found)
+            if '410' in error_msg or '404' in error_msg:
+                db.session.delete(sub)
+                db.session.commit()
+    
+    return success_count > 0
+
 
 def get_friends_with_availability(user_id):
     """Count how many friends have future availability"""
@@ -76,6 +110,7 @@ def get_friends_with_availability(user_id):
     
     return count
 
+
 def send_sunday_reminders():
     """Send Sunday evening reminders to all users who have weekly reminders enabled"""
     with app.app_context():
@@ -93,17 +128,20 @@ def send_sunday_reminders():
                 print(f"   ⏭️  Skipped (weekly reminders disabled)")
                 continue
             
-            base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
-            message = f"Hi {user.name.split()[0]}! 👋 Share your availability for the week: {base_url}\n\nTo turn off these reminders, visit Settings in the app."
-            
-            if send_sms(user.phone_number, message):
+            if send_push_notification(
+                user.id,
+                "Time to plan your week! 📅",
+                "Share your availability so friends know when you're free.",
+                "/"
+            ):
                 sent_count += 1
-                print(f"   📱 ✅ Sent reminder")
+                print(f"   🔔 ✅ Sent push reminder")
             else:
-                print(f"   📱 ❌ Failed to send")
+                print(f"   🔔 ❌ Failed to send (no subscription)")
         
         print(f"\n✅ Sent {sent_count} Sunday reminder(s)")
         return sent_count
+
 
 def send_wednesday_reminders():
     """Send Wednesday evening reminders with friend availability count"""
@@ -143,16 +181,21 @@ def send_wednesday_reminders():
                 continue
             
             friend_text = f"{friends_with_avail} {'friend has' if friends_with_avail == 1 else 'friends have'}"
-            message = f"Time to plan your weekend! 🎉\n\n{friend_text} shared their availability!\n\nSee when they're free: https://trygatherly.com"
             
-            if send_sms(user.phone_number, message):
+            if send_push_notification(
+                user.id,
+                "Time to plan your weekend! 🎉",
+                f"{friend_text} shared their availability!",
+                "/"
+            ):
                 sent_count += 1
-                print(f"   📱 ✅ Sent reminder ({friends_with_avail} friends with availability)")
+                print(f"   🔔 ✅ Sent push reminder ({friends_with_avail} friends with availability)")
             else:
-                print(f"   📱 ❌ Failed to send")
+                print(f"   🔔 ❌ Failed to send (no subscription)")
         
         print(f"\n✅ Sent {sent_count} Wednesday reminder(s)")
         return sent_count
+
 
 if __name__ == '__main__':
     # Check command line argument for which type of reminder to send
