@@ -1942,9 +1942,17 @@ body:has(.guest-info) .container {
 
 /* Nudge Popup */
 .nudge-popup {
+    display: none;
     position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     z-index: 1200;
     animation: fadeIn 0.15s ease-out;
+}
+
+.nudge-popup.active {
+    display: block;
 }
 
 .nudge-popup-content {
