@@ -2293,6 +2293,259 @@ body:has(.guest-info) .container {
     color: #fbbf24;
 }
 
+/* Plans Modal */
+.plans-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 0;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.plan-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.plan-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-mint);
+}
+
+.plan-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.plan-card-date {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.plan-card-time {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-transform: capitalize;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.plan-card-description {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.plan-card-guests {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.plan-guest-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+}
+
+.plan-guest-chip.accepted {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.plan-guest-chip.declined {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.plan-guest-chip.maybe {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.plan-guest-chip.pending {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+}
+
+.plan-card-role {
+    font-size: 11px;
+    color: var(--accent-mint);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.plans-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
+.plans-empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.plans-empty-text {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.plans-empty-hint {
+    font-size: 13px;
+    opacity: 0.7;
+}
+
+/* Plan Detail */
+.plan-detail-content {
+    padding: 16px 0;
+}
+
+.plan-detail-header {
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.plan-detail-date {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 4px;
+}
+
+.plan-detail-time {
+    font-size: 16px;
+    color: var(--accent-mint);
+    text-transform: capitalize;
+}
+
+.plan-detail-section {
+    margin-bottom: 24px;
+}
+
+.plan-detail-section-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.plan-detail-description {
+    font-size: 15px;
+    color: var(--text-light);
+    line-height: 1.5;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.plan-detail-guests {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.plan-detail-guest {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+}
+
+.plan-detail-guest-name {
+    font-size: 15px;
+    color: var(--text-light);
+}
+
+.plan-detail-guest-status {
+    font-size: 13px;
+    padding: 4px 12px;
+    border-radius: 16px;
+    text-transform: capitalize;
+}
+
+.plan-detail-guest-status.accepted {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.plan-detail-guest-status.declined {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.plan-detail-guest-status.maybe {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.plan-detail-guest-status.pending {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+}
+
+.plan-detail-creator {
+    font-size: 14px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.plan-detail-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.plan-detail-actions .btn-danger {
+    flex: 1;
+}
+
+/* Make plans modal fullscreen on mobile */
+@media (max-width: 480px) {
+    #plansModal .modal-content,
+    #planDetailModal .modal-content {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-height: none;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    #plansModal .plans-list {
+        flex: 1;
+        max-height: none;
+        overflow-y: auto;
+    }
+}
+
 /* Install Popup (Add to Home Screen) */
 .install-popup-overlay {
     display: none;

@@ -27,6 +27,14 @@
                         <circle cx="12" cy="12" r="3"></circle>
                     </svg>
                 </button>
+                <button class="icon-btn" onclick="openPlans()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                </button>
                 <button class="icon-btn notification-btn" onclick="openNotifications()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -285,6 +293,46 @@
                     <button type="submit" class="btn-primary">Save Changes</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Plans Modal -->
+    <div class="modal" id="plansModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">My Plans</h2>
+                <button class="close-btn" onclick="closePlans()">×</button>
+            </div>
+            <div class="plans-list" id="plansList">
+                <!-- Plans will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Plan Detail Modal -->
+    <div class="modal" id="planDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="back-btn" onclick="backToPlans()">←</button>
+                <h2 class="modal-title">Plan Details</h2>
+                <button class="close-btn" onclick="closePlanDetail()">×</button>
+            </div>
+            <div class="plan-detail-content" id="planDetailContent">
+                <!-- Plan details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Nudge Popup -->
+    <div class="nudge-overlay" id="nudgeOverlay" onclick="closeNudgeConfirmDialog()"></div>
+    <div class="nudge-popup" id="nudgePopup">
+        <div class="nudge-popup-content">
+            <div class="nudge-popup-header">Send a nudge?</div>
+            <p>Ask <span id="nudgeFriendName"></span> to share their availability</p>
+            <div class="nudge-popup-buttons">
+                <button class="nudge-btn nudge-cancel-btn" onclick="closeNudgeConfirmDialog()">Cancel</button>
+                <button class="nudge-btn" id="sendNudgeBtn">Send Nudge</button>
+            </div>
         </div>
     </div>
 

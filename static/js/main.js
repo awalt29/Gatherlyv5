@@ -2283,6 +2283,255 @@ setInterval(() => {
     }
 }, 30000);
 
+// =====================
+// Plans Functions
+// =====================
+
+let allPlans = { created: [], invited: [] };
+let currentPlanDetail = null;
+
+async function openPlans() {
+    document.getElementById('plansModal').classList.add('active');
+    await loadPlans();
+}
+
+function closePlans() {
+    document.getElementById('plansModal').classList.remove('active');
+}
+
+async function loadPlans() {
+    try {
+        const response = await fetch('/api/hangouts');
+        if (response.ok) {
+            allPlans = await response.json();
+            renderPlans();
+        }
+    } catch (error) {
+        console.error('Error loading plans:', error);
+    }
+}
+
+function renderPlans() {
+    const plansList = document.getElementById('plansList');
+    const allPlansList = [];
+    
+    // Combine created and invited plans
+    allPlans.created.forEach(plan => {
+        allPlansList.push({ ...plan, role: 'host' });
+    });
+    allPlans.invited.forEach(plan => {
+        // Don't duplicate if you're both creator and invitee
+        if (!allPlansList.find(p => p.id === plan.id)) {
+            allPlansList.push({ ...plan, role: 'guest' });
+        }
+    });
+    
+    // Sort by date (most recent first)
+    allPlansList.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    if (allPlansList.length === 0) {
+        plansList.innerHTML = `
+            <div class="plans-empty">
+                <div class="plans-empty-icon">📅</div>
+                <div class="plans-empty-text">No plans yet</div>
+                <div class="plans-empty-hint">Tap a time slot with friends available to create a plan</div>
+            </div>
+        `;
+        return;
+    }
+    
+    plansList.innerHTML = allPlansList.map(plan => {
+        const dateObj = new Date(plan.date + 'T12:00:00');
+        const dateStr = dateObj.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+        
+        const guestChips = plan.invitees.map(inv => {
+            const statusClass = inv.status || 'pending';
+            return `<span class="plan-guest-chip ${statusClass}">${inv.user_name}</span>`;
+        }).join('');
+        
+        return `
+            <div class="plan-card" onclick="openPlanDetail(${plan.id})">
+                <div class="plan-card-role">${plan.role === 'host' ? '👑 You\'re hosting' : '📬 Invited'}</div>
+                <div class="plan-card-header">
+                    <div class="plan-card-date">${dateStr}</div>
+                    <div class="plan-card-time">${plan.time_slot}</div>
+                </div>
+                ${plan.description ? `<div class="plan-card-description">${plan.description}</div>` : ''}
+                <div class="plan-card-guests">${guestChips}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openPlanDetail(planId) {
+    // Find the plan in our loaded data
+    let plan = allPlans.created.find(p => p.id === planId);
+    let role = 'host';
+    if (!plan) {
+        plan = allPlans.invited.find(p => p.id === planId);
+        role = 'guest';
+    }
+    
+    if (!plan) {
+        showStatus('Plan not found', 'error');
+        return;
+    }
+    
+    currentPlanDetail = { ...plan, role };
+    renderPlanDetail();
+    document.getElementById('planDetailModal').classList.add('active');
+}
+
+function renderPlanDetail() {
+    if (!currentPlanDetail) return;
+    
+    const plan = currentPlanDetail;
+    const content = document.getElementById('planDetailContent');
+    
+    const dateObj = new Date(plan.date + 'T12:00:00');
+    const dateStr = dateObj.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        month: 'long', 
+        day: 'numeric',
+        year: 'numeric'
+    });
+    
+    const guestsHtml = plan.invitees.map(inv => {
+        const statusClass = inv.status || 'pending';
+        const statusText = inv.status === 'accepted' ? 'Going' : 
+                          inv.status === 'declined' ? 'Can\'t go' : 
+                          inv.status === 'maybe' ? 'Maybe' : 'Pending';
+        return `
+            <div class="plan-detail-guest">
+                <div class="plan-detail-guest-name">${inv.user_name}</div>
+                <div class="plan-detail-guest-status ${statusClass}">${statusText}</div>
+            </div>
+        `;
+    }).join('');
+    
+    // Check if user can respond (they're a guest and haven't responded or want to change)
+    const myInvite = plan.invitees.find(inv => inv.user_id === plannerInfo.id);
+    const canRespond = plan.role === 'guest' && myInvite;
+    
+    let responseButtons = '';
+    if (canRespond) {
+        responseButtons = `
+            <div class="plan-detail-section">
+                <div class="plan-detail-section-title">Your Response</div>
+                <div class="friend-request-actions hangout-actions">
+                    <button class="btn-accept ${myInvite.status === 'accepted' ? 'active' : ''}" onclick="respondToPlanDetail('accepted')">Going</button>
+                    <button class="btn-maybe ${myInvite.status === 'maybe' ? 'active' : ''}" onclick="respondToPlanDetail('maybe')">Maybe</button>
+                    <button class="btn-reject ${myInvite.status === 'declined' ? 'active' : ''}" onclick="respondToPlanDetail('declined')">Can't go</button>
+                </div>
+            </div>
+        `;
+    }
+    
+    let cancelButton = '';
+    if (plan.role === 'host') {
+        cancelButton = `
+            <div class="plan-detail-actions">
+                <button class="btn-danger" onclick="cancelPlan(${plan.id})">Cancel Plan</button>
+            </div>
+        `;
+    }
+    
+    content.innerHTML = `
+        <div class="plan-detail-header">
+            <div class="plan-detail-date">${dateStr}</div>
+            <div class="plan-detail-time">${plan.time_slot}</div>
+        </div>
+        
+        ${plan.description ? `
+            <div class="plan-detail-section">
+                <div class="plan-detail-section-title">Description</div>
+                <div class="plan-detail-description">${plan.description}</div>
+            </div>
+        ` : ''}
+        
+        <div class="plan-detail-section">
+            <div class="plan-detail-section-title">Guests</div>
+            <div class="plan-detail-guests">${guestsHtml}</div>
+        </div>
+        
+        ${responseButtons}
+        
+        <div class="plan-detail-creator">
+            Created by ${plan.creator_name}
+        </div>
+        
+        ${cancelButton}
+    `;
+}
+
+async function respondToPlanDetail(response) {
+    if (!currentPlanDetail) return;
+    
+    try {
+        const res = await fetch(`/api/hangouts/${currentPlanDetail.id}/respond`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ response })
+        });
+        
+        if (res.ok) {
+            showStatus('Response updated!', 'success');
+            // Update local data
+            const myInvite = currentPlanDetail.invitees.find(inv => inv.user_id === plannerInfo.id);
+            if (myInvite) myInvite.status = response;
+            renderPlanDetail();
+            // Reload plans list
+            await loadPlans();
+            // Reload calendar to show updated statuses
+            loadHangoutStatuses();
+        } else {
+            const data = await res.json();
+            showStatus(data.error || 'Failed to update response', 'error');
+        }
+    } catch (error) {
+        console.error('Error responding to plan:', error);
+        showStatus('Failed to update response', 'error');
+    }
+}
+
+async function cancelPlan(planId) {
+    if (!confirm('Are you sure you want to cancel this plan? All guests will be notified.')) {
+        return;
+    }
+    
+    try {
+        const res = await fetch(`/api/hangouts/${planId}`, {
+            method: 'DELETE'
+        });
+        
+        if (res.ok) {
+            showStatus('Plan cancelled', 'success');
+            closePlanDetail();
+            await loadPlans();
+            loadHangoutStatuses();
+        } else {
+            const data = await res.json();
+            showStatus(data.error || 'Failed to cancel plan', 'error');
+        }
+    } catch (error) {
+        console.error('Error cancelling plan:', error);
+        showStatus('Failed to cancel plan', 'error');
+    }
+}
+
+function closePlanDetail() {
+    document.getElementById('planDetailModal').classList.remove('active');
+    currentPlanDetail = null;
+}
+
+function backToPlans() {
+    closePlanDetail();
+}
+
 // Settings functions
 async function openSettings() {
     if (!plannerInfo) {

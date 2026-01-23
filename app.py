@@ -1883,6 +1883,39 @@ def get_user_hangouts():
     })
 
 
+@app.route('/api/hangouts/<int:hangout_id>', methods=['DELETE'])
+def delete_hangout(hangout_id):
+    """Cancel/delete a hangout (only by creator)"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    hangout = Hangout.query.get_or_404(hangout_id)
+    
+    # Only creator can delete
+    if hangout.creator_id != user_id:
+        return jsonify({'error': 'Only the host can cancel this plan'}), 403
+    
+    # Notify all invitees
+    creator = User.query.get(user_id)
+    for invitee in hangout.invitees:
+        notification = Notification(
+            planner_id=invitee.user_id,
+            message=f"{creator.name} cancelled the plan for {hangout.date} ({hangout.time_slot})",
+            from_user_id=user_id
+        )
+        db.session.add(notification)
+    
+    # Delete associated notifications
+    Notification.query.filter_by(hangout_id=hangout_id).delete()
+    
+    # Delete the hangout (cascade will delete invitees)
+    db.session.delete(hangout)
+    db.session.commit()
+    
+    return jsonify({'message': 'Plan cancelled'}), 200
+
+
 @app.route('/api/hangouts/for-slot', methods=['GET'])
 def get_hangouts_for_slot():
     """Get hangout invitee statuses for a specific date/time slot (for calendar display)"""
