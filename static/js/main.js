@@ -178,25 +178,47 @@ function urlBase64ToUint8Array(base64String) {
 
 // Check if we should show push prompt to existing users
 function showPushPromptIfNeeded() {
+    console.log('[PUSH PROMPT] showPushPromptIfNeeded called');
+    console.log('[PUSH PROMPT] pushSubscription:', pushSubscription);
+    console.log('[PUSH PROMPT] Notification.permission:', Notification.permission);
+    
     // Don't show if push not supported
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.log('[PUSH PROMPT] Push not supported, skipping');
         return;
     }
     
-    // Don't show if already subscribed or denied
-    if (pushSubscription || Notification.permission === 'denied' || Notification.permission === 'granted') {
+    // Already subscribed - nothing to do
+    if (pushSubscription) {
+        console.log('[PUSH PROMPT] Already subscribed, skipping');
         return;
     }
     
+    // If permission denied, nothing we can do
+    if (Notification.permission === 'denied') {
+        console.log('[PUSH PROMPT] Permission denied, skipping');
+        return;
+    }
+    
+    // If permission already granted but not subscribed, auto-subscribe
+    if (Notification.permission === 'granted') {
+        console.log('[PUSH PROMPT] Permission already granted, auto-subscribing...');
+        enablePushNotifications();
+        return;
+    }
+    
+    // Permission is 'default' - show our custom prompt
     // Check if user has dismissed recently (don't show again for 7 days)
     const lastDismissed = localStorage.getItem('push_prompt_dismissed');
     if (lastDismissed) {
         const daysSinceDismissed = (Date.now() - parseInt(lastDismissed)) / (1000 * 60 * 60 * 24);
         if (daysSinceDismissed < 7) {
+            console.log('[PUSH PROMPT] Dismissed recently, skipping');
             return;
         }
     }
     
+    console.log('[PUSH PROMPT] Showing prompt...');
     // Show the prompt
     showPushPermissionPrompt();
 }
@@ -2923,20 +2945,35 @@ async function togglePushNotifications() {
 
 async function disablePushNotifications() {
     try {
-        if (pushSubscription) {
+        console.log('[PUSH] Disabling push notifications...');
+        
+        // Get the current subscription from the browser
+        const registration = await navigator.serviceWorker.ready;
+        const currentSub = await registration.pushManager.getSubscription();
+        
+        console.log('[PUSH] Current browser subscription:', currentSub ? 'exists' : 'none');
+        
+        if (currentSub) {
             // Unsubscribe from browser
-            await pushSubscription.unsubscribe();
+            const unsubResult = await currentSub.unsubscribe();
+            console.log('[PUSH] Browser unsubscribe result:', unsubResult);
             
             // Remove from server
             await fetch('/api/push/unsubscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ endpoint: pushSubscription.endpoint })
+                body: JSON.stringify({ endpoint: currentSub.endpoint })
             });
-            
-            pushSubscription = null;
-            showStatus('Push notifications disabled', 'success');
+            console.log('[PUSH] Removed from server');
         }
+        
+        pushSubscription = null;
+        showStatus('Push notifications disabled', 'success');
+        
+        // Verify it's gone
+        const verifyCheck = await registration.pushManager.getSubscription();
+        console.log('[PUSH] Verification - subscription after disable:', verifyCheck ? 'still exists!' : 'successfully removed');
+        
     } catch (error) {
         console.error('[PUSH] Error disabling:', error);
         showStatus('Failed to disable notifications', 'error');
