@@ -8,5 +8,7 @@ twilio==8.10.0
 sendgrid==6.11.0
 gunicorn==21.2.0
 pytz==2024.2
-pywebpush==1.14.0
+pywebpush==1.14.1
+py-vapid==1.9.1
+cryptography>=41.0.0
 

@@ -2022,7 +2022,7 @@ def send_push_notification(user_id, title, body, url=None, notification_id=None)
         return False
     
     try:
-        from pywebpush import webpush, WebPushException
+        from pywebpush import webpush
     except ImportError:
         print("[PUSH] pywebpush not installed")
         return False
@@ -2039,6 +2039,7 @@ def send_push_notification(user_id, title, body, url=None, notification_id=None)
         'notificationId': notification_id
     })
     
+    # VAPID claims with the required 'sub' claim
     vapid_claims = {
         'sub': f'mailto:{VAPID_EMAIL}'
     }
@@ -2046,6 +2047,7 @@ def send_push_notification(user_id, title, body, url=None, notification_id=None)
     success_count = 0
     for sub in subscriptions:
         try:
+            # Use the raw private key string directly
             webpush(
                 subscription_info={
                     'endpoint': sub.endpoint,
@@ -2063,6 +2065,8 @@ def send_push_notification(user_id, title, body, url=None, notification_id=None)
         except Exception as e:
             error_msg = str(e)
             print(f"[PUSH] Error sending to user {user_id}: {error_msg}")
+            import traceback
+            traceback.print_exc()
             # Remove invalid subscriptions (410 Gone or 404 Not Found)
             if '410' in error_msg or '404' in error_msg:
                 print(f"[PUSH] Removing invalid subscription {sub.id}")
