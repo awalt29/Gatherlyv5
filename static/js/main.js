@@ -203,10 +203,23 @@ function showPushPromptIfNeeded() {
 
 // Show custom prompt before browser permission request
 function showPushPermissionPrompt() {
+    console.log('[PUSH PROMPT] Checking if should show...');
+    console.log('[PUSH PROMPT] pushSubscription:', pushSubscription);
+    console.log('[PUSH PROMPT] Notification.permission:', Notification.permission);
+    
     // Don't show if already subscribed or denied
     if (pushSubscription || Notification.permission === 'denied') {
+        console.log('[PUSH PROMPT] Skipping - already subscribed or denied');
         return;
     }
+    
+    // Don't show if push not supported
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.log('[PUSH PROMPT] Skipping - push not supported');
+        return;
+    }
+    
+    console.log('[PUSH PROMPT] Showing prompt!');
     
     // Create custom prompt
     const overlay = document.createElement('div');
@@ -559,11 +572,21 @@ async function setupPlanner(event) {
             // Initialize push notifications
             initPushNotifications();
             
-            // Show "Add to Home Screen" prompt for iOS users
+            // Show "Add to Home Screen" prompt for iOS users first
             setTimeout(() => showInstallPopup(), 1500);
             
-            // Show push notification prompt for new users (after a delay)
-            setTimeout(() => showPushPermissionPrompt(), 3000);
+            // Show push notification prompt for new users (after install popup)
+            // Delay longer to not conflict with install popup
+            setTimeout(() => {
+                // Only show if install popup is not visible
+                const installPopup = document.getElementById('installPopup');
+                if (!installPopup || !installPopup.classList.contains('active')) {
+                    showPushPermissionPrompt();
+                } else {
+                    // Wait for install popup to close, then show push prompt
+                    setTimeout(() => showPushPermissionPrompt(), 3000);
+                }
+            }, 5000);
         } else {
             showStatus('Error setting up. Please try again.', 'error');
         }
