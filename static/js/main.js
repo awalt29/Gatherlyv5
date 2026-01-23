@@ -205,17 +205,25 @@ function showPushPromptIfNeeded() {
 function showPushPermissionPrompt() {
     console.log('[PUSH PROMPT] Checking if should show...');
     console.log('[PUSH PROMPT] pushSubscription:', pushSubscription);
-    console.log('[PUSH PROMPT] Notification.permission:', Notification.permission);
+    console.log('[PUSH PROMPT] Notification.permission:', typeof Notification !== 'undefined' ? Notification.permission : 'Notification not available');
+    console.log('[PUSH PROMPT] serviceWorker supported:', 'serviceWorker' in navigator);
+    console.log('[PUSH PROMPT] PushManager supported:', 'PushManager' in window);
     
     // Don't show if already subscribed or denied
-    if (pushSubscription || Notification.permission === 'denied') {
-        console.log('[PUSH PROMPT] Skipping - already subscribed or denied');
+    if (pushSubscription) {
+        console.log('[PUSH PROMPT] Skipping - already subscribed');
         return;
     }
     
-    // Don't show if push not supported
+    if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+        console.log('[PUSH PROMPT] Skipping - permission denied');
+        return;
+    }
+    
+    // Don't show if push not supported (but allow on iOS for education)
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        console.log('[PUSH PROMPT] Skipping - push not supported');
+        console.log('[PUSH PROMPT] Push not supported on this browser');
+        // Still skip - can't enable anyway
         return;
     }
     
