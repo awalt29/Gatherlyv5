@@ -2804,9 +2804,10 @@ async function openSettings() {
 
 function updatePushNotificationStatus() {
     const statusEl = document.getElementById('pushStatus');
-    const enableBtn = document.getElementById('enablePushBtn');
-    const testBtn = document.getElementById('testPushBtn');
     const section = document.getElementById('pushNotificationSection');
+    const pushNotEnabled = document.getElementById('pushNotEnabled');
+    const pushEnabled = document.getElementById('pushEnabled');
+    const pushToggle = document.getElementById('pushToggle');
     
     // Hide section if push not supported
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -2818,16 +2819,17 @@ function updatePushNotificationStatus() {
     
     if (Notification.permission === 'denied') {
         statusEl.innerHTML = '<p class="settings-hint" style="color: #ef4444;">⚠️ Notifications are blocked. Please enable them in your browser settings.</p>';
-        enableBtn.style.display = 'none';
-        testBtn.style.display = 'none';
+        pushNotEnabled.style.display = 'none';
+        pushEnabled.style.display = 'none';
     } else if (Notification.permission === 'granted' && pushSubscription) {
-        statusEl.innerHTML = '<p class="settings-hint" style="color: #22c55e;">✓ Push notifications are enabled</p>';
-        enableBtn.style.display = 'none';
-        testBtn.style.display = 'inline-block';
+        statusEl.innerHTML = '';
+        pushNotEnabled.style.display = 'none';
+        pushEnabled.style.display = 'block';
+        pushToggle.checked = true;
     } else {
-        statusEl.innerHTML = '<p class="settings-hint">Push notifications are not enabled</p>';
-        enableBtn.style.display = 'inline-block';
-        testBtn.style.display = 'none';
+        statusEl.innerHTML = '';
+        pushNotEnabled.style.display = 'block';
+        pushEnabled.style.display = 'none';
     }
 }
 
@@ -2837,6 +2839,44 @@ async function enablePushFromSettings() {
         showStatus('Push notifications enabled! 🔔', 'success');
     }
     updatePushNotificationStatus();
+}
+
+async function togglePushNotifications() {
+    const pushToggle = document.getElementById('pushToggle');
+    
+    if (pushToggle.checked) {
+        // Re-enable
+        const success = await requestPushPermission();
+        if (!success) {
+            pushToggle.checked = false;
+        }
+    } else {
+        // Disable - unsubscribe from push
+        await disablePushNotifications();
+    }
+    updatePushNotificationStatus();
+}
+
+async function disablePushNotifications() {
+    try {
+        if (pushSubscription) {
+            // Unsubscribe from browser
+            await pushSubscription.unsubscribe();
+            
+            // Remove from server
+            await fetch('/api/push/unsubscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ endpoint: pushSubscription.endpoint })
+            });
+            
+            pushSubscription = null;
+            showStatus('Push notifications disabled', 'success');
+        }
+    } catch (error) {
+        console.error('[PUSH] Error disabling:', error);
+        showStatus('Failed to disable notifications', 'error');
+    }
 }
 
 function closeSettings() {
