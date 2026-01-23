@@ -604,6 +604,10 @@ def get_user(user_id):
                 db.session.delete(hangout)
             print(f"[DELETE ACCOUNT] Deleted hangouts (as creator)")
             
+            # Delete push subscriptions
+            PushSubscription.query.filter_by(user_id=user_id).delete()
+            print(f"[DELETE ACCOUNT] Deleted push subscriptions")
+            
             # Finally delete the user
             db.session.delete(user)
             db.session.commit()
