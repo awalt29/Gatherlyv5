@@ -176,6 +176,31 @@ function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
+// Check if we should show push prompt to existing users
+function showPushPromptIfNeeded() {
+    // Don't show if push not supported
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        return;
+    }
+    
+    // Don't show if already subscribed or denied
+    if (pushSubscription || Notification.permission === 'denied' || Notification.permission === 'granted') {
+        return;
+    }
+    
+    // Check if user has dismissed recently (don't show again for 7 days)
+    const lastDismissed = localStorage.getItem('push_prompt_dismissed');
+    if (lastDismissed) {
+        const daysSinceDismissed = (Date.now() - parseInt(lastDismissed)) / (1000 * 60 * 60 * 24);
+        if (daysSinceDismissed < 7) {
+            return;
+        }
+    }
+    
+    // Show the prompt
+    showPushPermissionPrompt();
+}
+
 // Show custom prompt before browser permission request
 function showPushPermissionPrompt() {
     // Don't show if already subscribed or denied
@@ -210,15 +235,20 @@ function showPushPermissionPrompt() {
     }, 10);
 }
 
-function closePushPrompt() {
+function closePushPrompt(dismissed = true) {
     const overlay = document.getElementById('pushPromptOverlay');
     const prompt = document.querySelector('.push-prompt');
     if (overlay) overlay.remove();
     if (prompt) prompt.remove();
+    
+    // Record dismissal time so we don't show again for 7 days
+    if (dismissed) {
+        localStorage.setItem('push_prompt_dismissed', Date.now().toString());
+    }
 }
 
 async function enablePushFromPrompt() {
-    closePushPrompt();
+    closePushPrompt(false); // Don't record as dismissed since they're enabling
     const success = await requestPushPermission();
     if (success) {
         showStatus('Notifications enabled! 🔔', 'success');
@@ -416,6 +446,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Initialize push notifications
             initPushNotifications();
+            
+            // Show push notification prompt for existing users who haven't enabled yet
+            setTimeout(() => showPushPromptIfNeeded(), 2000);
             
             // Show "Add to Home Screen" prompt for iOS users (also applies to existing users on login)
             setTimeout(() => showInstallPopup(), 1500);
