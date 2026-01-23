@@ -49,12 +49,14 @@ async function requestPushPermission() {
     // Check if push is supported
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         console.log('[PUSH] Push notifications not supported');
+        showStatus('Push notifications not supported on this browser', 'error');
         return false;
     }
     
     // Check current permission
     if (Notification.permission === 'denied') {
         console.log('[PUSH] Notifications are blocked');
+        showStatus('Notifications are blocked. Please enable in browser settings.', 'error');
         return false;
     }
     
@@ -65,44 +67,68 @@ async function requestPushPermission() {
     
     try {
         // Get VAPID public key from server
+        console.log('[PUSH] Fetching VAPID key...');
         const keyResponse = await fetch('/api/push/vapid-key');
+        console.log('[PUSH] VAPID key response status:', keyResponse.status);
         if (!keyResponse.ok) {
-            console.log('[PUSH] Server does not support push notifications');
+            const errorText = await keyResponse.text();
+            console.error('[PUSH] VAPID key error:', errorText);
+            showStatus('Push notifications not configured on server', 'error');
             return false;
         }
-        const { publicKey } = await keyResponse.json();
+        const keyData = await keyResponse.json();
+        console.log('[PUSH] Got VAPID key:', keyData.publicKey ? 'yes' : 'no');
+        const publicKey = keyData.publicKey;
+        
+        if (!publicKey) {
+            console.error('[PUSH] No public key in response');
+            showStatus('Push notifications not configured', 'error');
+            return false;
+        }
         
         // Request permission
+        console.log('[PUSH] Requesting permission...');
         const permission = await Notification.requestPermission();
+        console.log('[PUSH] Permission result:', permission);
         if (permission !== 'granted') {
             console.log('[PUSH] Permission denied');
+            showStatus('Notification permission denied', 'error');
             return false;
         }
         
         // Subscribe to push
+        console.log('[PUSH] Subscribing to push manager...');
         const registration = await navigator.serviceWorker.ready;
+        console.log('[PUSH] Service worker ready');
+        
         const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(publicKey)
         });
+        console.log('[PUSH] Got subscription');
         
         // Send subscription to server
+        console.log('[PUSH] Saving subscription to server...');
         const response = await fetch('/api/push/subscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(subscription.toJSON())
         });
         
+        console.log('[PUSH] Server response status:', response.status);
         if (response.ok) {
             pushSubscription = subscription;
-            console.log('[PUSH] Successfully subscribed');
+            console.log('[PUSH] Successfully subscribed!');
             return true;
         } else {
-            console.error('[PUSH] Failed to save subscription to server');
+            const errorData = await response.text();
+            console.error('[PUSH] Failed to save subscription:', errorData);
+            showStatus('Failed to save subscription', 'error');
             return false;
         }
     } catch (error) {
         console.error('[PUSH] Error subscribing:', error);
+        showStatus('Error enabling notifications: ' + error.message, 'error');
         return false;
     }
 }
