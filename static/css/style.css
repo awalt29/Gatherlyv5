@@ -2307,8 +2307,9 @@ body:has(.guest-info) .container {
     flex-direction: column;
     gap: 12px;
     padding: 16px 0;
-    max-height: 60vh;
+    flex: 1;
     overflow-y: auto;
+    min-height: 0; /* Needed for flex scrolling */
 }
 
 .plan-card {
@@ -2456,14 +2457,12 @@ body:has(.guest-info) .container {
 }
 
 .plans-past-section {
-    overflow: hidden;
-    transition: max-height 0.3s ease, opacity 0.3s ease;
-    max-height: 2000px;
+    transition: opacity 0.3s ease;
     opacity: 1;
 }
 
 .plans-past-section.collapsed {
-    max-height: 0;
+    display: none;
     opacity: 0;
 }
 
