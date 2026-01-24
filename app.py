@@ -1071,8 +1071,9 @@ def get_friends():
             has_actual_availability = False
             if friend_availability and friend_availability.time_slots:
                 # Only count slots that are today or in the future
-                today_str = date.today().isoformat()
-                future_slots = [s for s in friend_availability.time_slots if s.get('date', '') >= today_str]
+                # Use yesterday as cutoff to handle timezone differences (server is UTC)
+                yesterday_str = (date.today() - timedelta(days=1)).isoformat()
+                future_slots = [s for s in friend_availability.time_slots if s.get('date', '') >= yesterday_str]
                 has_actual_availability = len(future_slots) > 0
             
             friends.append({
@@ -1105,9 +1106,10 @@ def send_nudge(friend_user_id):
     friend_availability = UserAvailability.query.filter_by(user_id=friend_user_id).order_by(UserAvailability.updated_at.desc()).first()
     has_future_availability = False
     if friend_availability and friend_availability.time_slots:
-        today_str = date.today().isoformat()
+        # Use yesterday as cutoff to handle timezone differences (server is UTC)
+        yesterday_str = (date.today() - timedelta(days=1)).isoformat()
         for slot in friend_availability.time_slots:
-            if slot.get('date', '') >= today_str:
+            if slot.get('date', '') >= yesterday_str:
                 has_future_availability = True
                 break
     
@@ -1181,7 +1183,8 @@ def get_friends_availability():
         friend_ids.append(friend_id)
     
     # Get availability for all friends (only future slots)
-    today_str = date.today().isoformat()
+    # Use yesterday as cutoff to handle timezone differences (server is UTC)
+    yesterday_str = (date.today() - timedelta(days=1)).isoformat()
     availabilities = []
     for friend_id in friend_ids:
         friend = User.query.get(friend_id)
@@ -1192,7 +1195,7 @@ def get_friends_availability():
             ).order_by(UserAvailability.updated_at.desc()).first()
             if avail and avail.time_slots:
                 # Filter to only include future slots
-                future_slots = [s for s in avail.time_slots if s.get('date', '') >= today_str]
+                future_slots = [s for s in avail.time_slots if s.get('date', '') >= yesterday_str]
                 if len(future_slots) > 0:
                     availabilities.append({
                         'user_id': friend.id,
