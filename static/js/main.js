@@ -2786,6 +2786,12 @@ function renderPlanDetail() {
         year: 'numeric'
     });
     
+    // Check if plan is in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const planDate = new Date(plan.date + 'T23:59:59');
+    const isPast = planDate < today;
+    
     const guestsHtml = plan.invitees.map(inv => {
         const statusClass = inv.status || 'pending';
         const statusText = inv.status === 'accepted' ? 'Going' : 
@@ -2799,9 +2805,9 @@ function renderPlanDetail() {
         `;
     }).join('');
     
-    // Check if user can respond (they're a guest and haven't responded or want to change)
+    // Check if user can respond (they're a guest and plan is not in the past)
     const myInvite = plan.invitees.find(inv => inv.user_id === plannerInfo.id);
-    const canRespond = plan.role === 'guest' && myInvite;
+    const canRespond = plan.role === 'guest' && myInvite && !isPast;
     
     let responseButtons = '';
     if (canRespond) {
@@ -2815,10 +2821,22 @@ function renderPlanDetail() {
                 </div>
             </div>
         `;
+    } else if (isPast && plan.role === 'guest' && myInvite) {
+        // Show final response for past events
+        const finalStatus = myInvite.status === 'accepted' ? 'You attended' : 
+                           myInvite.status === 'declined' ? 'You didn\'t attend' : 
+                           myInvite.status === 'maybe' ? 'You were unsure' : 'You didn\'t respond';
+        responseButtons = `
+            <div class="plan-detail-section">
+                <div class="plan-detail-section-title">Your Response</div>
+                <div class="plan-past-response">${finalStatus}</div>
+            </div>
+        `;
     }
     
     let cancelButton = '';
-    if (plan.role === 'host') {
+    // Only show cancel for hosts of future events
+    if (plan.role === 'host' && !isPast) {
         cancelButton = `
             <div class="plan-detail-actions">
                 <button class="btn-danger" onclick="cancelPlan(${plan.id})">Cancel Plan</button>

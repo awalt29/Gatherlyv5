@@ -2582,6 +2582,16 @@ body:has(.guest-info) .container {
     color: var(--text-muted);
 }
 
+.plan-past-response {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    text-align: center;
+}
+
 .plan-detail-creator {
     font-size: 14px;
     color: var(--text-muted);
