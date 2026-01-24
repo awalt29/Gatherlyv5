@@ -3070,7 +3070,7 @@ function renderChatMessages(messages) {
     if (!container) return;
     
     if (messages.length === 0) {
-        container.innerHTML = '<div class="chat-empty">No messages yet. Start the conversation!</div>';
+        container.innerHTML = '<div class="chat-empty">Start the conversation!</div>';
         return;
     }
     
