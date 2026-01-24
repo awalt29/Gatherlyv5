@@ -484,8 +484,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadHangoutStatuses();
             loadNotifications();
             
+            // Load plans for unread message badge
+            loadPlans();
+            
             // Check for new notifications every 10 seconds (which will auto-refresh calendar)
             setInterval(loadNotifications, 10000);
+            
+            // Check for new plan messages every 15 seconds
+            startPlansBadgePolling();
             
             // Initialize push notifications
             initPushNotifications();
@@ -2637,10 +2643,62 @@ async function loadPlans() {
         if (response.ok) {
             allPlans = await response.json();
             renderPlans();
+            updatePlansBadge();
         }
     } catch (error) {
         console.error('Error loading plans:', error);
     }
+}
+
+// Track last seen message IDs per plan
+function getSeenMessageIds() {
+    return JSON.parse(localStorage.getItem('seenPlanMessages') || '{}');
+}
+
+function setSeenMessageId(planId, messageId) {
+    const seen = getSeenMessageIds();
+    seen[planId] = messageId;
+    localStorage.setItem('seenPlanMessages', JSON.stringify(seen));
+}
+
+function updatePlansBadge() {
+    if (!allPlans) return;
+    
+    const seen = getSeenMessageIds();
+    let unreadCount = 0;
+    
+    // Check all plans for new messages
+    const allPlansList = [...allPlans.created, ...allPlans.invited];
+    
+    allPlansList.forEach(plan => {
+        if (plan.latest_message_id) {
+            const lastSeen = seen[plan.id] || 0;
+            if (plan.latest_message_id > lastSeen) {
+                unreadCount++;
+            }
+        }
+    });
+    
+    const badge = document.getElementById('plansBadge');
+    if (badge) {
+        if (unreadCount > 0) {
+            badge.textContent = unreadCount;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
+// Call this periodically to check for new messages
+function startPlansBadgePolling() {
+    setInterval(async () => {
+        // Only poll if plans modal is NOT open
+        if (!document.getElementById('plansModal').classList.contains('active') &&
+            !document.getElementById('planDetailModal').classList.contains('active')) {
+            await loadPlans();
+        }
+    }, 15000); // Check every 15 seconds
 }
 
 function renderPlans() {
@@ -2771,6 +2829,13 @@ function openPlanDetail(planId) {
     }
     
     currentPlanDetail = { ...plan, role };
+    
+    // Mark messages as seen for this plan
+    if (plan.latest_message_id) {
+        setSeenMessageId(planId, plan.latest_message_id);
+        updatePlansBadge();
+    }
+    
     renderPlanDetail();
     document.getElementById('planDetailModal').classList.add('active');
 }
@@ -2984,6 +3049,9 @@ async function loadPlanChatMessages(hangoutId) {
             // Track last message ID for polling
             if (messages.length > 0) {
                 lastMessageId = messages[messages.length - 1].id;
+                // Mark as seen since user is viewing the chat
+                setSeenMessageId(hangoutId, lastMessageId);
+                updatePlansBadge();
             }
             
             // Start polling for new messages
@@ -3053,7 +3121,10 @@ async function sendPlanMessage() {
         });
         
         if (response.ok) {
+            const newMessage = await response.json();
             input.value = '';
+            // Mark this message as seen (so your own message doesn't show as unread)
+            setSeenMessageId(currentPlanDetail.id, newMessage.id);
             // Reload messages to show new one
             await loadPlanChatMessages(currentPlanDetail.id);
         } else {

@@ -1951,9 +1951,22 @@ def get_user_hangouts():
         Hangout.status == 'active'
     ).all() if invited_hangout_ids else []
     
+    # Add message count and latest message info to each hangout
+    def hangout_with_messages(h):
+        data = h.to_dict()
+        messages = HangoutMessage.query.filter_by(hangout_id=h.id).order_by(HangoutMessage.created_at.desc()).all()
+        data['message_count'] = len(messages)
+        if messages:
+            data['latest_message_id'] = messages[0].id
+            data['latest_message_at'] = messages[0].created_at.isoformat() + 'Z'
+        else:
+            data['latest_message_id'] = None
+            data['latest_message_at'] = None
+        return data
+    
     return jsonify({
-        'created': [h.to_dict() for h in created],
-        'invited': [h.to_dict() for h in invited]
+        'created': [hangout_with_messages(h) for h in created],
+        'invited': [hangout_with_messages(h) for h in invited]
     })
 
 
