@@ -41,12 +41,20 @@ self.addEventListener('notificationclick', function(event) {
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true })
             .then(function(clientList) {
-                // If app is already open, focus it
+                // If app is already open, focus it and send message
                 for (let client of clientList) {
                     if (client.url.includes(self.location.origin) && 'focus' in client) {
                         client.focus();
+                        
+                        // Handle different URL types
                         if (urlToOpen.includes('#notifications')) {
                             client.postMessage({ type: 'OPEN_NOTIFICATIONS' });
+                        } else if (urlToOpen.includes('openPlan=')) {
+                            // Extract plan ID and send message to open it
+                            const planId = new URL(urlToOpen, self.location.origin).searchParams.get('openPlan');
+                            if (planId) {
+                                client.postMessage({ type: 'OPEN_PLAN', planId: parseInt(planId) });
+                            }
                         }
                         return;
                     }

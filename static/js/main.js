@@ -33,9 +33,16 @@ async function initPushNotifications() {
         console.log('[PUSH] Service worker is ready');
         
         // Listen for messages from service worker
-        navigator.serviceWorker.addEventListener('message', (event) => {
+        navigator.serviceWorker.addEventListener('message', async (event) => {
+            console.log('[SW Message]', event.data);
             if (event.data.type === 'OPEN_NOTIFICATIONS') {
                 openNotifications();
+            } else if (event.data.type === 'OPEN_PLAN') {
+                // Load plans and open the specific plan detail
+                await loadPlans();
+                setTimeout(() => {
+                    openPlanDetail(event.data.planId);
+                }, 300);
             }
         });
         
