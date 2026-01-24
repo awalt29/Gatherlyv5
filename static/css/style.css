@@ -2646,6 +2646,8 @@ body:has(.guest-info) .container {
     display: flex;
     flex-direction: column;
     max-width: 80%;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .chat-message-me {
@@ -2670,9 +2672,7 @@ body:has(.guest-info) .container {
     border-radius: 16px;
     padding: 8px 12px;
     position: relative;
-    max-width: 100%;
-    overflow-wrap: break-word;
-    word-break: break-word;
+    min-width: 0;
 }
 
 .chat-message-me .chat-message-bubble {
@@ -2683,9 +2683,8 @@ body:has(.guest-info) .container {
 .chat-message-text {
     font-size: 14px;
     line-height: 1.4;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    word-break: break-word;
+    word-break: break-all;
+    overflow-wrap: anywhere;
     white-space: pre-wrap;
 }
 
