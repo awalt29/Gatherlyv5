@@ -2844,6 +2844,29 @@ function renderPlanDetail() {
         `;
     }
     
+    // Build chat section
+    const chatSection = `
+        <div class="plan-detail-section plan-chat-section">
+            <div class="plan-detail-section-title">Chat</div>
+            <div class="plan-chat-messages" id="planChatMessages">
+                <div class="chat-loading">Loading messages...</div>
+            </div>
+            ${!isPast ? `
+                <div class="plan-chat-input">
+                    <input type="text" id="planChatInput" placeholder="Type a message..." maxlength="500" onkeypress="handleChatKeypress(event)">
+                    <button class="chat-send-btn" onclick="sendPlanMessage()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            ` : `
+                <div class="plan-chat-locked">Chat is locked for past events</div>
+            `}
+        </div>
+    `;
+    
     content.innerHTML = `
         <div class="plan-detail-header">
             <div class="plan-detail-date">${dateStr}</div>
@@ -2864,12 +2887,17 @@ function renderPlanDetail() {
         
         ${responseButtons}
         
+        ${chatSection}
+        
         <div class="plan-detail-creator">
             Created by ${plan.creator_name}
         </div>
         
         ${cancelButton}
     `;
+    
+    // Load chat messages
+    loadPlanChatMessages(plan.id);
 }
 
 async function respondToPlanDetail(response) {
@@ -2930,6 +2958,155 @@ async function cancelPlan(planId) {
 function closePlanDetail() {
     document.getElementById('planDetailModal').classList.remove('active');
     currentPlanDetail = null;
+    stopChatPolling();
+}
+
+// =====================
+// Plan Chat Functions
+// =====================
+
+let chatPollingInterval = null;
+let lastMessageId = 0;
+
+async function loadPlanChatMessages(hangoutId) {
+    const container = document.getElementById('planChatMessages');
+    if (!container) return;
+    
+    try {
+        const response = await fetch(`/api/hangouts/${hangoutId}/messages`);
+        if (response.ok) {
+            const messages = await response.json();
+            renderChatMessages(messages);
+            
+            // Track last message ID for polling
+            if (messages.length > 0) {
+                lastMessageId = messages[messages.length - 1].id;
+            }
+            
+            // Start polling for new messages
+            startChatPolling(hangoutId);
+        } else {
+            container.innerHTML = '<div class="chat-error">Failed to load messages</div>';
+        }
+    } catch (error) {
+        console.error('Error loading chat messages:', error);
+        container.innerHTML = '<div class="chat-error">Failed to load messages</div>';
+    }
+}
+
+function renderChatMessages(messages) {
+    const container = document.getElementById('planChatMessages');
+    if (!container) return;
+    
+    if (messages.length === 0) {
+        container.innerHTML = '<div class="chat-empty">No messages yet. Start the conversation!</div>';
+        return;
+    }
+    
+    container.innerHTML = messages.map(msg => {
+        const isMe = msg.user_id === plannerInfo.id;
+        const time = new Date(msg.created_at).toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit' 
+        });
+        
+        return `
+            <div class="chat-message ${isMe ? 'chat-message-me' : 'chat-message-other'}">
+                ${!isMe ? `<div class="chat-message-name">${msg.user_name}</div>` : ''}
+                <div class="chat-message-bubble">
+                    <div class="chat-message-text">${escapeHtml(msg.message)}</div>
+                    <div class="chat-message-time">${time}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Scroll to bottom
+    container.scrollTop = container.scrollHeight;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+async function sendPlanMessage() {
+    if (!currentPlanDetail) return;
+    
+    const input = document.getElementById('planChatInput');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Disable input while sending
+    input.disabled = true;
+    
+    try {
+        const response = await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+        
+        if (response.ok) {
+            input.value = '';
+            // Reload messages to show new one
+            await loadPlanChatMessages(currentPlanDetail.id);
+        } else {
+            const data = await response.json();
+            showStatus(data.error || 'Failed to send message', 'error');
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        showStatus('Failed to send message', 'error');
+    } finally {
+        input.disabled = false;
+        input.focus();
+    }
+}
+
+function handleChatKeypress(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendPlanMessage();
+    }
+}
+
+function startChatPolling(hangoutId) {
+    // Stop any existing polling
+    stopChatPolling();
+    
+    // Poll every 5 seconds
+    chatPollingInterval = setInterval(async () => {
+        if (!currentPlanDetail || currentPlanDetail.id !== hangoutId) {
+            stopChatPolling();
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/hangouts/${hangoutId}/messages`);
+            if (response.ok) {
+                const messages = await response.json();
+                
+                // Only update if there are new messages
+                if (messages.length > 0 && messages[messages.length - 1].id > lastMessageId) {
+                    lastMessageId = messages[messages.length - 1].id;
+                    renderChatMessages(messages);
+                }
+            }
+        } catch (error) {
+            console.error('Error polling chat:', error);
+        }
+    }, 5000);
+}
+
+function stopChatPolling() {
+    if (chatPollingInterval) {
+        clearInterval(chatPollingInterval);
+        chatPollingInterval = null;
+    }
+    lastMessageId = 0;
 }
 
 function backToPlans() {

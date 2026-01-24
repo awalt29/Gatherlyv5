@@ -487,3 +487,28 @@ class PushSubscription(db.Model):
             'endpoint': self.endpoint,
             'created_at': self.created_at.isoformat()
         }
+
+
+class HangoutMessage(db.Model):
+    """Chat messages for hangouts/plans"""
+    __tablename__ = 'hangout_messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    hangout_id = db.Column(db.Integer, db.ForeignKey('hangouts.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    hangout = db.relationship('Hangout', backref='messages')
+    user = db.relationship('User', backref='hangout_messages')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'hangout_id': self.hangout_id,
+            'user_id': self.user_id,
+            'user_name': self.user.name,
+            'message': self.message,
+            'created_at': self.created_at.isoformat() + 'Z'
+        }

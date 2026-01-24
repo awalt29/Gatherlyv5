@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
 from flask_migrate import Migrate
-from models import db, User, Contact, Plan, PlanGuest, Availability, Notification, PasswordReset, FriendRequest, Friendship, UserAvailability, Hangout, HangoutInvitee, PushSubscription
+from models import db, User, Contact, Plan, PlanGuest, Availability, Notification, PasswordReset, FriendRequest, Friendship, UserAvailability, Hangout, HangoutInvitee, PushSubscription, HangoutMessage
 from datetime import datetime, timedelta, date
 from twilio.rest import Client
 from sendgrid import SendGridAPIClient
@@ -2022,6 +2022,90 @@ def get_hangouts_for_slot():
             })
     
     return jsonify(result)
+
+
+# =====================
+# Hangout Chat Endpoints
+# =====================
+
+@app.route('/api/hangouts/<int:hangout_id>/messages', methods=['GET'])
+def get_hangout_messages(hangout_id):
+    """Get all messages for a hangout"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    hangout = Hangout.query.get_or_404(hangout_id)
+    
+    # Check if user is creator or invitee
+    is_creator = hangout.creator_id == user_id
+    is_invitee = any(inv.user_id == user_id for inv in hangout.invitees)
+    
+    if not is_creator and not is_invitee:
+        return jsonify({'error': 'Not authorized to view this chat'}), 403
+    
+    # Get messages ordered by creation time
+    messages = HangoutMessage.query.filter_by(hangout_id=hangout_id).order_by(HangoutMessage.created_at.asc()).all()
+    
+    return jsonify([m.to_dict() for m in messages])
+
+
+@app.route('/api/hangouts/<int:hangout_id>/messages', methods=['POST'])
+def send_hangout_message(hangout_id):
+    """Send a message in a hangout chat"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    hangout = Hangout.query.get_or_404(hangout_id)
+    
+    # Check if user is creator or invitee
+    is_creator = hangout.creator_id == user_id
+    is_invitee = any(inv.user_id == user_id for inv in hangout.invitees)
+    
+    if not is_creator and not is_invitee:
+        return jsonify({'error': 'Not authorized to chat here'}), 403
+    
+    # Check if hangout is in the past
+    from datetime import date as date_type
+    hangout_date = datetime.strptime(hangout.date, '%Y-%m-%d').date()
+    if hangout_date < date_type.today():
+        return jsonify({'error': 'Cannot send messages for past events'}), 400
+    
+    data = request.json
+    message_text = data.get('message', '').strip()
+    
+    if not message_text:
+        return jsonify({'error': 'Message cannot be empty'}), 400
+    
+    if len(message_text) > 500:
+        return jsonify({'error': 'Message too long (max 500 characters)'}), 400
+    
+    # Create message
+    message = HangoutMessage(
+        hangout_id=hangout_id,
+        user_id=user_id,
+        message=message_text
+    )
+    db.session.add(message)
+    db.session.commit()
+    
+    # Send push notifications to other participants
+    participants = [hangout.creator_id] + [inv.user_id for inv in hangout.invitees]
+    for participant_id in participants:
+        if participant_id != user_id:  # Don't notify sender
+            # Format date for notification
+            hangout_date_obj = datetime.strptime(hangout.date, '%Y-%m-%d')
+            date_str = hangout_date_obj.strftime('%a %m/%d')
+            send_push_notification(
+                participant_id,
+                f'💬 {user.name}',
+                f'{message_text[:100]}{"..." if len(message_text) > 100 else ""}',
+                f'/?openPlan={hangout_id}'
+            )
+    
+    return jsonify(message.to_dict()), 201
 
 
 # =====================
