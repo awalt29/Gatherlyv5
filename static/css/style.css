@@ -2698,7 +2698,7 @@ body:has(.guest-info) .container {
     border-radius: 20px;
     padding: 10px 16px;
     color: var(--text-light);
-    font-size: 14px;
+    font-size: 16px; /* Must be 16px+ to prevent iOS auto-zoom */
 }
 
 .plan-chat-input input:focus {
