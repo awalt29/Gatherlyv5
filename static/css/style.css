@@ -2420,6 +2420,76 @@ body:has(.guest-info) .container {
     opacity: 0.7;
 }
 
+/* Plans Section Headers */
+.plans-section-header {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent-mint);
+    padding: 8px 0;
+    margin-top: 8px;
+}
+
+.plans-section-header:first-child {
+    margin-top: 0;
+}
+
+.plans-past-header {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.plans-past-header:hover {
+    color: var(--text-light);
+}
+
+.past-toggle-icon {
+    font-size: 10px;
+    transition: transform 0.2s ease;
+}
+
+.plans-past-section {
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    max-height: 2000px;
+    opacity: 1;
+}
+
+.plans-past-section.collapsed {
+    max-height: 0;
+    opacity: 0;
+}
+
+.plans-section-empty {
+    font-size: 14px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 20px;
+    opacity: 0.7;
+}
+
+/* Past Plan Cards (faded) */
+.plan-card-past {
+    opacity: 0.5;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.plan-card-past:hover {
+    opacity: 0.7;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.plan-card-past .plan-card-role {
+    color: var(--text-muted);
+}
+
 /* Plan Detail */
 .plan-detail-content {
     padding: 16px 0;

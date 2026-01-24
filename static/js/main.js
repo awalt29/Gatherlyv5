@@ -2655,8 +2655,25 @@ function renderPlans() {
         }
     });
     
-    // Sort by date (most recent first)
-    allPlansList.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Separate into upcoming and past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const upcomingPlans = allPlansList.filter(plan => {
+        const planDate = new Date(plan.date + 'T23:59:59'); // End of day
+        return planDate >= today;
+    });
+    
+    const pastPlans = allPlansList.filter(plan => {
+        const planDate = new Date(plan.date + 'T23:59:59');
+        return planDate < today;
+    });
+    
+    // Sort upcoming by date ascending (soonest first)
+    upcomingPlans.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // Sort past by date descending (most recent past first)
+    pastPlans.sort((a, b) => new Date(b.date) - new Date(a.date));
     
     if (allPlansList.length === 0) {
         plansList.innerHTML = `
@@ -2669,31 +2686,71 @@ function renderPlans() {
         return;
     }
     
-    plansList.innerHTML = allPlansList.map(plan => {
-        const dateObj = new Date(plan.date + 'T12:00:00');
-        const dateStr = dateObj.toLocaleDateString('en-US', { 
-            weekday: 'short', 
-            month: 'short', 
-            day: 'numeric' 
-        });
-        
-        const guestChips = plan.invitees.map(inv => {
-            const statusClass = inv.status || 'pending';
-            return `<span class="plan-guest-chip ${statusClass}">${inv.user_name}</span>`;
-        }).join('');
-        
-        return `
-            <div class="plan-card" onclick="openPlanDetail(${plan.id})">
-                <div class="plan-card-role">${plan.role === 'host' ? '👑 You\'re hosting' : '📬 Invited'}</div>
-                <div class="plan-card-header">
-                    <div class="plan-card-date">${dateStr}</div>
-                    <div class="plan-card-time">${plan.time_slot}</div>
-                </div>
-                ${plan.description ? `<div class="plan-card-description">${plan.description}</div>` : ''}
-                <div class="plan-card-guests">${guestChips}</div>
+    let html = '';
+    
+    // Upcoming section
+    if (upcomingPlans.length > 0) {
+        html += `<div class="plans-section-header">Upcoming</div>`;
+        html += upcomingPlans.map(plan => renderPlanCard(plan, false)).join('');
+    } else {
+        html += `
+            <div class="plans-section-header">Upcoming</div>
+            <div class="plans-section-empty">No upcoming plans</div>
+        `;
+    }
+    
+    // Past section (collapsible)
+    if (pastPlans.length > 0) {
+        html += `
+            <div class="plans-section-header plans-past-header" onclick="togglePastPlans()">
+                Past <span class="past-toggle-icon" id="pastToggleIcon">▼</span>
+            </div>
+            <div class="plans-past-section" id="pastPlansSection">
+                ${pastPlans.map(plan => renderPlanCard(plan, true)).join('')}
             </div>
         `;
+    }
+    
+    plansList.innerHTML = html;
+}
+
+function renderPlanCard(plan, isPast) {
+    const dateObj = new Date(plan.date + 'T12:00:00');
+    const dateStr = dateObj.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+    });
+    
+    const guestChips = plan.invitees.map(inv => {
+        const statusClass = inv.status || 'pending';
+        return `<span class="plan-guest-chip ${statusClass}">${inv.user_name}</span>`;
     }).join('');
+    
+    return `
+        <div class="plan-card ${isPast ? 'plan-card-past' : ''}" onclick="openPlanDetail(${plan.id})">
+            <div class="plan-card-role">${plan.role === 'host' ? '👑 You\'re hosting' : '📬 Invited'}</div>
+            <div class="plan-card-header">
+                <div class="plan-card-date">${dateStr}</div>
+                <div class="plan-card-time">${plan.time_slot}</div>
+            </div>
+            ${plan.description ? `<div class="plan-card-description">${plan.description}</div>` : ''}
+            <div class="plan-card-guests">${guestChips}</div>
+        </div>
+    `;
+}
+
+function togglePastPlans() {
+    const section = document.getElementById('pastPlansSection');
+    const icon = document.getElementById('pastToggleIcon');
+    
+    if (section.classList.contains('collapsed')) {
+        section.classList.remove('collapsed');
+        icon.textContent = '▼';
+    } else {
+        section.classList.add('collapsed');
+        icon.textContent = '▶';
+    }
 }
 
 function openPlanDetail(planId) {
