@@ -2670,6 +2670,9 @@ body:has(.guest-info) .container {
     border-radius: 16px;
     padding: 8px 12px;
     position: relative;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .chat-message-me .chat-message-bubble {
@@ -2681,6 +2684,9 @@ body:has(.guest-info) .container {
     font-size: 14px;
     line-height: 1.4;
     word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    white-space: pre-wrap;
 }
 
 .chat-message-time {
