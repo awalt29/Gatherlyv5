@@ -2921,7 +2921,7 @@ function renderPlanDetail() {
             </div>
             ${!isPast ? `
                 <div class="plan-chat-input">
-                    <input type="text" id="planChatInput" placeholder="Type a message..." maxlength="500" onkeypress="handleChatKeypress(event)">
+                    <textarea id="planChatInput" placeholder="Type a message..." maxlength="500" rows="1" oninput="autoResizeTextarea(this)" onkeydown="handleChatKeydown(event)"></textarea>
                     <button class="chat-send-btn" onclick="sendPlanMessage()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -3123,6 +3123,7 @@ async function sendPlanMessage() {
         if (response.ok) {
             const newMessage = await response.json();
             input.value = '';
+            input.style.height = 'auto'; // Reset textarea height
             // Mark this message as seen (so your own message doesn't show as unread)
             setSeenMessageId(currentPlanDetail.id, newMessage.id);
             // Reload messages to show new one
@@ -3140,11 +3141,19 @@ async function sendPlanMessage() {
     }
 }
 
-function handleChatKeypress(event) {
+function handleChatKeydown(event) {
     if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
         sendPlanMessage();
     }
+}
+
+function autoResizeTextarea(textarea) {
+    // Reset height to auto to get the correct scrollHeight
+    textarea.style.height = 'auto';
+    // Set the height to scrollHeight (content height)
+    const newHeight = Math.min(textarea.scrollHeight, 120); // Max 120px (about 4 lines)
+    textarea.style.height = newHeight + 'px';
 }
 
 function startChatPolling(hangoutId) {

@@ -2697,12 +2697,13 @@ body:has(.guest-info) .container {
 
 .plan-chat-input {
     display: flex;
+    align-items: flex-end;
     gap: 8px;
     margin-top: 12px;
     min-width: 0;
 }
 
-.plan-chat-input input {
+.plan-chat-input textarea {
     flex: 1;
     min-width: 0;
     background: rgba(255, 255, 255, 0.1);
@@ -2711,16 +2712,20 @@ body:has(.guest-info) .container {
     padding: 10px 16px;
     color: var(--text-light);
     font-size: 16px; /* Must be 16px+ to prevent iOS auto-zoom */
-    text-overflow: ellipsis;
-    overflow: hidden;
+    font-family: inherit;
+    resize: none;
+    overflow-y: hidden;
+    min-height: 40px;
+    max-height: 120px;
+    line-height: 1.4;
 }
 
-.plan-chat-input input:focus {
+.plan-chat-input textarea:focus {
     outline: none;
     border-color: var(--accent-mint);
 }
 
-.plan-chat-input input::placeholder {
+.plan-chat-input textarea::placeholder {
     color: var(--text-muted);
 }
 
