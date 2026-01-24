@@ -1808,12 +1808,12 @@ def create_hangout():
             )
             db.session.add(notification)
             
-            # Send push notification
+            # Send push notification - link to the plan detail
             send_push_notification(
                 user_id,
                 f'{creator.name} invited you! 🎉',
                 f'Hang out {day_name} {time_display}? Tap to respond.',
-                '/#notifications'
+                f'/?openPlan={hangout.id}'
             )
             
             # SMS disabled - using push notifications instead
@@ -1913,12 +1913,13 @@ def respond_to_hangout(hangout_id):
     )
     db.session.add(creator_notification)
     
-    # Send push notification to creator
+    # Send push notification to creator - link to the plan detail
     emoji = '✅' if response == 'accepted' else ('🤔' if response == 'maybe' else '❌')
     send_push_notification(
         hangout.creator_id,
         f'{user.name} responded {emoji}',
-        f'{response_text.capitalize()} your {day_name} hangout invite'
+        f'{response_text.capitalize()} your {day_name} hangout invite',
+        f'/?openPlan={hangout.id}'
     )
     
     db.session.commit()

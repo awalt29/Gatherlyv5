@@ -496,6 +496,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Show "Add to Home Screen" prompt for iOS users (also applies to existing users on login)
             setTimeout(() => showInstallPopup(), 1500);
             
+            // Check for ?openPlan= URL parameter (from push notifications)
+            checkOpenPlanParam();
+            
             // Check for pending hangout invites or #notifications hash - auto-open modal (once per invite)
             setTimeout(async () => {
                 // Check if URL has #notifications hash
@@ -3107,6 +3110,27 @@ function stopChatPolling() {
         chatPollingInterval = null;
     }
     lastMessageId = 0;
+}
+
+// Check for ?openPlan= URL parameter and open the plan detail
+async function checkOpenPlanParam() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const planId = urlParams.get('openPlan');
+    
+    if (planId) {
+        console.log('[PLANS] Opening plan from URL param:', planId);
+        
+        // Clean up the URL without reloading
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Load plans first (in case they haven't been loaded yet)
+        await loadPlans();
+        
+        // Small delay to ensure data is loaded
+        setTimeout(() => {
+            openPlanDetail(parseInt(planId));
+        }, 300);
+    }
 }
 
 function backToPlans() {
