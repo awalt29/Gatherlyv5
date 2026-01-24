@@ -339,8 +339,8 @@ def auth_signup():
                     # Send push notification
                     send_push_notification(
                         inviter.id,
-                        f'{user.name} joined! 🎉',
-                        'Your friend is now on Gatherly. You\'re automatically connected!'
+                        user.name,
+                        'Joined Gatherly! You\'re now connected 🎉'
                     )
                     db.session.add(notification)
                     
@@ -763,8 +763,8 @@ def contacts():
                 # Send push notification to the recipient
                 send_push_notification(
                     existing_user.id,
-                    'New Friend Request! 👋',
-                    f'{owner.name} wants to be your friend',
+                    owner.name,
+                    'Sent you a friend request 👋',
                     '/#notifications'
                 )
                 
@@ -1011,8 +1011,8 @@ def accept_friend_request(request_id):
     # Send push notification
     send_push_notification(
         friend_request.from_user_id,
-        'Friend Request Accepted! 🎉',
-        f'{current_user.name} accepted your friend request!'
+        current_user.name,
+        'Accepted your friend request! 🎉'
     )
     db.session.add(notification)
     
@@ -1293,8 +1293,8 @@ def my_availability():
                         # Send push notification
                         send_push_notification(
                             watcher.id,
-                            'New Availability! 📅',
-                            f'{user.name} added new availability. Check when they\'re free!'
+                            user.name,
+                            'Added new availability 📅'
                         )
                         db.session.add(notification)
                         
@@ -1811,8 +1811,8 @@ def create_hangout():
             # Send push notification - link to the plan detail
             send_push_notification(
                 user_id,
-                f'{creator.name} invited you! 🎉',
-                f'Hang out {day_name} {time_display}? Tap to respond.',
+                creator.name,
+                f'Invited you to hang out {day_name} {time_display} 🎉',
                 f'/?openPlan={hangout.id}'
             )
             
@@ -1917,8 +1917,8 @@ def respond_to_hangout(hangout_id):
     emoji = '✅' if response == 'accepted' else ('🤔' if response == 'maybe' else '❌')
     send_push_notification(
         hangout.creator_id,
-        f'{user.name} responded {emoji}',
-        f'{response_text.capitalize()} your {day_name} hangout invite',
+        user.name,
+        f'{response_text.capitalize()} your {day_name} invite {emoji}',
         f'/?openPlan={hangout.id}'
     )
     
