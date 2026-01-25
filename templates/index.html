@@ -331,11 +331,16 @@
 
     <!-- Plan Detail Modal -->
     <div class="modal" id="planDetailModal">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content plan-detail-modal">
+            <div class="plan-detail-header-bar" id="planDetailHeaderBar">
                 <button class="back-btn" onclick="backToPlans()">←</button>
-                <h2 class="modal-title">Plan Details</h2>
-                <button class="close-btn" onclick="closePlanDetail()">×</button>
+                <div class="plan-detail-title-info" id="planDetailTitleInfo">
+                    <!-- Title · Date · Time -->
+                </div>
+                <button class="plan-options-btn" id="planOptionsBtn" onclick="togglePlanOptions()">•••</button>
+            </div>
+            <div class="plan-options-menu" id="planOptionsMenu">
+                <!-- Options will be populated here -->
             </div>
             <div class="plan-detail-content" id="planDetailContent">
                 <!-- Plan details will be populated here -->

@@ -2511,143 +2511,240 @@ body:has(.guest-info) .container {
     color: var(--text-muted);
 }
 
-/* Plan Detail */
-.plan-detail-content {
-    padding: 16px 0;
-}
-
-.plan-detail-header {
-    text-align: center;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.plan-detail-date {
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--text-light);
-    margin-bottom: 4px;
-}
-
-.plan-detail-time {
-    font-size: 16px;
-    color: var(--accent-mint);
-    text-transform: capitalize;
-}
-
-.plan-detail-section {
-    margin-bottom: 24px;
-}
-
-.plan-detail-section-title {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-}
-
-.plan-detail-description {
-    font-size: 15px;
-    color: var(--text-light);
-    line-height: 1.5;
-    background: rgba(255, 255, 255, 0.03);
-    padding: 12px;
-    border-radius: 8px;
-}
-
-.plan-detail-guests {
+/* Plan Detail - Chat Focused Layout */
+.plan-detail-modal {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    height: 100%;
+    padding: 0 !important;
 }
 
-.plan-detail-guest {
+.plan-detail-header-bar {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
+    justify-content: space-between;
+    padding: 12px 16px;
+    padding-top: calc(12px + env(safe-area-inset-top));
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
 }
 
-.plan-detail-guest-name {
-    font-size: 15px;
+.plan-detail-title-info {
+    flex: 1;
+    text-align: center;
+    font-size: 14px;
     color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 8px;
 }
 
-.plan-detail-guest-status {
-    font-size: 13px;
-    padding: 4px 12px;
-    border-radius: 16px;
-    text-transform: capitalize;
+.plan-title-text {
+    font-weight: 600;
 }
 
-.plan-detail-guest-status.accepted {
-    background: rgba(34, 197, 94, 0.2);
-    color: #22c55e;
+.plan-options-btn {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    font-size: 18px;
+    letter-spacing: 2px;
+    padding: 8px;
+    cursor: pointer;
 }
 
-.plan-detail-guest-status.declined {
-    background: rgba(239, 68, 68, 0.2);
+.plan-options-menu {
+    display: none;
+    position: absolute;
+    top: calc(50px + env(safe-area-inset-top));
+    right: 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    min-width: 150px;
+}
+
+.plan-options-menu.active {
+    display: block;
+}
+
+.plan-option-item {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    text-align: left;
+    color: var(--text-light);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.plan-option-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.plan-option-danger {
     color: #ef4444;
 }
 
-.plan-detail-guest-status.maybe {
-    background: rgba(251, 191, 36, 0.2);
+.plan-option-info {
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: default;
+}
+
+.plan-option-info:hover {
+    background: none;
+}
+
+.plan-detail-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+}
+
+/* Info Card */
+.plan-info-card {
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.plan-info-description {
+    font-size: 15px;
+    color: var(--text-light);
+    margin-bottom: 12px;
+}
+
+.plan-info-guests {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.guest-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    font-size: 13px;
+}
+
+.guest-badge-name {
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.guest-badge-status {
+    font-size: 12px;
+}
+
+.guest-badge.accepted .guest-badge-status {
+    color: #22c55e;
+}
+
+.guest-badge.declined .guest-badge-status {
+    color: #ef4444;
+}
+
+.guest-badge.maybe .guest-badge-status {
     color: #fbbf24;
 }
 
-.plan-detail-guest-status.pending {
-    background: rgba(255, 255, 255, 0.1);
+.guest-badge.pending .guest-badge-status {
     color: var(--text-muted);
+}
+
+/* Chat Area */
+.plan-chat-area {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Bottom Bar */
+.plan-bottom-bar {
+    flex-shrink: 0;
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid var(--border-color);
+}
+
+.plan-bottom-bar-locked {
+    padding: 16px;
+    text-align: center;
+}
+
+/* RSVP Pills */
+.rsvp-pills {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    justify-content: center;
+}
+
+.rsvp-pill {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.rsvp-pill:hover {
+    border-color: var(--text-light);
+    color: var(--text-light);
+}
+
+.rsvp-going.active {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: #22c55e;
+    color: #22c55e;
+}
+
+.rsvp-maybe.active {
+    background: rgba(251, 191, 36, 0.2);
+    border-color: #fbbf24;
+    color: #fbbf24;
+}
+
+.rsvp-cant.active {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+    color: #ef4444;
 }
 
 .plan-past-response {
     font-size: 14px;
     color: var(--text-muted);
     font-style: italic;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
     text-align: center;
-}
-
-.plan-detail-creator {
-    font-size: 14px;
-    color: var(--text-muted);
-    text-align: center;
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-color);
-}
-
-.plan-detail-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 24px;
-}
-
-.plan-detail-actions .btn-danger {
-    flex: 1;
 }
 
 /* Plan Chat */
-.plan-chat-section {
-    margin-top: 16px;
-}
-
 .plan-chat-messages {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
-    padding: 12px;
-    max-height: 250px;
-    min-height: 100px;
+    flex: 1;
+    padding: 16px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
 }
 
 .chat-loading,
@@ -2720,7 +2817,6 @@ body:has(.guest-info) .container {
     display: flex;
     align-items: flex-end;
     gap: 8px;
-    margin-top: 12px;
     min-width: 0;
 }
 
@@ -2772,11 +2868,8 @@ body:has(.guest-info) .container {
 .plan-chat-locked {
     text-align: center;
     color: var(--text-muted);
-    font-size: 13px;
+    font-size: 14px;
     font-style: italic;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 8px;
     margin-top: 12px;
 }
 

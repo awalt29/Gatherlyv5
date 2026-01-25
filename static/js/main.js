@@ -2865,13 +2865,14 @@ function renderPlanDetail() {
     
     const plan = currentPlanDetail;
     const content = document.getElementById('planDetailContent');
+    const titleInfo = document.getElementById('planDetailTitleInfo');
+    const optionsMenu = document.getElementById('planOptionsMenu');
     
     const dateObj = new Date(plan.date + 'T12:00:00');
-    const dateStr = dateObj.toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        month: 'long', 
-        day: 'numeric',
-        year: 'numeric'
+    const shortDateStr = dateObj.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric'
     });
     
     // Check if plan is in the past
@@ -2880,66 +2881,69 @@ function renderPlanDetail() {
     const planDate = new Date(plan.date + 'T23:59:59');
     const isPast = planDate < today;
     
-    const guestsHtml = plan.invitees.map(inv => {
+    // Update header bar with plan info
+    const planTitle = plan.description ? plan.description.substring(0, 20) + (plan.description.length > 20 ? '...' : '') : 'Plan';
+    titleInfo.innerHTML = `<span class="plan-title-text">${planTitle}</span> · ${shortDateStr} · ${plan.time_slot}`;
+    
+    // Build options menu
+    let optionsHtml = '';
+    if (plan.role === 'host' && !isPast) {
+        optionsHtml = `<button class="plan-option-item plan-option-danger" onclick="cancelPlan(${plan.id}); closePlanOptions()">Cancel Plan</button>`;
+    } else {
+        optionsHtml = `<div class="plan-option-item plan-option-info">Created by ${plan.creator_name}</div>`;
+    }
+    optionsMenu.innerHTML = optionsHtml;
+    
+    // Build guest badges (inline)
+    const guestBadges = plan.invitees.map(inv => {
         const statusClass = inv.status || 'pending';
         const statusText = inv.status === 'accepted' ? 'Going' : 
-                          inv.status === 'declined' ? 'Can\'t go' : 
-                          inv.status === 'maybe' ? 'Maybe' : 'Pending';
-        return `
-            <div class="plan-detail-guest">
-                <div class="plan-detail-guest-name">${inv.user_name}</div>
-                <div class="plan-detail-guest-status ${statusClass}">${statusText}</div>
-            </div>
-        `;
+                          inv.status === 'declined' ? 'Can\'t' : 
+                          inv.status === 'maybe' ? 'Maybe' : '...';
+        const firstName = inv.user_name.split(' ')[0];
+        return `<span class="guest-badge ${statusClass}"><span class="guest-badge-name">${firstName}</span> <span class="guest-badge-status">${statusText}</span></span>`;
     }).join('');
     
     // Check if user can respond (they're a guest and plan is not in the past)
     const myInvite = plan.invitees.find(inv => inv.user_id === plannerInfo.id);
     const canRespond = plan.role === 'guest' && myInvite && !isPast;
     
-    let responseButtons = '';
+    // Build RSVP pills (only for guests who haven't responded or want to change)
+    let rsvpPills = '';
     if (canRespond) {
-        responseButtons = `
-            <div class="plan-detail-section">
-                <div class="plan-detail-section-title">Your Response</div>
-                <div class="friend-request-actions hangout-actions">
-                    <button class="btn-accept ${myInvite.status === 'accepted' ? 'active' : ''}" onclick="respondToPlanDetail('accepted')">Going</button>
-                    <button class="btn-maybe ${myInvite.status === 'maybe' ? 'active' : ''}" onclick="respondToPlanDetail('maybe')">Maybe</button>
-                    <button class="btn-reject ${myInvite.status === 'declined' ? 'active' : ''}" onclick="respondToPlanDetail('declined')">Can't go</button>
-                </div>
-            </div>
-        `;
-    } else if (isPast && plan.role === 'guest' && myInvite) {
-        // Show final response for past events
-        const finalStatus = myInvite.status === 'accepted' ? 'You attended' : 
-                           myInvite.status === 'declined' ? 'You didn\'t attend' : 
-                           myInvite.status === 'maybe' ? 'You were unsure' : 'You didn\'t respond';
-        responseButtons = `
-            <div class="plan-detail-section">
-                <div class="plan-detail-section-title">Your Response</div>
-                <div class="plan-past-response">${finalStatus}</div>
+        rsvpPills = `
+            <div class="rsvp-pills">
+                <button class="rsvp-pill rsvp-going ${myInvite.status === 'accepted' ? 'active' : ''}" onclick="respondToPlanDetail('accepted')">Going</button>
+                <button class="rsvp-pill rsvp-maybe ${myInvite.status === 'maybe' ? 'active' : ''}" onclick="respondToPlanDetail('maybe')">Maybe</button>
+                <button class="rsvp-pill rsvp-cant ${myInvite.status === 'declined' ? 'active' : ''}" onclick="respondToPlanDetail('declined')">Can't go</button>
             </div>
         `;
     }
     
-    let cancelButton = '';
-    // Only show cancel for hosts of future events
-    if (plan.role === 'host' && !isPast) {
-        cancelButton = `
-            <div class="plan-detail-actions">
-                <button class="btn-danger" onclick="cancelPlan(${plan.id})">Cancel Plan</button>
-            </div>
-        `;
-    }
+    // Build info card
+    const hostName = plan.creator_name.split(' ')[0];
+    const infoCard = `
+        <div class="plan-info-card">
+            <div class="plan-info-description">${hostName} suggested: "${plan.description || 'hangout'}"</div>
+            <div class="plan-info-guests">${guestBadges}</div>
+        </div>
+    `;
     
-    // Build chat section
-    const chatSection = `
-        <div class="plan-detail-section plan-chat-section">
-            <div class="plan-detail-section-title">Chat</div>
+    // Build chat area
+    const chatArea = `
+        <div class="plan-chat-area">
             <div class="plan-chat-messages" id="planChatMessages">
                 <div class="chat-loading">Loading messages...</div>
             </div>
-            ${!isPast ? `
+        </div>
+    `;
+    
+    // Build bottom bar with input and optional RSVP
+    let bottomBar = '';
+    if (!isPast) {
+        bottomBar = `
+            <div class="plan-bottom-bar">
+                ${rsvpPills}
                 <div class="plan-chat-input">
                     <textarea id="planChatInput" placeholder="Type a message..." maxlength="500" rows="1" oninput="autoResizeTextarea(this)" onkeydown="handleChatKeydown(event)"></textarea>
                     <button class="chat-send-btn" onclick="sendPlanMessage()">
@@ -2949,37 +2953,21 @@ function renderPlanDetail() {
                         </svg>
                     </button>
                 </div>
-            ` : `
-                <div class="plan-chat-locked">Chat is locked for past events</div>
-            `}
-        </div>
-    `;
+            </div>
+        `;
+    } else {
+        bottomBar = `
+            <div class="plan-bottom-bar plan-bottom-bar-locked">
+                <div class="plan-chat-locked">This event has passed</div>
+            </div>
+        `;
+    }
     
     content.innerHTML = `
-        <div class="plan-detail-header">
-            <div class="plan-detail-date">${dateStr}</div>
-            <div class="plan-detail-time">${plan.time_slot}</div>
-        </div>
-        
-        ${plan.description ? `
-            <div class="plan-detail-section">
-                <div class="plan-detail-section-title">Description</div>
-                <div class="plan-detail-description">${plan.description}</div>
-            </div>
-        ` : ''}
-        
-        <div class="plan-detail-section">
-            <div class="plan-detail-section-title">Guests</div>
-            <div class="plan-detail-guests">${guestsHtml}</div>
-        </div>
-        
-        ${responseButtons}
-        
-        ${chatSection}
-        
-        <div class="plan-detail-creator">
-            Created by ${plan.creator_name}
-        </div>
+        ${infoCard}
+        ${chatArea}
+        ${bottomBar}
+    `;
         
         ${cancelButton}
     `;
@@ -3233,7 +3221,18 @@ async function checkOpenPlanParam() {
     }
 }
 
+function togglePlanOptions() {
+    const menu = document.getElementById('planOptionsMenu');
+    menu.classList.toggle('active');
+}
+
+function closePlanOptions() {
+    const menu = document.getElementById('planOptionsMenu');
+    menu.classList.remove('active');
+}
+
 function backToPlans() {
+    closePlanOptions();
     closePlanDetail();
 }
 
