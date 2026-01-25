@@ -2968,9 +2968,6 @@ function renderPlanDetail() {
         ${chatArea}
         ${bottomBar}
     `;
-        
-        ${cancelButton}
-    `;
     
     // Load chat messages
     loadPlanChatMessages(plan.id);
