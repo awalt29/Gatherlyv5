@@ -2419,7 +2419,7 @@ body:has(.guest-info) .container {
 }
 
 .plan-card-unread {
-    border-left: 3px solid #ff4757;
+    border-left: 3px solid var(--accent-mint);
 }
 
 .plans-empty {
