@@ -2882,8 +2882,7 @@ function renderPlanDetail() {
     const isPast = planDate < today;
     
     // Update header bar with plan info
-    const planTitle = plan.description ? plan.description.substring(0, 20) + (plan.description.length > 20 ? '...' : '') : 'Plan';
-    titleInfo.innerHTML = `<span class="plan-title-text">${planTitle}</span> · ${shortDateStr} · ${plan.time_slot}`;
+    titleInfo.innerHTML = `${shortDateStr} · ${plan.time_slot}`;
     
     // Build options menu
     let optionsHtml = '';
