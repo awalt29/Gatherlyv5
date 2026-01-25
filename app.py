@@ -1959,9 +1959,11 @@ def get_user_hangouts():
         if messages:
             data['latest_message_id'] = messages[0].id
             data['latest_message_at'] = messages[0].created_at.isoformat() + 'Z'
+            data['latest_message_user_id'] = messages[0].user_id
         else:
             data['latest_message_id'] = None
             data['latest_message_at'] = None
+            data['latest_message_user_id'] = None
         return data
     
     return jsonify({

@@ -2669,7 +2669,7 @@ function setSeenMessageId(planId, messageId) {
 }
 
 function updatePlansBadge() {
-    if (!allPlans) return;
+    if (!allPlans || !plannerInfo) return;
     
     const seen = getSeenMessageIds();
     let unreadCount = 0;
@@ -2680,7 +2680,10 @@ function updatePlansBadge() {
     allPlansList.forEach(plan => {
         if (plan.latest_message_id) {
             const lastSeen = seen[plan.id] || 0;
-            if (plan.latest_message_id > lastSeen) {
+            // Only count as unread if:
+            // 1. There's a new message we haven't seen
+            // 2. AND the latest message is NOT from the current user
+            if (plan.latest_message_id > lastSeen && plan.latest_message_user_id !== plannerInfo.id) {
                 unreadCount++;
             }
         }
