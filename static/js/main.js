@@ -2771,9 +2771,9 @@ function renderPlans() {
     if (pastPlans.length > 0) {
         html += `
             <div class="plans-section-header plans-past-header" onclick="togglePastPlans()">
-                Past <span class="past-toggle-icon" id="pastToggleIcon">▼</span>
+                Past <span class="past-toggle-icon" id="pastToggleIcon">▶</span>
             </div>
-            <div class="plans-past-section" id="pastPlansSection">
+            <div class="plans-past-section collapsed" id="pastPlansSection">
                 ${pastPlans.map(plan => renderPlanCard(plan, true)).join('')}
             </div>
         `;
