@@ -33,6 +33,7 @@ body {
     min-height: -webkit-fill-available;
     margin: 0;
     padding: 0;
+    padding-top: env(safe-area-inset-top);
     display: flex;
     justify-content: center;
     align-items: flex-start;
