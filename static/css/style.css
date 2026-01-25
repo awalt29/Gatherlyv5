@@ -2400,6 +2400,26 @@ body:has(.guest-info) .container {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.plan-unread-dot {
+    width: 8px;
+    height: 8px;
+    background: #ff4757;
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.plan-card-unread {
+    border-left: 3px solid #ff4757;
 }
 
 .plans-empty {

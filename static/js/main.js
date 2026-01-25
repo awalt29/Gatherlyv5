@@ -2798,9 +2798,19 @@ function renderPlanCard(plan, isPast) {
         return `<span class="plan-guest-chip ${statusClass}">${inv.user_name}</span>`;
     }).join('');
     
+    // Check if this plan has unread messages
+    const seen = getSeenMessageIds();
+    const lastSeen = seen[plan.id] || 0;
+    const hasUnread = plan.latest_message_id && 
+                      plan.latest_message_id > lastSeen && 
+                      plan.latest_message_user_id !== plannerInfo?.id;
+    
     return `
-        <div class="plan-card ${isPast ? 'plan-card-past' : ''}" onclick="openPlanDetail(${plan.id})">
-            <div class="plan-card-role">${plan.role === 'host' ? '👑 You\'re hosting' : '📬 Invited'}</div>
+        <div class="plan-card ${isPast ? 'plan-card-past' : ''} ${hasUnread ? 'plan-card-unread' : ''}" onclick="openPlanDetail(${plan.id})">
+            <div class="plan-card-role">
+                ${plan.role === 'host' ? '👑 You\'re hosting' : '📬 Invited'}
+                ${hasUnread ? '<span class="plan-unread-dot"></span>' : ''}
+            </div>
             <div class="plan-card-header">
                 <div class="plan-card-date">${dateStr}</div>
                 <div class="plan-card-time">${plan.time_slot}</div>
