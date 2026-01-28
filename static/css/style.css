@@ -1108,8 +1108,7 @@ h1 {
 .calendar-grid {
     display: grid;
     grid-template-columns: 10px repeat(14, 43px);
-    column-gap: 4px;
-    row-gap: 14px;
+    gap: 4px;
     width: fit-content;
 }
 
