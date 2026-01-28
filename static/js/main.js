@@ -2922,9 +2922,11 @@ function renderPlanDetail() {
     // Build info card
     const hostName = plan.creator_name.split(' ')[0];
     const infoCard = `
-        <div class="plan-info-card">
-            <div class="plan-info-description">${hostName} suggested: "${plan.description || 'hangout'}"</div>
-            <div class="plan-info-guests">${guestBadges}</div>
+        <div class="plan-info-section">
+            <div class="plan-info-card">
+                <div class="plan-info-description">${hostName} suggested: "${plan.description || 'hangout'}"</div>
+                <div class="plan-info-guests">${guestBadges}</div>
+            </div>
             ${rsvpPills}
         </div>
     `;
