@@ -645,8 +645,8 @@ h1 {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    margin-bottom: 20px;
-    padding-top: calc(15px + env(safe-area-inset-top));
+    margin-bottom: 16px;
+    padding-top: calc(22px + env(safe-area-inset-top));
     width: 100%;
 }
 
@@ -749,7 +749,7 @@ h1 {
 
 /* Friends Section */
 .friends-section {
-    margin-bottom: 30px;
+    margin-bottom: 22px;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -973,7 +973,7 @@ h1 {
 
 /* Calendar Section */
 .calendar-section {
-    margin-bottom: 15px;
+    margin-bottom: 28px;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -1077,7 +1077,7 @@ h1 {
     display: grid;
     grid-template-columns: 10px repeat(14, 43px);
     gap: 4px;
-    margin-bottom: 4px;
+    margin-bottom: 14px;
     width: fit-content;
 }
 
@@ -1108,7 +1108,8 @@ h1 {
 .calendar-grid {
     display: grid;
     grid-template-columns: 10px repeat(14, 43px);
-    gap: 4px;
+    column-gap: 4px;
+    row-gap: 14px;
     width: fit-content;
 }
 
@@ -3373,8 +3374,8 @@ body:has(.guest-info) .container {
     -webkit-backdrop-filter: blur(10px);
     border-radius: 20px;
     padding: 8px 15px;
-    margin: 20px 25px;
-    margin-bottom: calc(15px + env(safe-area-inset-bottom));
+    margin: 0 25px;
+    margin-bottom: calc(16px + env(safe-area-inset-bottom));
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(108, 200, 190, 0.25);
 }
