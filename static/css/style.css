@@ -3394,7 +3394,7 @@ body:has(.guest-info) .container {
     padding: 8px 12px;
     background: transparent;
     border: none;
-    color: var(--text-muted);
+    color: #B8C5D3;
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
