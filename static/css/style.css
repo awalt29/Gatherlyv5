@@ -639,6 +639,35 @@ h1 {
     width: 100%;
 }
 
+/* Title with Logo */
+.title-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.title-logo .app-logo {
+    width: 32px;
+    height: 32px;
+    margin-right: 0;
+}
+
+.title-logo span {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-light);
+}
+
+/* Friends header row */
+.friends-header-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+
 /* Status Badge */
 .status-badge {
     display: inline-flex;

@@ -43,16 +43,18 @@
             </div>
         </div>
 
-        <!-- Title -->
-        <h1>Let's plan your week!</h1>
+        <!-- Title with Logo -->
+        <div class="title-logo">
+            <div class="app-logo"></div>
+            <span>Gatherly</span>
+        </div>
 
         <!-- Status Message -->
         <div id="statusMessage" style="display: none;"></div>
 
         <!-- Friends Section -->
         <div class="friends-section">
-            <div class="section-header-with-menu">
-                <div class="section-header">FRIENDS</div>
+            <div class="friends-header-row">
                 <button class="menu-btn" onclick="openManageFriendsModal()">⋯</button>
             </div>
             <div class="friends-list-wrapper" id="friendsListWrapper">
@@ -64,7 +66,6 @@
 
         <!-- Calendar Section -->
         <div class="calendar-section">
-            <div class="section-header">PICK TIMES</div>
             <div class="calendar">
                 <div class="calendar-header" id="calendarHeader">
                     <!-- Dynamically generated -->
