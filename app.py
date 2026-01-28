@@ -2312,7 +2312,7 @@ To give you the best suggestions, tell me:
 • Any cuisine preferences? (Italian, Mexican, Asian, etc.)
 • Vibe? (Casual, upscale, good for groups?)
 
-Just reply with something like "@AI Italian restaurant near downtown" and I'll find some great options!"""
+Just reply with something like "@AI Italian restaurant in Chelsea" and I'll find some great options!"""
                 
                 ai_message = HangoutMessage(
                     hangout_id=hangout_id,
@@ -2362,7 +2362,7 @@ Tell me a bit more:
 • What vibe? (Chill bar, rooftop, sports bar, cocktail lounge?)
 • Any preferences? (Craft beer, cocktails, wine?)
 
-Reply with something like "@AI chill cocktail bar near downtown" and I'll hook you up!"""
+Reply with something like "@AI chill cocktail bar in Chelsea" and I'll hook you up!"""
                 
                 ai_message = HangoutMessage(
                     hangout_id=hangout_id,
