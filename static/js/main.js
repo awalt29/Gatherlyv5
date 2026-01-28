@@ -3264,31 +3264,13 @@ function handleChatKeydown(event) {
 }
 
 function handleChatFocus() {
-    // When keyboard opens, scroll to keep input visible
+    // When keyboard opens, just scroll chat to bottom
     setTimeout(() => {
-        const bottomBar = document.querySelector('.plan-bottom-bar');
-        if (bottomBar) {
-            bottomBar.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }
-        // Also scroll chat to bottom
         const chatMessages = document.getElementById('planChatMessages');
         if (chatMessages) {
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
-    }, 300); // Delay to let keyboard animation finish
-}
-
-// Handle iOS keyboard resize
-if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => {
-        const planDetailModal = document.getElementById('planDetailModal');
-        if (planDetailModal && planDetailModal.classList.contains('active')) {
-            const bottomBar = document.querySelector('.plan-bottom-bar');
-            if (bottomBar && document.activeElement === document.getElementById('planChatInput')) {
-                bottomBar.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            }
-        }
-    });
+    }, 100);
 }
 
 function autoResizeTextarea(textarea) {
