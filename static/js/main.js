@@ -2925,6 +2925,7 @@ function renderPlanDetail() {
         <div class="plan-info-card">
             <div class="plan-info-description">${hostName} suggested: "${plan.description || 'hangout'}"</div>
             <div class="plan-info-guests">${guestBadges}</div>
+            ${rsvpPills}
         </div>
     `;
     
@@ -2937,17 +2938,15 @@ function renderPlanDetail() {
         </div>
     `;
     
-    // Build bottom bar with input, suggestions, and optional RSVP
+    // Build bottom bar with input and suggestions
     let bottomBar = '';
     if (!isPast) {
         bottomBar = `
             <div class="plan-bottom-bar">
-                ${rsvpPills}
                 <div class="ai-suggestions-panel" id="aiSuggestionsPanel">
                     <div class="ai-suggestions-header" onclick="toggleAiSuggestions()">
                         <span class="ai-suggestions-icon">✨</span>
                         <span class="ai-suggestions-title">Get suggestions</span>
-                        <span class="ai-suggestions-subtitle">Based on everyone's replies</span>
                         <span class="ai-suggestions-toggle" id="aiSuggestionsToggle">▲</span>
                     </div>
                     <div class="ai-suggestions-options" id="aiSuggestionsOptions">
