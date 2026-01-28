@@ -2220,13 +2220,30 @@ Instructions:
 If you can't match an item to someone, note it as "shared" and split it evenly.
 Be precise with numbers. Format currency nicely."""
 
+            # Clean up base64 string (remove any whitespace or line breaks)
+            import re
+            clean_image = re.sub(r'\s+', '', receipt_image)
+            
+            # Detect image type from base64 header or default to jpeg
+            image_type = 'jpeg'
+            if clean_image.startswith('/9j/'):
+                image_type = 'jpeg'
+            elif clean_image.startswith('iVBOR'):
+                image_type = 'png'
+            elif clean_image.startswith('R0lGOD'):
+                image_type = 'gif'
+            elif clean_image.startswith('UklGR'):
+                image_type = 'webp'
+            
+            print(f"[AI] Processing image, type detected: {image_type}, length: {len(clean_image)}")
+            
             response = openai.chat.completions.create(
                 model="gpt-4o",  # Need GPT-4o for vision
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": [
                         {"type": "text", "text": "Please analyze this receipt and split the bill based on what everyone said they ordered in the chat."},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{receipt_image}"}}
+                        {"type": "image_url", "image_url": {"url": f"data:image/{image_type};base64,{clean_image}"}}
                     ]}
                 ],
                 max_tokens=500,
@@ -2327,7 +2344,9 @@ Keep responses under 150 words."""
         
     except Exception as e:
         print(f"[AI] Error: {e}")
-        return jsonify({'error': 'Failed to get AI suggestion'}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'AI error: {str(e)}'}), 500
 
 
 # =====================
