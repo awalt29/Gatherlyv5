@@ -645,8 +645,8 @@ h1 {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    margin-bottom: 20px;
-    padding-top: env(safe-area-inset-top);
+    margin-bottom: 25px;
+    padding-top: calc(30px + env(safe-area-inset-top));
     width: 100%;
 }
 
