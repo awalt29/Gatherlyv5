@@ -3214,9 +3214,17 @@ function renderChatMessages(messages) {
         `;
     }).join('');
     
-    // Scroll to bottom after DOM renders
+    // Scroll to bottom after DOM renders - multiple attempts for reliability
     requestAnimationFrame(() => {
         container.scrollTop = container.scrollHeight;
+        // Second scroll after a short delay to catch any late layout shifts
+        setTimeout(() => {
+            container.scrollTop = container.scrollHeight;
+        }, 100);
+        // Third scroll for first-time modal opens
+        setTimeout(() => {
+            container.scrollTop = container.scrollHeight;
+        }, 300);
     });
 }
 
