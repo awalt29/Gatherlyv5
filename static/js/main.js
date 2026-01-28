@@ -2978,7 +2978,7 @@ function renderPlanDetail() {
                             <polyline points="21 15 16 10 5 21"></polyline>
                         </svg>
                     </button>
-                    <textarea id="planChatInput" placeholder="Type a message..." maxlength="500" rows="1" oninput="autoResizeTextarea(this)" onkeydown="handleChatKeydown(event)"></textarea>
+                    <textarea id="planChatInput" placeholder="Type a message..." maxlength="500" rows="1" oninput="autoResizeTextarea(this)" onkeydown="handleChatKeydown(event)" onfocus="handleChatFocus()"></textarea>
                     <button class="chat-send-btn" onclick="sendPlanMessage()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -3261,6 +3261,34 @@ function handleChatKeydown(event) {
         event.preventDefault();
         sendPlanMessage();
     }
+}
+
+function handleChatFocus() {
+    // When keyboard opens, scroll to keep input visible
+    setTimeout(() => {
+        const bottomBar = document.querySelector('.plan-bottom-bar');
+        if (bottomBar) {
+            bottomBar.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+        // Also scroll chat to bottom
+        const chatMessages = document.getElementById('planChatMessages');
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }, 300); // Delay to let keyboard animation finish
+}
+
+// Handle iOS keyboard resize
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+        const planDetailModal = document.getElementById('planDetailModal');
+        if (planDetailModal && planDetailModal.classList.contains('active')) {
+            const bottomBar = document.querySelector('.plan-bottom-bar');
+            if (bottomBar && document.activeElement === document.getElementById('planChatInput')) {
+                bottomBar.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+        }
+    });
 }
 
 function autoResizeTextarea(textarea) {
