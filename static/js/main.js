@@ -2375,11 +2375,19 @@ async function loadNotifications() {
         // Update badge count (unread notifications + pending friend requests)
         const unreadCount = notifications.filter(n => !n.read).length + friendRequests.length;
         const badge = document.getElementById('notificationBadge');
+        const navBadge = document.getElementById('notificationBadgeNav');
         if (unreadCount > 0) {
-            badge.textContent = unreadCount;
-            badge.style.display = 'flex';
+            if (badge) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'flex';
+            }
+            if (navBadge) {
+                navBadge.textContent = unreadCount;
+                navBadge.style.display = 'flex';
+            }
         } else {
-            badge.style.display = 'none';
+            if (badge) badge.style.display = 'none';
+            if (navBadge) navBadge.style.display = 'none';
         }
         
         // Only re-render if data has changed (prevents icon blinking)
@@ -2639,8 +2647,11 @@ async function openNotifications() {
             method: 'POST'
         });
         
-        // Hide badge immediately
-        document.getElementById('notificationBadge').style.display = 'none';
+        // Hide badges immediately
+        const badge = document.getElementById('notificationBadge');
+        const navBadge = document.getElementById('notificationBadgeNav');
+        if (badge) badge.style.display = 'none';
+        if (navBadge) navBadge.style.display = 'none';
     }
     
     // Update timestamps every 5 seconds while modal is open
@@ -2731,13 +2742,19 @@ function updatePlansBadge() {
     });
     
     const badge = document.getElementById('plansBadge');
-    if (badge) {
-        if (unreadCount > 0) {
+    const navBadge = document.getElementById('plansBadgeNav');
+    if (unreadCount > 0) {
+        if (badge) {
             badge.textContent = unreadCount;
             badge.style.display = 'flex';
-        } else {
-            badge.style.display = 'none';
         }
+        if (navBadge) {
+            navBadge.textContent = unreadCount;
+            navBadge.style.display = 'flex';
+        }
+    } else {
+        if (badge) badge.style.display = 'none';
+        if (navBadge) navBadge.style.display = 'none';
     }
 }
 
