@@ -646,6 +646,7 @@ h1 {
     justify-content: center;
     gap: 10px;
     margin-bottom: 20px;
+    padding-top: env(safe-area-inset-top);
     width: 100%;
 }
 
