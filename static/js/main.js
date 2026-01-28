@@ -2978,7 +2978,7 @@ function renderPlanDetail() {
                             <polyline points="21 15 16 10 5 21"></polyline>
                         </svg>
                     </button>
-                    <textarea id="planChatInput" placeholder="Type a message..." maxlength="500" rows="1" oninput="autoResizeTextarea(this)" onkeydown="handleChatKeydown(event)" onfocus="handleChatFocus()"></textarea>
+                    <textarea id="planChatInput" placeholder="Type a message..." maxlength="500" rows="1" oninput="autoResizeTextarea(this)" onkeydown="handleChatKeydown(event)"></textarea>
                     <button class="chat-send-btn" onclick="sendPlanMessage()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
