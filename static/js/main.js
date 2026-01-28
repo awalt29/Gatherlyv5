@@ -1541,7 +1541,58 @@ function toggleSlotAvailability(slot, date, timeSlot) {
         selectedTimeSlots.push({ date, slot: timeSlot });
     }
     
-    updatePlanButton();
+    // Auto-save with debounce
+    scheduleAutoSave();
+}
+
+// Auto-save functionality
+let autoSaveTimeout = null;
+let isSaving = false;
+
+function scheduleAutoSave() {
+    // Clear any pending save
+    if (autoSaveTimeout) {
+        clearTimeout(autoSaveTimeout);
+    }
+    
+    // Schedule save after 1 second of no changes
+    autoSaveTimeout = setTimeout(() => {
+        autoSaveAvailability();
+    }, 1000);
+}
+
+async function autoSaveAvailability() {
+    if (isSaving) return;
+    
+    // Check if there are actual changes from the last saved state
+    if (!hasAvailabilityChanges()) return;
+    
+    isSaving = true;
+    
+    try {
+        const response = await fetch('/api/my-availability', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                time_slots: selectedTimeSlots
+            })
+        });
+        
+        if (response.ok) {
+            // Update original state to match current (no more "changes")
+            originalTimeSlots = JSON.parse(JSON.stringify(selectedTimeSlots));
+            updateActiveStatus(true, 7);  // Just saved = 7 days remaining
+            loadFriendsAvailability();
+        } else {
+            const data = await response.json();
+            showStatus(data.error || 'Error saving', 'error');
+        }
+    } catch (error) {
+        console.error('Error auto-saving availability:', error);
+        showStatus('Error saving', 'error');
+    } finally {
+        isSaving = false;
+    }
 }
 
 // Show slot popup menu
@@ -1772,19 +1823,9 @@ function hasAvailabilityChanges() {
     return false;
 }
 
-// Update plan button state
+// Update plan button state (no longer used - auto-save enabled)
 function updatePlanButton() {
-    const button = document.getElementById('planButton');
-    // Button should only be active when user has made changes from saved state
-    const hasChanges = hasAvailabilityChanges();
-    
-    if (hasChanges) {
-        button.classList.remove('inactive');
-        button.disabled = false;
-    } else {
-        button.classList.add('inactive');
-        button.disabled = true;
-    }
+    // No-op: Save button removed, using auto-save instead
 }
 
 // Load my saved availability
