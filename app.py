@@ -8,6 +8,7 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, To, Content
 import json
 import os
+import openai
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -100,6 +101,11 @@ SENDGRID_FROM_EMAIL = os.getenv('SENDGRID_FROM_EMAIL', os.getenv('MAIL_USERNAME'
 VAPID_PUBLIC_KEY = os.getenv('VAPID_PUBLIC_KEY')
 VAPID_PRIVATE_KEY = os.getenv('VAPID_PRIVATE_KEY')
 VAPID_EMAIL = os.getenv('VAPID_EMAIL', 'hello@trygatherly.com')
+
+# OpenAI for AI suggestions
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+if OPENAI_API_KEY:
+    openai.api_key = OPENAI_API_KEY
 
 sendgrid_client = None
 if SENDGRID_API_KEY:
@@ -2122,6 +2128,116 @@ def send_hangout_message(hangout_id):
             )
     
     return jsonify(message.to_dict()), 201
+
+
+# =====================
+# AI Suggestions Endpoint
+# =====================
+
+@app.route('/api/hangouts/<int:hangout_id>/ai-suggest', methods=['POST'])
+def ai_suggest(hangout_id):
+    """Get AI suggestions for a hangout based on chat context"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    if not OPENAI_API_KEY:
+        return jsonify({'error': 'AI suggestions not configured'}), 503
+    
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    hangout = Hangout.query.get_or_404(hangout_id)
+    
+    # Check if user is participant
+    is_creator = hangout.creator_id == user_id
+    is_invitee = any(inv.user_id == user_id for inv in hangout.invitees)
+    
+    if not is_creator and not is_invitee:
+        return jsonify({'error': 'Not authorized'}), 403
+    
+    data = request.json
+    prompt = data.get('prompt', '').strip()
+    suggestion_type = data.get('type', 'custom')  # dinner, drinks, split, custom
+    
+    if not prompt:
+        return jsonify({'error': 'Prompt required'}), 400
+    
+    # Build context from hangout details
+    hangout_date = datetime.strptime(hangout.date, '%Y-%m-%d')
+    date_str = hangout_date.strftime('%A, %B %d')
+    
+    guest_names = [inv.user.name for inv in hangout.invitees]
+    creator_name = hangout.creator.name
+    all_participants = [creator_name] + guest_names
+    
+    # Get recent chat messages for context
+    recent_messages = HangoutMessage.query.filter_by(hangout_id=hangout_id)\
+        .order_by(HangoutMessage.created_at.desc())\
+        .limit(10).all()
+    
+    chat_context = ""
+    if recent_messages:
+        chat_context = "\n\nRecent chat messages:\n"
+        for msg in reversed(recent_messages):
+            chat_context += f"- {msg.user.name}: {msg.message}\n"
+    
+    # Build the system prompt
+    system_prompt = f"""You are a helpful assistant for a group planning app called Gatherly. 
+You're helping a group of friends plan a hangout.
+
+Event details:
+- Date: {date_str}
+- Time: {hangout.time_slot}
+- Description: {hangout.description or 'Not specified'}
+- Participants: {', '.join(all_participants)}
+{chat_context}
+
+Keep your responses concise, friendly, and helpful. 
+If suggesting places, give 2-3 specific options.
+Don't be overly formal - match the casual tone of friends planning to hang out.
+Keep responses under 150 words."""
+
+    # Adjust prompt based on suggestion type
+    if suggestion_type == 'dinner':
+        user_prompt = f"Suggest some dinner spots for our group. {prompt}" if prompt != '@AI suggest dinner' else "Suggest 2-3 dinner spots that would be good for our group."
+    elif suggestion_type == 'drinks':
+        user_prompt = f"Suggest some places for drinks. {prompt}" if prompt != '@AI suggest drinks' else "Suggest 2-3 bars or places for drinks that would be good for our group."
+    elif suggestion_type == 'split':
+        user_prompt = "Help us figure out how to split the bill fairly. What's the easiest way for our group to handle this?"
+    else:
+        # Custom - remove @AI prefix if present
+        user_prompt = prompt.replace('@AI ', '').replace('@ai ', '').strip()
+    
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            max_tokens=200,
+            temperature=0.7
+        )
+        
+        ai_response = response.choices[0].message.content.strip()
+        
+        # Save as a chat message with AI flag
+        ai_message = HangoutMessage(
+            hangout_id=hangout_id,
+            user_id=user_id,  # Associate with the user who asked
+            message=f"✨ AI: {ai_response}",
+            is_ai_message=True
+        )
+        db.session.add(ai_message)
+        db.session.commit()
+        
+        return jsonify({
+            'message': ai_message.to_dict(),
+            'ai_response': ai_response
+        }), 200
+        
+    except Exception as e:
+        print(f"[AI] Error: {e}")
+        return jsonify({'error': 'Failed to get AI suggestion'}), 500
 
 
 # =====================

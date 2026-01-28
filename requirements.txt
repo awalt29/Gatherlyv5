@@ -11,4 +11,5 @@ pytz==2024.2
 pywebpush==1.14.1
 py-vapid==1.9.1
 cryptography>=41.0.0
+openai>=1.0.0
 

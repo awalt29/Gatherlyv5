@@ -497,6 +497,7 @@ class HangoutMessage(db.Model):
     hangout_id = db.Column(db.Integer, db.ForeignKey('hangouts.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     message = db.Column(db.Text, nullable=False)
+    is_ai_message = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -510,5 +511,6 @@ class HangoutMessage(db.Model):
             'user_id': self.user_id,
             'user_name': self.user.name,
             'message': self.message,
+            'is_ai_message': self.is_ai_message or False,
             'created_at': self.created_at.isoformat() + 'Z'
         }

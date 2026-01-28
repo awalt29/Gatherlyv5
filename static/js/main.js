@@ -2937,12 +2937,38 @@ function renderPlanDetail() {
         </div>
     `;
     
-    // Build bottom bar with input and optional RSVP
+    // Build bottom bar with input, suggestions, and optional RSVP
     let bottomBar = '';
     if (!isPast) {
         bottomBar = `
             <div class="plan-bottom-bar">
                 ${rsvpPills}
+                <div class="ai-suggestions-panel" id="aiSuggestionsPanel">
+                    <div class="ai-suggestions-header" onclick="toggleAiSuggestions()">
+                        <span class="ai-suggestions-icon">✨</span>
+                        <span class="ai-suggestions-title">Get suggestions</span>
+                        <span class="ai-suggestions-subtitle">Based on everyone's replies</span>
+                        <span class="ai-suggestions-toggle" id="aiSuggestionsToggle">▲</span>
+                    </div>
+                    <div class="ai-suggestions-options" id="aiSuggestionsOptions">
+                        <button class="ai-suggestion-btn" onclick="selectAiSuggestion('dinner')">
+                            <span class="ai-btn-icon">🍽️</span>
+                            <span class="ai-btn-label">Dinner</span>
+                        </button>
+                        <button class="ai-suggestion-btn" onclick="selectAiSuggestion('drinks')">
+                            <span class="ai-btn-icon">🍸</span>
+                            <span class="ai-btn-label">Drinks</span>
+                        </button>
+                        <button class="ai-suggestion-btn" onclick="selectAiSuggestion('split')">
+                            <span class="ai-btn-icon">🧾</span>
+                            <span class="ai-btn-label">Split bill</span>
+                        </button>
+                        <button class="ai-suggestion-btn" onclick="selectAiSuggestion('custom')">
+                            <span class="ai-btn-icon">💬</span>
+                            <span class="ai-btn-label">Ask anything</span>
+                        </button>
+                    </div>
+                </div>
                 <div class="plan-chat-input">
                     <textarea id="planChatInput" placeholder="Type a message..." maxlength="500" rows="1" oninput="autoResizeTextarea(this)" onkeydown="handleChatKeydown(event)"></textarea>
                     <button class="chat-send-btn" onclick="sendPlanMessage()">
@@ -3080,16 +3106,23 @@ function renderChatMessages(messages) {
     
     container.innerHTML = messages.map(msg => {
         const isMe = msg.user_id === plannerInfo.id;
+        const isAi = msg.is_ai_message || msg.message.startsWith('✨ AI:');
         const time = new Date(msg.created_at).toLocaleTimeString('en-US', { 
             hour: 'numeric', 
             minute: '2-digit' 
         });
         
+        let messageClass = isMe ? 'chat-message-me' : 'chat-message-other';
+        if (isAi) messageClass += ' chat-message-ai';
+        
+        // For AI messages, show "AI Assistant" as the name
+        const displayName = isAi ? '✨ AI Assistant' : msg.user_name;
+        
         return `
-            <div class="chat-message ${isMe ? 'chat-message-me' : 'chat-message-other'}">
-                ${!isMe ? `<div class="chat-message-name">${msg.user_name}</div>` : ''}
+            <div class="chat-message ${messageClass}">
+                ${(!isMe || isAi) ? `<div class="chat-message-name">${displayName}</div>` : ''}
                 <div class="chat-message-bubble">
-                    <div class="chat-message-text">${escapeHtml(msg.message)}</div>
+                    <div class="chat-message-text">${escapeHtml(msg.message.replace('✨ AI: ', ''))}</div>
                     <div class="chat-message-time">${time}</div>
                 </div>
             </div>
@@ -3114,27 +3147,59 @@ async function sendPlanMessage() {
     
     if (!message) return;
     
+    // Check if this is an @AI message
+    const isAiMessage = message.toLowerCase().startsWith('@ai ');
+    
     // Disable input while sending
     input.disabled = true;
     
     try {
-        const response = await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message })
-        });
-        
-        if (response.ok) {
-            const newMessage = await response.json();
-            input.value = '';
-            input.style.height = 'auto'; // Reset textarea height
-            // Mark this message as seen (so your own message doesn't show as unread)
-            setSeenMessageId(currentPlanDetail.id, newMessage.id);
-            // Reload messages to show new one
-            await loadPlanChatMessages(currentPlanDetail.id);
+        if (isAiMessage) {
+            // Handle AI request
+            const aiPrompt = message.substring(4).trim(); // Remove @AI prefix
+            
+            // Determine suggestion type from prompt
+            let type = 'custom';
+            if (aiPrompt.toLowerCase().includes('dinner')) type = 'dinner';
+            else if (aiPrompt.toLowerCase().includes('drinks') || aiPrompt.toLowerCase().includes('bar')) type = 'drinks';
+            else if (aiPrompt.toLowerCase().includes('split') || aiPrompt.toLowerCase().includes('bill')) type = 'split';
+            
+            // First send the user's question as a regular message
+            await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: `🤖 ${aiPrompt}` })
+            });
+            
+            // Then get AI response
+            const aiResult = await sendAiRequest(message, type);
+            
+            if (aiResult) {
+                input.value = '';
+                input.style.height = 'auto';
+                setSeenMessageId(currentPlanDetail.id, aiResult.message.id);
+                await loadPlanChatMessages(currentPlanDetail.id);
+            }
         } else {
-            const data = await response.json();
-            showStatus(data.error || 'Failed to send message', 'error');
+            // Regular message
+            const response = await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
+            });
+            
+            if (response.ok) {
+                const newMessage = await response.json();
+                input.value = '';
+                input.style.height = 'auto'; // Reset textarea height
+                // Mark this message as seen (so your own message doesn't show as unread)
+                setSeenMessageId(currentPlanDetail.id, newMessage.id);
+                // Reload messages to show new one
+                await loadPlanChatMessages(currentPlanDetail.id);
+            } else {
+                const data = await response.json();
+                showStatus(data.error || 'Failed to send message', 'error');
+            }
         }
     } catch (error) {
         console.error('Error sending message:', error);
@@ -3158,6 +3223,75 @@ function autoResizeTextarea(textarea) {
     // Set the height to scrollHeight (content height)
     const newHeight = Math.min(textarea.scrollHeight, 120); // Max 120px (about 4 lines)
     textarea.style.height = newHeight + 'px';
+}
+
+// AI Suggestions
+let aiSuggestionsExpanded = false;
+
+function toggleAiSuggestions() {
+    const options = document.getElementById('aiSuggestionsOptions');
+    const toggle = document.getElementById('aiSuggestionsToggle');
+    
+    aiSuggestionsExpanded = !aiSuggestionsExpanded;
+    
+    if (aiSuggestionsExpanded) {
+        options.classList.add('expanded');
+        toggle.textContent = '▼';
+    } else {
+        options.classList.remove('expanded');
+        toggle.textContent = '▲';
+    }
+}
+
+function selectAiSuggestion(type) {
+    const input = document.getElementById('planChatInput');
+    
+    const prompts = {
+        'dinner': '@AI suggest dinner spots',
+        'drinks': '@AI suggest places for drinks',
+        'split': '@AI how should we split the bill?',
+        'custom': '@AI '
+    };
+    
+    input.value = prompts[type] || '@AI ';
+    input.focus();
+    
+    // If custom, place cursor at the end after @AI
+    if (type === 'custom') {
+        input.setSelectionRange(input.value.length, input.value.length);
+    }
+    
+    // Collapse the suggestions panel
+    if (aiSuggestionsExpanded) {
+        toggleAiSuggestions();
+    }
+    
+    autoResizeTextarea(input);
+}
+
+async function sendAiRequest(prompt, type) {
+    if (!currentPlanDetail) return null;
+    
+    try {
+        const response = await fetch(`/api/hangouts/${currentPlanDetail.id}/ai-suggest`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt, type })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        } else {
+            const error = await response.json();
+            showStatus(error.error || 'Failed to get suggestion', 'error');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error getting AI suggestion:', error);
+        showStatus('Failed to get suggestion', 'error');
+        return null;
+    }
 }
 
 function startChatPolling(hangoutId) {
