@@ -645,8 +645,8 @@ h1 {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    margin-bottom: 25px;
-    padding-top: calc(30px + env(safe-area-inset-top));
+    margin-bottom: 20px;
+    padding-top: calc(15px + env(safe-area-inset-top));
     width: 100%;
 }
 
@@ -3368,45 +3368,45 @@ body:has(.guest-info) .container {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    background: rgba(30, 40, 60, 0.95);
+    background: linear-gradient(135deg, rgba(40, 55, 80, 0.95) 0%, rgba(30, 45, 70, 0.95) 100%);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border-radius: 25px;
-    padding: 10px 20px;
-    margin-top: 20px;
-    margin-bottom: calc(10px + env(safe-area-inset-bottom));
+    border-radius: 20px;
+    padding: 8px 15px;
+    margin: 20px 25px;
+    margin-bottom: calc(15px + env(safe-area-inset-bottom));
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(108, 200, 190, 0.25);
 }
 
 .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 8px 20px;
+    gap: 3px;
+    padding: 8px 12px;
     background: transparent;
     border: none;
     color: var(--text-muted);
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
-    border-radius: 15px;
+    border-radius: 12px;
 }
 
 .nav-item span:not(.nav-badge) {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
 }
 
 .nav-item svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
 }
 
 .nav-item:hover,
 .nav-item:active {
-    color: var(--text-light);
+    color: var(--accent-mint);
 }
 
 .nav-badge {
