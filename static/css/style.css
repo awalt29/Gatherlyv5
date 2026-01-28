@@ -2801,8 +2801,8 @@ body:has(.guest-info) .container {
 .chat-message-text {
     font-size: 14px;
     line-height: 1.4;
-    word-break: break-all;
-    overflow-wrap: anywhere;
+    word-break: normal;
+    overflow-wrap: break-word;
     white-space: pre-wrap;
 }
 
