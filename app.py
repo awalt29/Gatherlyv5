@@ -2179,7 +2179,8 @@ def ai_suggest(hangout_id):
         .limit(20).all()
     
     # Check if this is a "split it" request (actually calculate the split)
-    is_split_calculation = suggestion_type == 'split' and ('split it' in prompt or 'calculate' in prompt or 'split the bill' in prompt)
+    # Only trigger calculation when user says "split it" - NOT on initial "split the bill" request
+    is_split_calculation = suggestion_type == 'split' and ('split it' in prompt or 'calculate' in prompt or 'do the split' in prompt)
     
     # For split calculation, look for receipt image
     receipt_image = None
