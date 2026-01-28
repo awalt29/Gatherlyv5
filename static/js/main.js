@@ -3156,8 +3156,10 @@ function renderChatMessages(messages) {
         `;
     }).join('');
     
-    // Scroll to bottom
-    container.scrollTop = container.scrollHeight;
+    // Scroll to bottom after DOM renders
+    requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight;
+    });
 }
 
 function openImageFullscreen(src) {
