@@ -2191,10 +2191,14 @@ def ai_suggest(hangout_id):
                 break
     
     chat_context = ""
+    previous_suggestions = ""
     if recent_messages:
         chat_context = "\n\nRecent chat messages:\n"
         for msg in reversed(recent_messages):
-            if not msg.is_ai_message:  # Skip AI messages for context
+            if msg.is_ai_message or msg.message.startswith('✨ AI:'):
+                # Track AI suggestions to avoid repeats
+                previous_suggestions += msg.message + "\n"
+            else:
                 chat_context += f"- {msg.user.name}: {msg.message}\n"
     
     try:
@@ -2325,9 +2329,13 @@ Just reply with something like "@AI Italian restaurant near downtown" and I'll f
                 }), 200
             else:
                 # They've provided preferences - give actual suggestions
+                no_repeat = ""
+                if previous_suggestions:
+                    no_repeat = f"\n\nIMPORTANT: Do NOT suggest any places already mentioned. Previous suggestions to avoid:\n{previous_suggestions}"
+                
                 system_prompt = f"""You are helping friends find a dinner spot. Give 2-3 specific restaurant suggestions based on their preferences.
 For each suggestion include: name, why it's good for groups, and price range ($, $$, $$$).
-Keep it brief and friendly."""
+Keep it brief and friendly.{no_repeat}"""
                 
                 user_prompt = prompt.replace('@ai ', '').strip()
                 
@@ -2338,7 +2346,7 @@ Keep it brief and friendly."""
                         {"role": "user", "content": user_prompt}
                     ],
                     max_tokens=250,
-                    temperature=0.7
+                    temperature=0.8
                 )
         
         # Handle drinks suggestions - check if they've provided preferences  
@@ -2371,9 +2379,13 @@ Reply with something like "@AI chill cocktail bar near downtown" and I'll hook y
                 }), 200
             else:
                 # They've provided preferences - give actual suggestions
+                no_repeat = ""
+                if previous_suggestions:
+                    no_repeat = f"\n\nIMPORTANT: Do NOT suggest any places already mentioned. Previous suggestions to avoid:\n{previous_suggestions}"
+                
                 system_prompt = f"""You are helping friends find a bar or place for drinks. Give 2-3 specific suggestions based on their preferences.
 For each suggestion include: name, vibe/atmosphere, and what they're known for.
-Keep it brief and friendly."""
+Keep it brief and friendly.{no_repeat}"""
                 
                 user_prompt = prompt.replace('@ai ', '').strip()
                 
@@ -2384,7 +2396,7 @@ Keep it brief and friendly."""
                         {"role": "user", "content": user_prompt}
                     ],
                     max_tokens=250,
-                    temperature=0.7
+                    temperature=0.8
                 )
         
         # Handle custom/other requests
