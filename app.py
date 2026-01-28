@@ -2210,16 +2210,19 @@ Recent chat where people mentioned what they ordered:
 Instructions:
 1. Look at the receipt image carefully
 2. Match items on the receipt to people based on what they said in chat
-3. Calculate each person's subtotal
-4. Split tax and tip proportionally
-5. Give a clear breakdown showing:
-   - What each person ordered
-   - Their subtotal
-   - Their share of tax/tip
-   - Their TOTAL to pay
+3. Calculate each person's total (including their proportional share of tax and tip)
 
-If you can't match an item to someone, note it as "shared" and split it evenly.
-Be precise with numbers. Format currency nicely."""
+Keep your response SHORT and SIMPLE. Use this exact format:
+
+**Items Ordered:**
+- [Name]: [their items]
+- [Name]: [their items]
+
+**Final Amounts (including tax & tip):**
+- [Name]: $XX.XX
+- [Name]: $XX.XX
+
+That's it! No calculations shown, no formulas, just the items and final totals."""
 
             # Clean up base64 string (remove any whitespace or line breaks)
             import re
