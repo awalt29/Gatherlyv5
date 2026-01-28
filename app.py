@@ -2294,7 +2294,100 @@ That's it! No calculations shown, no formulas, just the items and final totals."
                 'ai_response': ai_response
             }), 200
         
-        # Handle other suggestion types (dinner, drinks, custom)
+        # Handle dinner suggestions - check if they've provided preferences
+        elif suggestion_type == 'dinner':
+            # Check if this is just the initial request or if they've provided details
+            has_preferences = any(word in prompt for word in ['neighborhood', 'near', 'area', 'cuisine', 'type', 'mexican', 'italian', 'asian', 'chinese', 'japanese', 'indian', 'thai', 'american', 'french', 'mediterranean', 'sushi', 'pizza', 'burgers', 'seafood', 'steakhouse', 'vegetarian', 'vegan', 'downtown', 'midtown', 'uptown'])
+            
+            if not has_preferences and 'suggest dinner' in prompt:
+                # First request - ask for preferences
+                ai_response = """🍽️ I'd love to help find dinner spots!
+
+To give you the best suggestions, tell me:
+• What neighborhood or area?
+• Any cuisine preferences? (Italian, Mexican, Asian, etc.)
+• Vibe? (Casual, upscale, good for groups?)
+
+Just reply with something like "@AI Italian restaurant near downtown" and I'll find some great options!"""
+                
+                ai_message = HangoutMessage(
+                    hangout_id=hangout_id,
+                    user_id=user_id,
+                    message=f"✨ AI: {ai_response}",
+                    is_ai_message=True
+                )
+                db.session.add(ai_message)
+                db.session.commit()
+                
+                return jsonify({
+                    'message': ai_message.to_dict(),
+                    'ai_response': ai_response
+                }), 200
+            else:
+                # They've provided preferences - give actual suggestions
+                system_prompt = f"""You are helping friends find a dinner spot. Give 2-3 specific restaurant suggestions based on their preferences.
+For each suggestion include: name, why it's good for groups, and price range ($, $$, $$$).
+Keep it brief and friendly."""
+                
+                user_prompt = prompt.replace('@ai ', '').strip()
+                
+                response = openai.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    max_tokens=250,
+                    temperature=0.7
+                )
+        
+        # Handle drinks suggestions - check if they've provided preferences  
+        elif suggestion_type == 'drinks':
+            has_preferences = any(word in prompt for word in ['neighborhood', 'near', 'area', 'type', 'cocktails', 'beer', 'wine', 'sports bar', 'dive', 'rooftop', 'lounge', 'club', 'downtown', 'midtown', 'uptown', 'chill', 'loud', 'quiet'])
+            
+            if not has_preferences and 'suggest' in prompt and 'drinks' in prompt:
+                # First request - ask for preferences
+                ai_response = """🍸 Let's find a great spot for drinks!
+
+Tell me a bit more:
+• What neighborhood or area?
+• What vibe? (Chill bar, rooftop, sports bar, cocktail lounge?)
+• Any preferences? (Craft beer, cocktails, wine?)
+
+Reply with something like "@AI chill cocktail bar near downtown" and I'll hook you up!"""
+                
+                ai_message = HangoutMessage(
+                    hangout_id=hangout_id,
+                    user_id=user_id,
+                    message=f"✨ AI: {ai_response}",
+                    is_ai_message=True
+                )
+                db.session.add(ai_message)
+                db.session.commit()
+                
+                return jsonify({
+                    'message': ai_message.to_dict(),
+                    'ai_response': ai_response
+                }), 200
+            else:
+                # They've provided preferences - give actual suggestions
+                system_prompt = f"""You are helping friends find a bar or place for drinks. Give 2-3 specific suggestions based on their preferences.
+For each suggestion include: name, vibe/atmosphere, and what they're known for.
+Keep it brief and friendly."""
+                
+                user_prompt = prompt.replace('@ai ', '').strip()
+                
+                response = openai.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    max_tokens=250,
+                    temperature=0.7
+                )
+        
+        # Handle custom/other requests
         else:
             system_prompt = f"""You are a helpful assistant for a group planning app called Gatherly. 
 You're helping a group of friends plan a hangout.
@@ -2307,17 +2400,10 @@ Event details:
 {chat_context}
 
 Keep your responses concise, friendly, and helpful. 
-If suggesting places, give 2-3 specific options.
 Don't be overly formal - match the casual tone of friends planning to hang out.
 Keep responses under 150 words."""
 
-            if suggestion_type == 'dinner':
-                user_prompt = "Suggest 2-3 dinner spots that would be good for our group."
-            elif suggestion_type == 'drinks':
-                user_prompt = "Suggest 2-3 bars or places for drinks that would be good for our group."
-            else:
-                # Custom - remove @AI prefix if present
-                user_prompt = prompt.replace('@ai ', '').strip()
+            user_prompt = prompt.replace('@ai ', '').strip()
             
             response = openai.chat.completions.create(
                 model="gpt-4o-mini",
