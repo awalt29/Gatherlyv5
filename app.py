@@ -2097,18 +2097,25 @@ def send_hangout_message(hangout_id):
     
     data = request.json
     message_text = data.get('message', '').strip()
+    image_data = data.get('image_data')  # Base64 encoded image
     
-    if not message_text:
-        return jsonify({'error': 'Message cannot be empty'}), 400
+    # Either message or image is required
+    if not message_text and not image_data:
+        return jsonify({'error': 'Message or image required'}), 400
     
-    if len(message_text) > 500:
+    if message_text and len(message_text) > 500:
         return jsonify({'error': 'Message too long (max 500 characters)'}), 400
+    
+    # Validate image size (max ~2MB base64 = ~1.5MB actual image)
+    if image_data and len(image_data) > 2 * 1024 * 1024:
+        return jsonify({'error': 'Image too large (max 1.5MB)'}), 400
     
     # Create message
     message = HangoutMessage(
         hangout_id=hangout_id,
         user_id=user_id,
-        message=message_text
+        message=message_text or '📷 Shared a photo',
+        image_data=image_data
     )
     db.session.add(message)
     db.session.commit()
@@ -2155,11 +2162,8 @@ def ai_suggest(hangout_id):
         return jsonify({'error': 'Not authorized'}), 403
     
     data = request.json
-    prompt = data.get('prompt', '').strip()
+    prompt = data.get('prompt', '').strip().lower()
     suggestion_type = data.get('type', 'custom')  # dinner, drinks, split, custom
-    
-    if not prompt:
-        return jsonify({'error': 'Prompt required'}), 400
     
     # Build context from hangout details
     hangout_date = datetime.strptime(hangout.date, '%Y-%m-%d')
@@ -2172,16 +2176,106 @@ def ai_suggest(hangout_id):
     # Get recent chat messages for context
     recent_messages = HangoutMessage.query.filter_by(hangout_id=hangout_id)\
         .order_by(HangoutMessage.created_at.desc())\
-        .limit(10).all()
+        .limit(20).all()
+    
+    # Check if this is a "split it" request (actually calculate the split)
+    is_split_calculation = suggestion_type == 'split' and ('split it' in prompt or 'calculate' in prompt or 'split the bill' in prompt)
+    
+    # For split calculation, look for receipt image
+    receipt_image = None
+    if is_split_calculation:
+        for msg in recent_messages:
+            if msg.image_data:
+                receipt_image = msg.image_data
+                break
     
     chat_context = ""
     if recent_messages:
         chat_context = "\n\nRecent chat messages:\n"
         for msg in reversed(recent_messages):
-            chat_context += f"- {msg.user.name}: {msg.message}\n"
+            if not msg.is_ai_message:  # Skip AI messages for context
+                chat_context += f"- {msg.user.name}: {msg.message}\n"
     
-    # Build the system prompt
-    system_prompt = f"""You are a helpful assistant for a group planning app called Gatherly. 
+    try:
+        # Handle split bill with image (vision API)
+        if is_split_calculation and receipt_image:
+            system_prompt = f"""You are helping split a restaurant bill for a group of friends.
+
+Participants: {', '.join(all_participants)}
+
+Recent chat where people mentioned what they ordered:
+{chat_context}
+
+Instructions:
+1. Look at the receipt image carefully
+2. Match items on the receipt to people based on what they said in chat
+3. Calculate each person's subtotal
+4. Split tax and tip proportionally
+5. Give a clear breakdown showing:
+   - What each person ordered
+   - Their subtotal
+   - Their share of tax/tip
+   - Their TOTAL to pay
+
+If you can't match an item to someone, note it as "shared" and split it evenly.
+Be precise with numbers. Format currency nicely."""
+
+            response = openai.chat.completions.create(
+                model="gpt-4o",  # Need GPT-4o for vision
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": [
+                        {"type": "text", "text": "Please analyze this receipt and split the bill based on what everyone said they ordered in the chat."},
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{receipt_image}"}}
+                    ]}
+                ],
+                max_tokens=500,
+                temperature=0.3
+            )
+        
+        # Handle split bill without image (just give instructions)
+        elif suggestion_type == 'split' and not is_split_calculation:
+            ai_response = """📸 To split the bill:
+
+1️⃣ Someone upload a photo of the receipt
+2️⃣ Everyone reply with what you ordered (e.g., "I had the burger and a beer")
+3️⃣ Then say "@AI split it" and I'll calculate who owes what!"""
+            
+            ai_message = HangoutMessage(
+                hangout_id=hangout_id,
+                user_id=user_id,
+                message=f"✨ AI: {ai_response}",
+                is_ai_message=True
+            )
+            db.session.add(ai_message)
+            db.session.commit()
+            
+            return jsonify({
+                'message': ai_message.to_dict(),
+                'ai_response': ai_response
+            }), 200
+        
+        # Handle split without receipt image
+        elif is_split_calculation and not receipt_image:
+            ai_response = "I don't see a receipt photo! Please upload a picture of the bill first, then try again."
+            
+            ai_message = HangoutMessage(
+                hangout_id=hangout_id,
+                user_id=user_id,
+                message=f"✨ AI: {ai_response}",
+                is_ai_message=True
+            )
+            db.session.add(ai_message)
+            db.session.commit()
+            
+            return jsonify({
+                'message': ai_message.to_dict(),
+                'ai_response': ai_response
+            }), 200
+        
+        # Handle other suggestion types (dinner, drinks, custom)
+        else:
+            system_prompt = f"""You are a helpful assistant for a group planning app called Gatherly. 
 You're helping a group of friends plan a hangout.
 
 Event details:
@@ -2196,34 +2290,30 @@ If suggesting places, give 2-3 specific options.
 Don't be overly formal - match the casual tone of friends planning to hang out.
 Keep responses under 150 words."""
 
-    # Adjust prompt based on suggestion type
-    if suggestion_type == 'dinner':
-        user_prompt = f"Suggest some dinner spots for our group. {prompt}" if prompt != '@AI suggest dinner' else "Suggest 2-3 dinner spots that would be good for our group."
-    elif suggestion_type == 'drinks':
-        user_prompt = f"Suggest some places for drinks. {prompt}" if prompt != '@AI suggest drinks' else "Suggest 2-3 bars or places for drinks that would be good for our group."
-    elif suggestion_type == 'split':
-        user_prompt = "Help us figure out how to split the bill fairly. What's the easiest way for our group to handle this?"
-    else:
-        # Custom - remove @AI prefix if present
-        user_prompt = prompt.replace('@AI ', '').replace('@ai ', '').strip()
-    
-    try:
-        response = openai.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            max_tokens=200,
-            temperature=0.7
-        )
+            if suggestion_type == 'dinner':
+                user_prompt = "Suggest 2-3 dinner spots that would be good for our group."
+            elif suggestion_type == 'drinks':
+                user_prompt = "Suggest 2-3 bars or places for drinks that would be good for our group."
+            else:
+                # Custom - remove @AI prefix if present
+                user_prompt = prompt.replace('@ai ', '').strip()
+            
+            response = openai.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=200,
+                temperature=0.7
+            )
         
         ai_response = response.choices[0].message.content.strip()
         
         # Save as a chat message with AI flag
         ai_message = HangoutMessage(
             hangout_id=hangout_id,
-            user_id=user_id,  # Associate with the user who asked
+            user_id=user_id,
             message=f"✨ AI: {ai_response}",
             is_ai_message=True
         )

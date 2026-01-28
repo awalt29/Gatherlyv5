@@ -2970,6 +2970,14 @@ function renderPlanDetail() {
                     </div>
                 </div>
                 <div class="plan-chat-input">
+                    <input type="file" id="chatImageInput" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
+                    <button class="chat-image-btn" onclick="document.getElementById('chatImageInput').click()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                    </button>
                     <textarea id="planChatInput" placeholder="Type a message..." maxlength="500" rows="1" oninput="autoResizeTextarea(this)" onkeydown="handleChatKeydown(event)"></textarea>
                     <button class="chat-send-btn" onclick="sendPlanMessage()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2977,6 +2985,10 @@ function renderPlanDetail() {
                             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                         </svg>
                     </button>
+                </div>
+                <div class="chat-image-preview" id="chatImagePreview" style="display: none;">
+                    <img id="chatImagePreviewImg" src="" alt="Preview">
+                    <button class="chat-image-remove" onclick="removeImagePreview()">×</button>
                 </div>
             </div>
         `;
@@ -3107,6 +3119,7 @@ function renderChatMessages(messages) {
     container.innerHTML = messages.map(msg => {
         const isMe = msg.user_id === plannerInfo.id;
         const isAi = msg.is_ai_message || msg.message.startsWith('✨ AI:');
+        const hasImage = msg.image_data;
         const time = new Date(msg.created_at).toLocaleTimeString('en-US', { 
             hour: 'numeric', 
             minute: '2-digit' 
@@ -3114,15 +3127,28 @@ function renderChatMessages(messages) {
         
         let messageClass = isMe ? 'chat-message-me' : 'chat-message-other';
         if (isAi) messageClass += ' chat-message-ai';
+        if (hasImage) messageClass += ' chat-message-image';
         
         // For AI messages, show "AI Assistant" as the name
         const displayName = isAi ? '✨ AI Assistant' : msg.user_name;
+        
+        // Build message content
+        let messageContent = '';
+        if (hasImage) {
+            messageContent += `<img class="chat-image" src="data:image/jpeg;base64,${msg.image_data}" alt="Shared image" onclick="openImageFullscreen(this.src)">`;
+        }
+        
+        // Only show text if it's not just the default "Shared a photo" or if there's a caption
+        const messageText = msg.message.replace('✨ AI: ', '');
+        if (messageText && messageText !== '📷 Shared a photo') {
+            messageContent += `<div class="chat-message-text">${escapeHtml(messageText)}</div>`;
+        }
         
         return `
             <div class="chat-message ${messageClass}">
                 ${(!isMe || isAi) ? `<div class="chat-message-name">${displayName}</div>` : ''}
                 <div class="chat-message-bubble">
-                    <div class="chat-message-text">${escapeHtml(msg.message.replace('✨ AI: ', ''))}</div>
+                    ${messageContent}
                     <div class="chat-message-time">${time}</div>
                 </div>
             </div>
@@ -3131,6 +3157,20 @@ function renderChatMessages(messages) {
     
     // Scroll to bottom
     container.scrollTop = container.scrollHeight;
+}
+
+function openImageFullscreen(src) {
+    // Create fullscreen overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'image-fullscreen-overlay';
+    overlay.innerHTML = `
+        <img src="${src}" alt="Full size image">
+        <button class="image-fullscreen-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    overlay.onclick = function(e) {
+        if (e.target === overlay) overlay.remove();
+    };
+    document.body.appendChild(overlay);
 }
 
 function escapeHtml(text) {
@@ -3144,6 +3184,12 @@ async function sendPlanMessage() {
     
     const input = document.getElementById('planChatInput');
     const message = input.value.trim();
+    
+    // If there's a pending image, send it
+    if (pendingImageData) {
+        await sendImageMessage();
+        return;
+    }
     
     if (!message) return;
     
@@ -3225,6 +3271,112 @@ function autoResizeTextarea(textarea) {
     textarea.style.height = newHeight + 'px';
 }
 
+// Image Upload for Chat
+let pendingImageData = null;
+
+async function handleImageSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+        showStatus('Please select an image file', 'error');
+        return;
+    }
+    
+    // Compress and convert to base64
+    try {
+        const compressedData = await compressImage(file, 800, 0.7);
+        pendingImageData = compressedData;
+        
+        // Show preview
+        const preview = document.getElementById('chatImagePreview');
+        const previewImg = document.getElementById('chatImagePreviewImg');
+        previewImg.src = `data:image/jpeg;base64,${compressedData}`;
+        preview.style.display = 'flex';
+    } catch (error) {
+        console.error('Error compressing image:', error);
+        showStatus('Failed to process image', 'error');
+    }
+    
+    // Clear the file input
+    event.target.value = '';
+}
+
+function compressImage(file, maxWidth, quality) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                // Scale down if needed
+                if (width > maxWidth) {
+                    height = (height * maxWidth) / width;
+                    width = maxWidth;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert to base64 (without the data:image/jpeg;base64, prefix)
+                const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                const base64 = dataUrl.split(',')[1];
+                resolve(base64);
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function removeImagePreview() {
+    pendingImageData = null;
+    const preview = document.getElementById('chatImagePreview');
+    preview.style.display = 'none';
+}
+
+async function sendImageMessage() {
+    if (!currentPlanDetail || !pendingImageData) return;
+    
+    const input = document.getElementById('planChatInput');
+    const caption = input.value.trim();
+    
+    try {
+        const response = await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                message: caption || '📷 Shared a photo',
+                image_data: pendingImageData 
+            })
+        });
+        
+        if (response.ok) {
+            const newMessage = await response.json();
+            input.value = '';
+            input.style.height = 'auto';
+            removeImagePreview();
+            setSeenMessageId(currentPlanDetail.id, newMessage.id);
+            await loadPlanChatMessages(currentPlanDetail.id);
+        } else {
+            const data = await response.json();
+            showStatus(data.error || 'Failed to send image', 'error');
+        }
+    } catch (error) {
+        console.error('Error sending image:', error);
+        showStatus('Failed to send image', 'error');
+    }
+}
+
 // AI Suggestions
 let aiSuggestionsExpanded = false;
 
@@ -3249,7 +3401,7 @@ function selectAiSuggestion(type) {
     const prompts = {
         'dinner': '@AI suggest dinner spots',
         'drinks': '@AI suggest places for drinks',
-        'split': '@AI how should we split the bill?',
+        'split': '@AI split the bill',
         'custom': '@AI '
     };
     
