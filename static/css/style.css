@@ -1108,8 +1108,7 @@ h1 {
 .calendar-grid {
     display: grid;
     grid-template-columns: 10px repeat(14, 43px);
-    column-gap: 4px;
-    row-gap: 0;
+    gap: 4px;
     width: fit-content;
 }
 
@@ -1131,27 +1130,12 @@ h1 {
 .time-slot {
     width: 43px;
     height: 130px;
-    padding: 10px 0;
     background: #3A4D6B;
     border-radius: 0;
     cursor: pointer;
     transition: all 0.15s;
     border: 2px solid transparent;
     position: relative;
-    box-sizing: border-box;
-}
-
-/* Row dividers - add subtle top border to rows 2 and 3 */
-/* Row 2 starts at item 16 (AFTER row) */
-.calendar-grid > .time-slot:nth-child(n+17):nth-child(-n+30),
-.calendar-grid > .time-label:nth-child(16) {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Row 3 starts at item 31 (EVEN row) */
-.calendar-grid > .time-slot:nth-child(n+32):nth-child(-n+45),
-.calendar-grid > .time-label:nth-child(31) {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Corner cells only (14-day grid: 15 columns per row) */
