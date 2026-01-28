@@ -54,9 +54,6 @@
 
         <!-- Friends Section -->
         <div class="friends-section">
-            <div class="friends-header-row">
-                <button class="menu-btn" onclick="openManageFriendsModal()">⋯</button>
-            </div>
             <div class="friends-list-wrapper" id="friendsListWrapper">
                 <div class="friends-list" id="friendsList">
                 </div>
@@ -102,6 +99,15 @@
                 </svg>
                 <span>Notifications</span>
                 <span class="nav-badge" id="notificationBadgeNav" style="display: none;">0</span>
+            </button>
+            <button class="nav-item" onclick="openManageFriendsModal()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <line x1="19" y1="8" x2="19" y2="14"></line>
+                    <line x1="22" y1="11" x2="16" y2="11"></line>
+                </svg>
+                <span>Friends</span>
             </button>
         </div>
 
