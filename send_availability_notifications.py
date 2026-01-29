@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from app import app, db, send_push_notification
 from models import User, Notification, Friendship
 
-NOTIFICATION_DELAY_MINUTES = 5
+NOTIFICATION_DELAY_MINUTES = 15  # Wait 15 minutes after last update before sending
 
 def send_pending_availability_notifications():
     """Send notifications for users whose availability was updated 5+ minutes ago"""
