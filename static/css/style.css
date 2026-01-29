@@ -766,8 +766,8 @@ h1 {
 /* Wrapper for scroll fade effect */
 .friends-list-wrapper {
     position: relative;
-    max-width: 340px; /* Fits ~5 bubbles (44px + 10px gap) * 5 + padding */
-    width: 100%;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
 }
 
 /* Fade gradient on right (leading edge) when scrollable - slightly favored */
@@ -836,7 +836,7 @@ h1 {
     max-width: 100%;
     width: 100%;
     overflow-x: auto;
-    padding: 4px 10px;
+    padding: 4px 20px;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
 }
