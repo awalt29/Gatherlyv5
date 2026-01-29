@@ -639,17 +639,46 @@ h1 {
     width: 100%;
 }
 
+/* Header Row */
+.header-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+    margin-bottom: 14px;
+    padding: 12px 24px;
+    padding-top: calc(16px + env(safe-area-inset-top));
+    background: linear-gradient(180deg, rgba(55, 85, 140, 0.3) 0%, transparent 100%);
+}
+
 /* Title with Logo */
 .title-logo {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    margin-bottom: 14px;
-    padding: 12px 24px;
-    padding-top: calc(16px + env(safe-area-inset-top));
-    width: 100%;
-    background: linear-gradient(180deg, rgba(55, 85, 140, 0.3) 0%, transparent 100%);
+}
+
+/* Settings Button (Top Right) */
+.settings-btn {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding-top: calc(env(safe-area-inset-top) / 2);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.settings-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
 }
 
 .title-logo .app-logo {
