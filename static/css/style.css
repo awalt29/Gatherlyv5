@@ -1004,6 +1004,59 @@ h1 {
     position: relative;
 }
 
+/* Calendar scroll fade - right edge */
+.calendar-section::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -30px;
+    width: 48px;
+    height: 100%;
+    background: linear-gradient(
+        to right,
+        transparent 0%,
+        rgba(15, 23, 38, 0.15) 30%,
+        rgba(15, 23, 38, 0.40) 60%,
+        rgba(15, 23, 38, 0.65) 85%,
+        rgba(15, 23, 38, 0.85) 100%
+    );
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+    z-index: 10;
+}
+
+/* Calendar scroll fade - left edge */
+.calendar-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -30px;
+    width: 42px;
+    height: 100%;
+    background: linear-gradient(
+        to left,
+        transparent 0%,
+        rgba(15, 23, 38, 0.12) 30%,
+        rgba(15, 23, 38, 0.35) 60%,
+        rgba(15, 23, 38, 0.55) 85%,
+        rgba(15, 23, 38, 0.75) 100%
+    );
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+    z-index: 10;
+}
+
+/* Show fades based on scroll state */
+.calendar-section.can-scroll-right::after {
+    opacity: 1;
+}
+
+.calendar-section.can-scroll-left::before {
+    opacity: 1;
+}
+
 /* Scroll hint gradient removed - calendar extends to viewport edges */
 
 .message-section {
@@ -1767,6 +1820,14 @@ h1 {
         margin-left: -20px;
         margin-right: -20px;
         padding-left: 20px;
+    }
+    
+    .calendar-section::after {
+        right: -20px;
+    }
+    
+    .calendar-section::before {
+        left: -20px;
     }
     
     h1 {

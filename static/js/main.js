@@ -482,7 +482,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Show the main content now that we're authenticated
             document.querySelector('.container').style.opacity = '1';
-            document.getElementById('setupModal').classList.remove('active');
+        document.getElementById('setupModal').classList.remove('active');
             // Load linked friends first (for active status), then contacts, then availability
             await loadLinkedFriends();
             await loadFriends();
@@ -572,16 +572,25 @@ function setupCalendarScrollHint() {
     
     if (!calendar || !calendarSection) return;
     
-    calendar.addEventListener('scroll', () => {
-        // Check if scrolled to the end (with small buffer)
-        const isAtEnd = calendar.scrollLeft + calendar.clientWidth >= calendar.scrollWidth - 10;
+    function updateCalendarScrollFades() {
+        const scrollLeft = calendar.scrollLeft;
+        const scrollWidth = calendar.scrollWidth;
+        const clientWidth = calendar.clientWidth;
         
-        if (isAtEnd) {
-            calendarSection.classList.add('scrolled-end');
-        } else {
-            calendarSection.classList.remove('scrolled-end');
-        }
-    });
+        // Check if can scroll left (not at start)
+        const canScrollLeft = scrollLeft > 5;
+        // Check if can scroll right (not at end)
+        const canScrollRight = scrollLeft + clientWidth < scrollWidth - 5;
+        
+        calendarSection.classList.toggle('can-scroll-left', canScrollLeft);
+        calendarSection.classList.toggle('can-scroll-right', canScrollRight);
+        calendarSection.classList.toggle('scrolled-end', !canScrollRight);
+    }
+    
+    calendar.addEventListener('scroll', updateCalendarScrollFades);
+    
+    // Initial check
+    setTimeout(updateCalendarScrollFades, 100);
 }
 
 // Setup planner
@@ -604,10 +613,10 @@ async function setupPlanner(event) {
         if (response.ok) {
             const user = await response.json();
             plannerInfo = { id: user.id, name: user.name, phone: user.phone_number, email: user.email, weekly_reminders_enabled: user.weekly_reminders_enabled !== false, has_seen_install_prompt: user.has_seen_install_prompt === true };
-            localStorage.setItem('gatherly_planner', JSON.stringify(plannerInfo));
-            
-            document.getElementById('setupModal').classList.remove('active');
-            showStatus('Welcome, ' + name + '!', 'success');
+    localStorage.setItem('gatherly_planner', JSON.stringify(plannerInfo));
+    
+    document.getElementById('setupModal').classList.remove('active');
+    showStatus('Welcome, ' + name + '!', 'success');
             // Load linked friends first (for active status), then contacts, then availability
             await loadLinkedFriends();
             await loadFriends();
@@ -1458,7 +1467,7 @@ async function addFriend(event) {
             } else if (contact.is_linked) {
                 showStatus('Friend added! You\'re already connected.', 'success');
             } else {
-                showStatus('Friend added!', 'success');
+            showStatus('Friend added!', 'success');
             }
         } else if (data.error === 'name_required') {
             // Show name fields and prompt user
@@ -1529,15 +1538,15 @@ function setupCalendar() {
 
 // Toggle slot availability (add/remove)
 function toggleSlotAvailability(slot, date, timeSlot) {
-    slot.classList.toggle('selected');
-    
-    const slotIndex = selectedTimeSlots.findIndex(
+            slot.classList.toggle('selected');
+            
+            const slotIndex = selectedTimeSlots.findIndex(
         s => s.date === date && s.slot === timeSlot
-    );
-    
-    if (slotIndex > -1) {
-        selectedTimeSlots.splice(slotIndex, 1);
-    } else {
+            );
+            
+            if (slotIndex > -1) {
+                selectedTimeSlots.splice(slotIndex, 1);
+            } else {
         selectedTimeSlots.push({ date, slot: timeSlot });
     }
     
@@ -1858,7 +1867,7 @@ async function loadMyAvailability() {
                 updatePlanButton();
                 
                 console.log('Loaded my availability:', selectedTimeSlots.length, 'slots');
-            } else {
+    } else {
                 // No saved availability - reset original state
                 originalTimeSlots = [];
                 updatePlanButton();
@@ -2159,9 +2168,9 @@ function getCalendarDateRange() {
 async function loadAvailability() {
     if (!plannerInfo || !plannerInfo.id) {
         console.log('No planner info with ID');
-        return;
-    }
-    
+            return;
+        }
+        
     try {
         const dateRange = getCalendarDateRange();
         console.log('Loading availability for date range:', dateRange.start, 'to', dateRange.end, 'planner ID:', plannerInfo.id);
