@@ -2147,6 +2147,10 @@ body:has(.guest-info) .container {
 /* Plan Modal */
 #planModal .modal-content {
     max-width: 400px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .new-plan-btn {
@@ -2158,6 +2162,9 @@ body:has(.guest-info) .container {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .plan-slot-info {
@@ -2250,6 +2257,9 @@ body:has(.guest-info) .container {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
 .plan-friend-item {
