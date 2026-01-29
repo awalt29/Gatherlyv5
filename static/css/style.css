@@ -1004,23 +1004,7 @@ h1 {
     position: relative;
 }
 
-/* Scroll hint gradient on right edge */
-.calendar-section::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 40px;
-    bottom: 0;
-    width: 40px;
-    background: linear-gradient(to right, transparent, var(--primary-bg));
-    pointer-events: none;
-    opacity: 0.9;
-    transition: opacity 0.3s;
-}
-
-.calendar-section.scrolled-end::after {
-    opacity: 0;
-}
+/* Scroll hint gradient removed - calendar extends to viewport edges */
 
 .message-section {
     width: 100%;
