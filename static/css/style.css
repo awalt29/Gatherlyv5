@@ -1004,14 +1004,14 @@ h1 {
     position: relative;
 }
 
-/* Calendar scroll fade - right edge */
+/* Calendar scroll fade - right edge (full screen height) */
 .calendar-section::after {
     content: '';
-    position: absolute;
+    position: fixed;
     top: 0;
-    right: -30px;
+    right: 0;
     width: 48px;
-    height: 100%;
+    height: 100vh;
     background: linear-gradient(
         to right,
         transparent 0%,
@@ -1026,14 +1026,14 @@ h1 {
     z-index: 10;
 }
 
-/* Calendar scroll fade - left edge */
+/* Calendar scroll fade - left edge (full screen height) */
 .calendar-section::before {
     content: '';
-    position: absolute;
+    position: fixed;
     top: 0;
-    left: -30px;
+    left: 0;
     width: 42px;
-    height: 100%;
+    height: 100vh;
     background: linear-gradient(
         to left,
         transparent 0%,
@@ -1820,14 +1820,6 @@ h1 {
         margin-left: -20px;
         margin-right: -20px;
         padding-left: 20px;
-    }
-    
-    .calendar-section::after {
-        right: -20px;
-    }
-    
-    .calendar-section::before {
-        left: -20px;
     }
     
     h1 {
