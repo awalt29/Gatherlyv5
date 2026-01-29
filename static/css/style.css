@@ -771,64 +771,6 @@ h1 {
     margin-right: -30px;
 }
 
-/* Fade gradient on right (leading edge) when scrollable - slightly favored */
-.friends-list-wrapper::after {
-    content: '';
-    position: absolute;
-    top: -10px;
-    right: 0;
-    width: 48px;
-    height: calc(100% + 20px);
-    background: linear-gradient(
-        to right,
-        transparent 0%,
-        rgba(42, 60, 90, 0.15) 30%,
-        rgba(42, 60, 90, 0.35) 60%,
-        rgba(42, 60, 90, 0.55) 85%,
-        rgba(42, 60, 90, 0.70) 100%
-    );
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s ease-out;
-    z-index: 1;
-}
-
-/* Fade gradient on left when scrolled - slightly subtler */
-.friends-list-wrapper::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: 0;
-    width: 42px;
-    height: calc(100% + 20px);
-    background: linear-gradient(
-        to left,
-        transparent 0%,
-        rgba(42, 60, 90, 0.12) 30%,
-        rgba(42, 60, 90, 0.30) 60%,
-        rgba(42, 60, 90, 0.48) 85%,
-        rgba(42, 60, 90, 0.60) 100%
-    );
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s ease-out;
-    z-index: 1;
-}
-
-.friends-list-wrapper.has-overflow::after {
-    opacity: 1;
-}
-
-/* Show left gradient when scrolled from start */
-.friends-list-wrapper.scrolled-start::before {
-    opacity: 1;
-}
-
-/* Hide right gradient when scrolled to end */
-.friends-list-wrapper.scrolled-end::after {
-    opacity: 0;
-}
-
 .friends-list {
     display: flex;
     gap: 10px;
@@ -1004,57 +946,41 @@ h1 {
     position: relative;
 }
 
-/* Calendar scroll fade - right edge (full screen height) */
+/* Screen edge fades - always visible, subtle */
 .calendar-section::after {
     content: '';
     position: fixed;
     top: 0;
     right: 0;
-    width: 48px;
+    width: 40px;
     height: 100vh;
     background: linear-gradient(
         to right,
         transparent 0%,
-        rgba(15, 23, 38, 0.15) 30%,
-        rgba(15, 23, 38, 0.40) 60%,
-        rgba(15, 23, 38, 0.65) 85%,
-        rgba(15, 23, 38, 0.85) 100%
+        rgba(15, 23, 38, 0.10) 40%,
+        rgba(15, 23, 38, 0.25) 70%,
+        rgba(15, 23, 38, 0.45) 100%
     );
     pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s ease-out;
     z-index: 10;
 }
 
-/* Calendar scroll fade - left edge (full screen height) */
 .calendar-section::before {
     content: '';
     position: fixed;
     top: 0;
     left: 0;
-    width: 42px;
+    width: 40px;
     height: 100vh;
     background: linear-gradient(
         to left,
         transparent 0%,
-        rgba(15, 23, 38, 0.12) 30%,
-        rgba(15, 23, 38, 0.35) 60%,
-        rgba(15, 23, 38, 0.55) 85%,
-        rgba(15, 23, 38, 0.75) 100%
+        rgba(15, 23, 38, 0.10) 40%,
+        rgba(15, 23, 38, 0.25) 70%,
+        rgba(15, 23, 38, 0.45) 100%
     );
     pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s ease-out;
     z-index: 10;
-}
-
-/* Show fades based on scroll state */
-.calendar-section.can-scroll-right::after {
-    opacity: 1;
-}
-
-.calendar-section.can-scroll-left::before {
-    opacity: 1;
 }
 
 /* Scroll hint gradient removed - calendar extends to viewport edges */
