@@ -766,36 +766,51 @@ h1 {
 /* Wrapper for scroll fade effect */
 .friends-list-wrapper {
     position: relative;
-    max-width: 340px; /* Fits ~5 bubbles (50px + 12px gap) * 5 + padding */
+    max-width: 340px; /* Fits ~5 bubbles (44px + 10px gap) * 5 + padding */
     width: 100%;
 }
 
-/* Fade gradient on right when scrollable */
+/* Fade gradient on right (leading edge) when scrollable - slightly favored */
 .friends-list-wrapper::after {
     content: '';
     position: absolute;
     top: 0;
-    right: -2px;
-    width: 35px;
+    right: 0;
+    width: 44px;
     height: 100%;
-    background: linear-gradient(to right, transparent, var(--primary-bg));
+    background: linear-gradient(
+        to right,
+        transparent 0%,
+        rgba(42, 60, 90, 0.04) 25%,
+        rgba(42, 60, 90, 0.08) 50%,
+        rgba(42, 60, 90, 0.12) 75%,
+        rgba(42, 60, 90, 0.16) 100%
+    );
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s ease-out;
+    z-index: 1;
 }
 
-/* Fade gradient on left when scrolled */
+/* Fade gradient on left when scrolled - slightly subtler */
 .friends-list-wrapper::before {
     content: '';
     position: absolute;
     top: 0;
-    left: -2px;
-    width: 35px;
+    left: 0;
+    width: 38px;
     height: 100%;
-    background: linear-gradient(to left, transparent, var(--primary-bg));
+    background: linear-gradient(
+        to left,
+        transparent 0%,
+        rgba(42, 60, 90, 0.03) 25%,
+        rgba(42, 60, 90, 0.06) 50%,
+        rgba(42, 60, 90, 0.10) 75%,
+        rgba(42, 60, 90, 0.14) 100%
+    );
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s ease-out;
     z-index: 1;
 }
 
