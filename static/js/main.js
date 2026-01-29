@@ -1673,6 +1673,11 @@ let selectedPlanTime = null;
 
 // Open plan modal from plans page (new plan mode)
 function openNewPlanModal() {
+    console.log('[NEW PLAN] Opening new plan modal');
+    
+    // Close the plans modal first
+    closePlans();
+    
     isNewPlanMode = true;
     currentPlanSlot = null;
     selectedPlanFriends = [];
