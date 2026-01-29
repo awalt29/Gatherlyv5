@@ -1154,6 +1154,7 @@ h1 {
     transition: all 0.15s;
     border: 2px solid transparent;
     position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Corner cells only (14-day grid: 15 columns per row) */
@@ -1180,6 +1181,7 @@ h1 {
 .time-slot.selected {
     background: var(--slot-selected);
     border-color: var(--slot-selected);
+    box-shadow: 0 2px 12px rgba(108, 200, 190, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Time slot with friends available */
