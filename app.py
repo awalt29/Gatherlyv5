@@ -1278,39 +1278,13 @@ def my_availability():
         print(f"[AVAILABILITY] {user.name} saved availability with {len(time_slots)} slots, active until {today + timedelta(days=7)}")
         print(f"[AVAILABILITY] New slots added: {len(added_slots)}, will notify: {has_new_availability}")
         
-        # Only notify friends if NEW availability was added (not just removed)
+        # Only mark notification as pending if NEW availability was added (not just removed)
+        # Notifications are aggregated and sent after 5 minutes by a cron job
         if has_new_availability:
-            # Find users who have this user in their notification_friend_ids
-            all_users = User.query.filter(User.notification_friend_ids.isnot(None)).all()
-            
-            for watcher in all_users:
-                # Check if this user is in their notification list
-                if watcher.notification_friend_ids and user_id in watcher.notification_friend_ids:
-                    # Check if they're actually linked friends
-                    if Friendship.are_friends(watcher.id, user_id):
-                        # In-app notification
-                        notification = Notification(
-                            planner_id=watcher.id,
-                            contact_id=None,
-                            message=f"{user.name} added new availability",
-                            from_user_id=user_id
-                        )
-                        
-                        # Send push notification
-                        send_push_notification(
-                            watcher.id,
-                            user.name,
-                            'Added new availability 📅'
-                        )
-                        db.session.add(notification)
-                        
-                        # SMS disabled - using push notifications instead
-                        # base_url = APP_BASE_URL if APP_BASE_URL.startswith('http') else f"https://{APP_BASE_URL}"
-                        # sms_message = f"{user.name} just added availability on Gatherly! Check it out: {base_url}"
-                        # send_sms(watcher.phone_number, sms_message)
-                        print(f"[AVAILABILITY NOTIFY] Sent push to {watcher.name} about {user.name}'s new availability")
-            
+            user.availability_notification_pending = True
+            user.availability_updated_at = datetime.utcnow()
             db.session.commit()
+            print(f"[AVAILABILITY] Marked notification as pending for {user.name}")
         
         return jsonify({
             'message': 'Availability saved',

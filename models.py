@@ -27,6 +27,8 @@ class User(db.Model):
     notification_friend_ids = db.Column(db.JSON, default=list)  # List of friend user IDs to notify about availability updates
     weekly_reminders_enabled = db.Column(db.Boolean, default=True)  # Whether to receive Sunday evening reminders
     has_seen_install_prompt = db.Column(db.Boolean, default=False)  # Whether user has seen the "Add to Home Screen" prompt
+    availability_notification_pending = db.Column(db.Boolean, default=False)  # Whether availability notification is pending
+    availability_updated_at = db.Column(db.DateTime, nullable=True)  # When availability was last updated
     timezone = db.Column(db.String(50), default='America/New_York')  # User's timezone
     weekly_availability_date = db.Column(db.Date)  # Date of the Monday when user submitted availability this week
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
