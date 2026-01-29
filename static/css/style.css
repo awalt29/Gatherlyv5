@@ -1174,8 +1174,11 @@ h1 {
     border-bottom-right-radius: 10px;
 }
 
-.time-slot:hover {
-    opacity: 0.8;
+/* Only apply hover on devices that support it (not touch) */
+@media (hover: hover) {
+    .time-slot:hover {
+        opacity: 0.8;
+    }
 }
 
 .time-slot.selected {
