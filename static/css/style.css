@@ -2149,6 +2149,11 @@ body:has(.guest-info) .container {
     max-width: 400px;
 }
 
+.new-plan-btn {
+    margin-bottom: 16px;
+    width: 100%;
+}
+
 .plan-modal-body {
     display: flex;
     flex-direction: column;
@@ -2160,6 +2165,54 @@ body:has(.guest-info) .container {
     padding: 16px;
     background: rgba(91, 163, 255, 0.1);
     border-radius: 12px;
+}
+
+.plan-datetime-section {
+    margin-bottom: 8px;
+}
+
+.plan-date-input {
+    width: 100%;
+    margin-bottom: 12px;
+    background: var(--secondary-bg);
+    color: var(--text-light);
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.plan-date-input::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+.plan-time-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.time-btn {
+    flex: 1;
+    padding: 12px 8px;
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.time-btn:hover {
+    border-color: var(--accent-mint);
+    color: var(--text-light);
+}
+
+.time-btn.selected {
+    background: var(--accent-mint);
+    border-color: var(--accent-mint);
+    color: var(--primary-bg);
+    font-weight: 600;
 }
 
 .plan-slot-info .slot-day {

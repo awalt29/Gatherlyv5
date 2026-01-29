@@ -105,10 +105,24 @@
                 <button class="close-btn" onclick="closePlanModal()">&times;</button>
             </div>
             <div class="plan-modal-body">
+                <!-- Slot info shown when coming from calendar -->
                 <div class="plan-slot-info" id="planSlotInfo"></div>
                 
+                <!-- Date/time pickers shown when creating new plan -->
+                <div class="plan-datetime-section" id="planDatetimeSection" style="display: none;">
+                    <div class="plan-section">
+                        <div class="plan-section-header">When?</div>
+                        <input type="date" class="form-input plan-date-input" id="planDateInput">
+                        <div class="plan-time-buttons" id="planTimeButtons">
+                            <button type="button" class="time-btn" data-time="morning" onclick="selectPlanTime('morning')">Morning</button>
+                            <button type="button" class="time-btn" data-time="afternoon" onclick="selectPlanTime('afternoon')">Afternoon</button>
+                            <button type="button" class="time-btn" data-time="evening" onclick="selectPlanTime('evening')">Evening</button>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="plan-section">
-                    <div class="plan-section-header">Who's available?</div>
+                    <div class="plan-section-header" id="planFriendsHeader">Who's available?</div>
                     <div class="plan-friends-list" id="planFriendsList"></div>
                 </div>
                 
@@ -328,6 +342,7 @@
                 <h2 class="modal-title">My Plans</h2>
                 <button class="close-btn" onclick="closePlans()">×</button>
             </div>
+            <button class="btn-primary new-plan-btn" onclick="openNewPlanModal()">+ New Plan</button>
             <div class="plans-list" id="plansList">
                 <!-- Plans will be populated here -->
             </div>

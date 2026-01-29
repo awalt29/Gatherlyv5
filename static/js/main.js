@@ -1668,16 +1668,85 @@ function toggleSlotFromPopup() {
 // Track current plan modal state
 let currentPlanSlot = null;
 let selectedPlanFriends = [];
+let isNewPlanMode = false;
+let selectedPlanTime = null;
+
+// Open plan modal from plans page (new plan mode)
+function openNewPlanModal() {
+    isNewPlanMode = true;
+    currentPlanSlot = null;
+    selectedPlanFriends = [];
+    selectedPlanTime = null;
+    
+    // Show datetime section, hide slot info
+    document.getElementById('planSlotInfo').style.display = 'none';
+    document.getElementById('planDatetimeSection').style.display = 'block';
+    document.getElementById('planFriendsHeader').textContent = 'Who do you want to invite?';
+    document.getElementById('planModalTitle').textContent = 'Create a Plan';
+    
+    // Set default date to today
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0];
+    document.getElementById('planDateInput').value = dateStr;
+    document.getElementById('planDateInput').min = dateStr;
+    
+    // Clear time selection
+    document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('selected'));
+    
+    // Clear message field
+    document.getElementById('planMessage').value = '';
+    
+    // Show ALL friends (not filtered by availability)
+    const friendsList = document.getElementById('planFriendsList');
+    if (linkedFriends && linkedFriends.length > 0) {
+        friendsList.innerHTML = linkedFriends.map(friend => `
+            <div class="plan-friend-item" data-user-id="${friend.id}" onclick="togglePlanFriend(this, ${friend.id})">
+                <div class="friend-checkbox"></div>
+                <div class="friend-avatar">${getInitials(friend.name)}</div>
+                <div class="friend-name">${friend.name}</div>
+            </div>
+        `).join('');
+    } else {
+        friendsList.innerHTML = '<div class="plan-friends-empty">No friends yet. Add friends first!</div>';
+    }
+    
+    updateSendInviteButton();
+    document.getElementById('planModal').classList.add('active');
+}
+
+// Select time for new plan
+function selectPlanTime(time) {
+    selectedPlanTime = time;
+    document.querySelectorAll('.time-btn').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.time === time);
+    });
+    updateSendInviteButton();
+}
+
+// Handle date input change
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('planDateInput');
+    if (dateInput) {
+        dateInput.addEventListener('change', updateSendInviteButton);
+    }
+});
 
 function openPlanModal() {
     if (!currentPopupSlot) return;
     
+    isNewPlanMode = false;
     const { date, timeSlot } = currentPopupSlot;
     closeSlotPopup();
     
     // Store for sending invite
     currentPlanSlot = { date, timeSlot };
     selectedPlanFriends = [];
+    
+    // Show slot info, hide datetime section
+    document.getElementById('planSlotInfo').style.display = 'block';
+    document.getElementById('planDatetimeSection').style.display = 'none';
+    document.getElementById('planFriendsHeader').textContent = "Who's available?";
+    document.getElementById('planModalTitle').textContent = 'Plan a Hangout';
     
     // Find friends available at this slot
     const availableFriends = getAvailableFriendsForSlot(date, timeSlot);
@@ -1730,18 +1799,47 @@ function togglePlanFriend(element, userId) {
 // Update the send invite button state
 function updateSendInviteButton() {
     const btn = document.getElementById('sendInviteBtn');
-    if (selectedPlanFriends.length > 0) {
-        btn.disabled = false;
-        btn.textContent = `Send Invite${selectedPlanFriends.length > 1 ? 's' : ''} (${selectedPlanFriends.length})`;
+    
+    // In new plan mode, also need date and time selected
+    if (isNewPlanMode) {
+        const dateValue = document.getElementById('planDateInput').value;
+        if (selectedPlanFriends.length > 0 && dateValue && selectedPlanTime) {
+            btn.disabled = false;
+            btn.textContent = `Send Invite${selectedPlanFriends.length > 1 ? 's' : ''} (${selectedPlanFriends.length})`;
+        } else {
+            btn.disabled = true;
+            if (!dateValue || !selectedPlanTime) {
+                btn.textContent = 'Select date and time';
+            } else {
+                btn.textContent = 'Select friends to invite';
+            }
+        }
     } else {
-        btn.disabled = true;
-        btn.textContent = 'Select friends to invite';
+        if (selectedPlanFriends.length > 0) {
+            btn.disabled = false;
+            btn.textContent = `Send Invite${selectedPlanFriends.length > 1 ? 's' : ''} (${selectedPlanFriends.length})`;
+        } else {
+            btn.disabled = true;
+            btn.textContent = 'Select friends to invite';
+        }
     }
 }
 
 // Send hangout invite
 async function sendHangoutInvite() {
-    if (!currentPlanSlot || selectedPlanFriends.length === 0) return;
+    if (selectedPlanFriends.length === 0) return;
+    
+    let date, timeSlot;
+    
+    if (isNewPlanMode) {
+        date = document.getElementById('planDateInput').value;
+        timeSlot = selectedPlanTime;
+        if (!date || !timeSlot) return;
+    } else {
+        if (!currentPlanSlot) return;
+        date = currentPlanSlot.date;
+        timeSlot = currentPlanSlot.timeSlot;
+    }
     
     const btn = document.getElementById('sendInviteBtn');
     btn.disabled = true;
@@ -1754,8 +1852,8 @@ async function sendHangoutInvite() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                date: currentPlanSlot.date,
-                time_slot: currentPlanSlot.timeSlot,
+                date: date,
+                time_slot: timeSlot,
                 description: message,
                 invitee_ids: selectedPlanFriends
             })
