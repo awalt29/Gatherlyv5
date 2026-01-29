@@ -3536,17 +3536,16 @@ function removeImagePreview() {
 }
 
 async function sendImageMessage() {
-    console.log('[IMAGE SEND] Starting, pendingImageData:', !!pendingImageData, 'currentPlanDetail:', !!currentPlanDetail);
-    
-    if (!currentPlanDetail || !pendingImageData) {
-        console.log('[IMAGE SEND] Missing data, returning');
-        return;
-    }
+    if (!currentPlanDetail || !pendingImageData) return;
     
     const input = document.getElementById('planChatInput');
     const caption = input.value.trim();
     
-    console.log('[IMAGE SEND] Sending with caption:', caption, 'image length:', pendingImageData.length);
+    // Clear UI immediately for better feedback
+    const imageData = pendingImageData;
+    input.value = '';
+    input.style.height = 'auto';
+    removeImagePreview();
     
     try {
         const response = await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
@@ -3554,26 +3553,20 @@ async function sendImageMessage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 message: caption || '📷 Shared a photo',
-                image_data: pendingImageData 
+                image_data: imageData 
             })
         });
         
-        console.log('[IMAGE SEND] Response status:', response.status);
-        
         if (response.ok) {
             const newMessage = await response.json();
-            input.value = '';
-            input.style.height = 'auto';
-            removeImagePreview();
             setSeenMessageId(currentPlanDetail.id, newMessage.id);
             await loadPlanChatMessages(currentPlanDetail.id);
         } else {
             const data = await response.json();
-            console.log('[IMAGE SEND] Error response:', data);
             showStatus(data.error || 'Failed to send image', 'error');
         }
     } catch (error) {
-        console.error('[IMAGE SEND] Error:', error);
+        console.error('Error sending image:', error);
         showStatus('Failed to send image', 'error');
     }
 }
