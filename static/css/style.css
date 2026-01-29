@@ -3485,9 +3485,12 @@ body:has(.guest-info) .container {
     border: none;
     color: #B8C5D3;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: none;
     position: relative;
     border-radius: 12px;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
 }
 
 .nav-item span:not(.nav-badge) {
@@ -3500,9 +3503,15 @@ body:has(.guest-info) .container {
     height: 20px;
 }
 
-.nav-item:hover,
-.nav-item:active {
+.nav-item:hover {
     color: var(--accent-mint);
+}
+
+/* Prevent sticky active states on mobile */
+@media (hover: none) {
+    .nav-item:hover {
+        color: #B8C5D3;
+    }
 }
 
 .nav-badge {
