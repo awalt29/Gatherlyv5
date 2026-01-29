@@ -776,15 +776,15 @@ h1 {
     position: absolute;
     top: 0;
     right: 0;
-    width: 44px;
+    width: 48px;
     height: 100%;
     background: linear-gradient(
         to right,
         transparent 0%,
-        rgba(42, 60, 90, 0.04) 25%,
-        rgba(42, 60, 90, 0.08) 50%,
-        rgba(42, 60, 90, 0.12) 75%,
-        rgba(42, 60, 90, 0.16) 100%
+        rgba(42, 60, 90, 0.15) 30%,
+        rgba(42, 60, 90, 0.35) 60%,
+        rgba(42, 60, 90, 0.55) 85%,
+        rgba(42, 60, 90, 0.70) 100%
     );
     pointer-events: none;
     opacity: 0;
@@ -798,15 +798,15 @@ h1 {
     position: absolute;
     top: 0;
     left: 0;
-    width: 38px;
+    width: 42px;
     height: 100%;
     background: linear-gradient(
         to left,
         transparent 0%,
-        rgba(42, 60, 90, 0.03) 25%,
-        rgba(42, 60, 90, 0.06) 50%,
-        rgba(42, 60, 90, 0.10) 75%,
-        rgba(42, 60, 90, 0.14) 100%
+        rgba(42, 60, 90, 0.12) 30%,
+        rgba(42, 60, 90, 0.30) 60%,
+        rgba(42, 60, 90, 0.48) 85%,
+        rgba(42, 60, 90, 0.60) 100%
     );
     pointer-events: none;
     opacity: 0;
