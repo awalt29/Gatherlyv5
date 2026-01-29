@@ -774,10 +774,10 @@ h1 {
 .friends-list-wrapper::after {
     content: '';
     position: absolute;
-    top: 0;
+    top: -10px;
     right: 0;
     width: 48px;
-    height: 100%;
+    height: calc(100% + 20px);
     background: linear-gradient(
         to right,
         transparent 0%,
@@ -796,10 +796,10 @@ h1 {
 .friends-list-wrapper::before {
     content: '';
     position: absolute;
-    top: 0;
+    top: -10px;
     left: 0;
     width: 42px;
-    height: 100%;
+    height: calc(100% + 20px);
     background: linear-gradient(
         to left,
         transparent 0%,
