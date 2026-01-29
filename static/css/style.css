@@ -2174,31 +2174,34 @@ body:has(.guest-info) .container {
 .plan-date-input {
     width: 100%;
     margin-bottom: 12px;
-    background: var(--secondary-bg);
+    background: rgba(255, 255, 255, 0.05);
     color: var(--text-light);
-    padding: 12px;
+    padding: 14px 16px;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 16px;
+    text-align: center;
+    cursor: pointer;
 }
 
 .plan-date-input::-webkit-calendar-picker-indicator {
     filter: invert(1);
+    cursor: pointer;
 }
 
 .plan-time-buttons {
     display: flex;
-    gap: 8px;
+    gap: 10px;
 }
 
 .time-btn {
     flex: 1;
-    padding: 12px 8px;
-    background: var(--secondary-bg);
+    padding: 14px 12px;
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 15px;
     cursor: pointer;
     transition: all 0.2s;
 }
