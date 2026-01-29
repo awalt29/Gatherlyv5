@@ -3445,14 +3445,41 @@ function handleChatKeydown(event) {
 }
 
 function handleChatFocus() {
-    // When keyboard opens, just scroll chat to bottom
-    setTimeout(() => {
+    // When keyboard opens, scroll chat to bottom with multiple attempts
+    // Mobile keyboards can take varying amounts of time to fully open
+    const scrollToBottom = () => {
         const chatMessages = document.getElementById('planChatMessages');
         if (chatMessages) {
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
-    }, 100);
+    };
+    
+    // Scroll immediately
+    scrollToBottom();
+    
+    // And again after delays to catch keyboard animation
+    setTimeout(scrollToBottom, 100);
+    setTimeout(scrollToBottom, 300);
+    setTimeout(scrollToBottom, 500);
 }
+
+// Set up visualViewport listener for keyboard changes
+function setupKeyboardListener() {
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+            // When viewport resizes (keyboard shows/hides), scroll chat to bottom
+            const chatMessages = document.getElementById('planChatMessages');
+            if (chatMessages && document.getElementById('planDetailModal')?.classList.contains('active')) {
+                requestAnimationFrame(() => {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                });
+            }
+        });
+    }
+}
+
+// Call setup on page load
+document.addEventListener('DOMContentLoaded', setupKeyboardListener);
 
 function autoResizeTextarea(textarea) {
     // Reset height to auto to get the correct scrollHeight
