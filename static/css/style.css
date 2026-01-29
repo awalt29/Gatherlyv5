@@ -669,7 +669,7 @@ h1 {
     padding-top: calc(env(safe-area-inset-top) / 2);
     background: none;
     border: none;
-    color: var(--text-muted);
+    color: white;
     cursor: pointer;
     padding: 8px;
     border-radius: 8px;
@@ -678,7 +678,6 @@ h1 {
 
 .settings-btn:hover {
     background: rgba(255, 255, 255, 0.1);
-    color: var(--text-light);
 }
 
 .title-logo .app-logo {
