@@ -650,7 +650,6 @@ h1 {
     padding: 12px 24px;
     padding-top: calc(16px + env(safe-area-inset-top));
     background: linear-gradient(180deg, rgba(55, 85, 140, 0.3) 0%, transparent 100%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Title with Logo (Center) */
@@ -885,15 +884,15 @@ h1 {
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
-    /* Deep shadow for depth */
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 3px 6px rgba(0, 0, 0, 0.35);
+    /* Even shadow spread */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .friend-avatar.selected {
     background: var(--accent-mint);
     border-color: var(--accent-mint);
     color: var(--primary-bg);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 3px 6px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 /* Linked friends (on the platform) */
