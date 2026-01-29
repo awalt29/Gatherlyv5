@@ -3536,10 +3536,17 @@ function removeImagePreview() {
 }
 
 async function sendImageMessage() {
-    if (!currentPlanDetail || !pendingImageData) return;
+    console.log('[IMAGE SEND] Starting, pendingImageData:', !!pendingImageData, 'currentPlanDetail:', !!currentPlanDetail);
+    
+    if (!currentPlanDetail || !pendingImageData) {
+        console.log('[IMAGE SEND] Missing data, returning');
+        return;
+    }
     
     const input = document.getElementById('planChatInput');
     const caption = input.value.trim();
+    
+    console.log('[IMAGE SEND] Sending with caption:', caption, 'image length:', pendingImageData.length);
     
     try {
         const response = await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
@@ -3551,6 +3558,8 @@ async function sendImageMessage() {
             })
         });
         
+        console.log('[IMAGE SEND] Response status:', response.status);
+        
         if (response.ok) {
             const newMessage = await response.json();
             input.value = '';
@@ -3560,10 +3569,11 @@ async function sendImageMessage() {
             await loadPlanChatMessages(currentPlanDetail.id);
         } else {
             const data = await response.json();
+            console.log('[IMAGE SEND] Error response:', data);
             showStatus(data.error || 'Failed to send image', 'error');
         }
     } catch (error) {
-        console.error('Error sending image:', error);
+        console.error('[IMAGE SEND] Error:', error);
         showStatus('Failed to send image', 'error');
     }
 }
