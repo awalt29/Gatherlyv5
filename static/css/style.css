@@ -650,6 +650,7 @@ h1 {
     padding: 12px 24px;
     padding-top: calc(16px + env(safe-area-inset-top));
     background: linear-gradient(180deg, rgba(55, 85, 140, 0.3) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Title with Logo */
