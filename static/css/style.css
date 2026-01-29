@@ -1064,7 +1064,7 @@ h1 {
 
 .calendar {
     background: transparent;
-    border-radius: 15px;
+    border-radius: 0;
     padding: 0;
     overflow-x: auto;
     overflow-y: hidden;
@@ -1158,13 +1158,7 @@ h1 {
     border-top-right-radius: 10px;
 }
 
-.time-slot:nth-child(32) {
-    border-bottom-left-radius: 10px;
-}
-
-.time-slot:nth-child(45) {
-    border-bottom-right-radius: 10px;
-}
+/* Bottom corners removed - calendar extends to viewport edges */
 
 .time-slot:hover {
     opacity: 0.8;
