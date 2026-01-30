@@ -3005,10 +3005,10 @@ body:has(.guest-info) .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 12px;
+    padding: 8px 12px;
     background: rgba(255, 255, 255, 0.05);
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--text-muted);
     border-bottom: 1px solid var(--border-color);
@@ -3196,8 +3196,7 @@ body:has(.guest-info) .container {
     align-items: flex-end;
     gap: 8px;
     min-width: 0;
-    padding: 8px 12px;
-    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+    padding: 6px 12px 2px 12px;
 }
 
 .chat-input-editable {
@@ -3206,29 +3205,34 @@ body:has(.guest-info) .container {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid var(--border-color);
     border-radius: 20px;
-    padding: 10px 16px;
+    padding: 8px 16px;
     color: var(--text-light);
     font-size: 16px; /* Must be 16px+ to prevent iOS auto-zoom */
     font-family: inherit;
     min-height: 20px;
-    max-height: 120px;
+    max-height: 100px;
     line-height: 1.4;
+    overflow: hidden;
     overflow-y: auto;
     word-wrap: break-word;
     white-space: pre-wrap;
     -webkit-user-select: text;
     user-select: text;
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 .chat-input-editable:focus {
     outline: none;
     border-color: var(--accent-mint);
+    caret-color: var(--text-light);
 }
 
 .chat-input-editable:empty:before {
     content: attr(data-placeholder);
     color: var(--text-muted);
     pointer-events: none;
+    display: block;
 }
 
 .chat-send-btn {
