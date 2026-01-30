@@ -3170,7 +3170,7 @@ function renderPlanDetail() {
                             <polyline points="21 15 16 10 5 21"></polyline>
                         </svg>
                     </button>
-                    <div id="planChatInput" class="chat-input-editable" contenteditable="true" data-placeholder="Type a message..." onkeydown="handleChatKeydown(event)" oninput="handleChatInput(this)"></div>
+                    <div id="planChatInput" class="chat-input-editable" contenteditable="true" data-placeholder="Type a message..." inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" onkeydown="handleChatKeydown(event)" oninput="handleChatInput(this)"></div>
                     <button class="chat-send-btn" onmousedown="event.preventDefault()" ontouchend="event.preventDefault(); sendPlanMessage()" onclick="sendPlanMessage()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
