@@ -3005,13 +3005,12 @@ body:has(.guest-info) .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 12px;
+    padding: 12px 16px;
     background: rgba(255, 255, 255, 0.05);
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     color: var(--text-muted);
-    border-bottom: 1px solid var(--border-color);
 }
 
 .ai-suggestions-header:hover {
