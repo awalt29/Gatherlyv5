@@ -3430,8 +3430,8 @@ async function sendPlanMessage() {
             else if (aiPrompt.toLowerCase().includes('drinks') || aiPrompt.toLowerCase().includes('bar')) type = 'drinks';
             else if (aiPrompt.toLowerCase().includes('split') || aiPrompt.toLowerCase().includes('bill')) type = 'split';
             
-            // Send the user's question to server (in background)
-            fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
+            // Send the user's question to server first (must complete before AI request)
+            await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: `🤖 ${aiPrompt}` })
