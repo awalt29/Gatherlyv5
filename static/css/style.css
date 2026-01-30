@@ -2851,7 +2851,7 @@ body:has(.guest-info) .container {
 /* Bottom Bar */
 .plan-bottom-bar {
     flex-shrink: 0;
-    background: rgba(0, 0, 0, 0.2);
+    background: #1c1c1e;
     border-top: 1px solid var(--border-color);
 }
 
@@ -3006,7 +3006,7 @@ body:has(.guest-info) .container {
     justify-content: space-between;
     align-items: center;
     padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.05);
+    background: #2c2c2e;
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
