@@ -1975,6 +1975,9 @@ def delete_hangout(hangout_id):
         )
         db.session.add(notification)
     
+    # Delete associated messages first
+    HangoutMessage.query.filter_by(hangout_id=hangout_id).delete()
+    
     # Delete associated notifications
     Notification.query.filter_by(hangout_id=hangout_id).delete()
     
