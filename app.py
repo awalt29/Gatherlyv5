@@ -1144,12 +1144,18 @@ def send_nudge(friend_user_id):
     )
     db.session.add(friend_notification)
     
-    # Send push notification
-    send_push_notification(
+    # Send push notification, fall back to SMS if no push subscription
+    push_sent = send_push_notification(
         friend_user_id,
         f'{user.name} nudged you 👋',
         'Share your availability so you can connect!'
     )
+    
+    # SMS fallback if push notification wasn't sent
+    if not push_sent:
+        sms_message = f"👋 {user.name} wants to know when you're free! Share your availability on Gatherly: {app_url}"
+        send_sms(friend.phone_number, sms_message)
+        print(f"[NUDGE] SMS fallback sent to {friend.name}")
     
     # Create notification for the sender (confirmation)
     sender_notification = Notification(
@@ -1789,33 +1795,25 @@ def create_hangout():
             db.session.add(notification)
             
             # Send push notification - link to the plan detail
-            send_push_notification(
+            push_sent = send_push_notification(
                 user_id,
                 creator.name,
                 f'Invited you to hang out {day_name} {time_display} 🎉',
                 f'/?openPlan={hangout.id}'
             )
             
-            # SMS disabled - using push notifications instead
-            # try:
-            #     app_url = os.getenv('APP_BASE_URL', 'https://trygatherly.com')
-            #     if not app_url.startswith('http'):
-            #         app_url = f'https://{app_url}'
-            #     
-            #     sms_message = f"{creator.name} sent you a hangout invite! RSVP here: {app_url}/#notifications"
-            #     
-            #     twilio_client = Client(
-            #         os.getenv('TWILIO_ACCOUNT_SID'),
-            #         os.getenv('TWILIO_AUTH_TOKEN')
-            #     )
-            #     twilio_client.messages.create(
-            #         body=sms_message,
-            #         from_=os.getenv('TWILIO_PHONE_NUMBER'),
-            #         to=invitee_user.phone_number
-            #     )
-            #     print(f"[HANGOUT] SMS sent to {invitee_user.name}")
-            # except Exception as e:
-            #     print(f"[HANGOUT] Error sending SMS to {invitee_user.name}: {e}")
+            # SMS fallback if push notification wasn't sent
+            if not push_sent:
+                try:
+                    app_url = os.getenv('APP_BASE_URL', 'https://trygatherly.com')
+                    if not app_url.startswith('http'):
+                        app_url = f'https://{app_url}'
+                    
+                    sms_message = f"{creator.name} invited you to hang out {day_name} {time_display}! RSVP here: {app_url}/?openPlan={hangout.id}"
+                    send_sms(invitee_user.phone_number, sms_message)
+                    print(f"[HANGOUT] SMS fallback sent to {invitee_user.name}")
+                except Exception as e:
+                    print(f"[HANGOUT] Error sending SMS fallback to {invitee_user.name}: {e}")
     
     # Create notification for the creator (confirmation)
     invitee_names = [User.query.get(uid).name for uid in invitee_ids if User.query.get(uid)]
