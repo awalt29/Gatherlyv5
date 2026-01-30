@@ -3431,19 +3431,24 @@ async function sendPlanMessage() {
             else if (aiPrompt.toLowerCase().includes('split') || aiPrompt.toLowerCase().includes('bill')) type = 'split';
             
             // Send the user's question to server first (must complete before AI request)
-            await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
+            const saveResponse = await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: `🤖 ${aiPrompt}` })
             });
             
+            if (!saveResponse.ok) {
+                console.error('Failed to save AI request message:', await saveResponse.text());
+            }
+            
             // Then get AI response (this takes time)
             const aiResult = await sendAiRequest(message, type);
             
-            if (aiResult) {
+            // Always reload messages to show user's message and any AI response
+            if (aiResult && aiResult.message) {
                 setSeenMessageId(currentPlanDetail.id, aiResult.message.id);
-                await loadPlanChatMessages(currentPlanDetail.id);
             }
+            await loadPlanChatMessages(currentPlanDetail.id);
         } else {
             // Regular message - show immediately (optimistic UI)
             const messageText = message;
