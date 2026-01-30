@@ -2978,7 +2978,7 @@ function renderPlanCard(plan, isPast) {
     return `
         <div class="plan-card ${isPast ? 'plan-card-past' : ''} ${hasUnread ? 'plan-card-unread' : ''}" onclick="openPlanDetail(${plan.id})">
             <div class="plan-card-role">
-                ${plan.role === 'host' ? '👑 You\'re hosting' : '📬 Invited'}
+                ${plan.role === 'host' ? '👑 You\'re hosting' : `📬 From ${plan.creator_name}`}
                 ${hasUnread ? '<span class="plan-unread-dot"></span>' : ''}
             </div>
             <div class="plan-card-header">
