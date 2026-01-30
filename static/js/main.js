@@ -2105,11 +2105,11 @@ function displayFriendsAvailability() {
             const avatarsContainer = document.createElement('div');
             avatarsContainer.className = 'slot-avatars';
             
-            // Add avatar for each friend (max 3 shown)
+            // Add avatar for each friend (max 4 shown)
             // Determine how many bubbles to show
-            // If 4 or fewer friends, show all of them
-            // If 5+ friends, show 3 + a "+N" indicator (where N >= 2)
-            const maxBubbles = friends.length <= 4 ? friends.length : 3;
+            // If 5 or fewer friends, show all of them
+            // If 6+ friends, show 4 + a "+N" indicator (where N >= 2)
+            const maxBubbles = friends.length <= 5 ? friends.length : 4;
             const overflow = friends.length - maxBubbles;
             
             friends.slice(0, maxBubbles).forEach(friend => {
