@@ -2063,11 +2063,12 @@ def send_hangout_message(hangout_id):
     if not is_creator and not is_invitee:
         return jsonify({'error': 'Not authorized to chat here'}), 403
     
-    # Check if hangout is in the past
+    # Check if hangout is too far in the past (allow 7 day grace period for post-event coordination like bill splitting)
     from datetime import date as date_type
     hangout_date = datetime.strptime(hangout.date, '%Y-%m-%d').date()
-    if hangout_date < date_type.today():
-        return jsonify({'error': 'Cannot send messages for past events'}), 400
+    days_past = (date_type.today() - hangout_date).days
+    if days_past > 7:
+        return jsonify({'error': 'Cannot send messages for events more than 7 days old'}), 400
     
     data = request.json
     message_text = data.get('message', '').strip()
