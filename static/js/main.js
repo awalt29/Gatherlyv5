@@ -3045,11 +3045,12 @@ function renderPlanDetail() {
         day: 'numeric'
     });
     
-    // Check if plan is in the past
+    // Check if plan is in the past (with 7-day grace period for post-event coordination like bill splitting)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const planDate = new Date(plan.date + 'T23:59:59');
-    const isPast = planDate < today;
+    const daysPast = Math.floor((today - planDate) / (1000 * 60 * 60 * 24));
+    const isPast = daysPast > 7; // Allow chat for 7 days after event
     
     // Update header bar with plan info
     titleInfo.innerHTML = `${shortDateStr} · ${plan.time_slot}`;

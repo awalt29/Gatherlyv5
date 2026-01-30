@@ -2064,9 +2064,12 @@ def send_hangout_message(hangout_id):
         return jsonify({'error': 'Not authorized to chat here'}), 403
     
     # Check if hangout is too far in the past (allow 7 day grace period for post-event coordination like bill splitting)
-    from datetime import date as date_type
+    # Use user's timezone to determine "today" to avoid timezone mismatches
+    import pytz
+    user_tz = pytz.timezone(user.timezone or 'America/New_York')
+    user_today = datetime.now(user_tz).date()
     hangout_date = datetime.strptime(hangout.date, '%Y-%m-%d').date()
-    days_past = (date_type.today() - hangout_date).days
+    days_past = (user_today - hangout_date).days
     if days_past > 7:
         return jsonify({'error': 'Cannot send messages for events more than 7 days old'}), 400
     
