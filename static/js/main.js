@@ -3360,6 +3360,43 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Add message to chat immediately (optimistic UI)
+function addOptimisticMessage(message, imageData = null) {
+    const container = document.getElementById('planChatMessages');
+    if (!container) return;
+    
+    // Remove "Start the conversation" placeholder if present
+    const empty = container.querySelector('.chat-empty');
+    if (empty) empty.remove();
+    
+    const now = new Date();
+    const time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    
+    let messageContent = '';
+    if (imageData) {
+        messageContent += `<img class="chat-image" src="data:image/jpeg;base64,${imageData}" alt="Shared image" onclick="openImageFullscreen(this.src)">`;
+    }
+    if (message && message !== '📷 Shared a photo') {
+        messageContent += `<div class="chat-message-text">${escapeHtml(message)}</div>`;
+    }
+    
+    const messageHtml = `
+        <div class="chat-message chat-message-me">
+            <div class="chat-message-bubble">
+                ${messageContent}
+                <div class="chat-message-time">${time}</div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', messageHtml);
+    
+    // Scroll to bottom
+    requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight;
+    });
+}
+
 async function sendPlanMessage() {
     if (!currentPlanDetail) return;
     
@@ -3408,21 +3445,25 @@ async function sendPlanMessage() {
                 await loadPlanChatMessages(currentPlanDetail.id);
             }
         } else {
-            // Regular message
+            // Regular message - show immediately (optimistic UI)
+            const messageText = message;
+            input.value = '';
+            input.style.height = 'auto';
+            
+            // Add message to chat immediately
+            addOptimisticMessage(messageText);
+            
+            // Send to server in background
             const response = await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message })
+                body: JSON.stringify({ message: messageText })
             });
             
             if (response.ok) {
                 const newMessage = await response.json();
-                input.value = '';
-                input.style.height = 'auto'; // Reset textarea height
                 // Mark this message as seen (so your own message doesn't show as unread)
                 setSeenMessageId(currentPlanDetail.id, newMessage.id);
-                // Reload messages to show new one
-                await loadPlanChatMessages(currentPlanDetail.id);
             } else {
                 const data = await response.json();
                 showStatus(data.error || 'Failed to send message', 'error');
@@ -3568,18 +3609,23 @@ async function sendImageMessage() {
     const input = document.getElementById('planChatInput');
     const caption = input.value.trim();
     
-    // Clear UI immediately for better feedback
+    // Clear UI immediately
     const imageData = pendingImageData;
+    const messageText = caption || '📷 Shared a photo';
     input.value = '';
     input.style.height = 'auto';
     removeImagePreview();
+    pendingImageData = null;
+    
+    // Show message immediately (optimistic UI)
+    addOptimisticMessage(messageText, imageData);
     
     try {
         const response = await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                message: caption || '📷 Shared a photo',
+                message: messageText,
                 image_data: imageData 
             })
         });
@@ -3587,7 +3633,6 @@ async function sendImageMessage() {
         if (response.ok) {
             const newMessage = await response.json();
             setSeenMessageId(currentPlanDetail.id, newMessage.id);
-            await loadPlanChatMessages(currentPlanDetail.id);
         } else {
             const data = await response.json();
             showStatus(data.error || 'Failed to send image', 'error');
