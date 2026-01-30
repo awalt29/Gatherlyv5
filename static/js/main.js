@@ -3004,6 +3004,19 @@ function togglePastPlans() {
     }
 }
 
+function togglePlanDetails() {
+    const content = document.getElementById('planInfoContent');
+    const icon = document.getElementById('planInfoToggle');
+    
+    if (content.classList.contains('collapsed')) {
+        content.classList.remove('collapsed');
+        icon.textContent = '▼';
+    } else {
+        content.classList.add('collapsed');
+        icon.textContent = '▶';
+    }
+}
+
 function openPlanDetail(planId) {
     // Find the plan in our loaded data
     let plan = allPlans.created.find(p => p.id === planId);
@@ -3090,13 +3103,19 @@ function renderPlanDetail() {
         `;
     }
     
-    // Build info card
+    // Build info card (collapsible)
     const hostName = plan.creator_name.split(' ')[0];
     const infoCard = `
         <div class="plan-info-section">
-            <div class="plan-info-card">
-                <div class="plan-info-description">${hostName} suggested: "${plan.description || 'hangout'}"</div>
-                <div class="plan-info-guests">${guestBadges}</div>
+            <div class="plan-info-header" onclick="togglePlanDetails()">
+                <span>Details</span>
+                <span class="plan-info-toggle" id="planInfoToggle">▼</span>
+            </div>
+            <div class="plan-info-content" id="planInfoContent">
+                <div class="plan-info-card">
+                    <div class="plan-info-description">${hostName} suggested: "${plan.description || 'hangout'}"</div>
+                    <div class="plan-info-guests">${guestBadges}</div>
+                </div>
             </div>
             ${rsvpPills}
         </div>
