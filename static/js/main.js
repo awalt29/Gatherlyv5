@@ -3170,7 +3170,7 @@ function renderPlanDetail() {
                             <polyline points="21 15 16 10 5 21"></polyline>
                         </svg>
                     </button>
-                    <textarea id="planChatInput" placeholder="Type a message..." maxlength="500" rows="1" oninput="autoResizeTextarea(this)" onkeydown="handleChatKeydown(event)"></textarea>
+                    <div id="planChatInput" class="chat-input-editable" contenteditable="true" data-placeholder="Type a message..." onkeydown="handleChatKeydown(event)" oninput="handleChatInput(this)"></div>
                     <button class="chat-send-btn" onmousedown="event.preventDefault()" ontouchend="event.preventDefault(); sendPlanMessage()" onclick="sendPlanMessage()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -3422,7 +3422,7 @@ async function sendPlanMessage() {
     if (!currentPlanDetail) return;
     
     const input = document.getElementById('planChatInput');
-    const message = input.value.trim();
+    const message = (input.innerText || input.textContent || '').trim();
     
     // If there's a pending image, send it
     if (pendingImageData) {
@@ -3441,8 +3441,7 @@ async function sendPlanMessage() {
             const aiPrompt = message.substring(4).trim(); // Remove @AI prefix
             
             // Clear input and show user's message immediately
-            input.value = '';
-            input.style.height = 'auto';
+            input.textContent = '';
             addOptimisticMessage(`🤖 ${aiPrompt}`);
             
             // Determine suggestion type from prompt
@@ -3473,8 +3472,7 @@ async function sendPlanMessage() {
         } else {
             // Regular message - show immediately (optimistic UI)
             const messageText = message;
-            input.value = '';
-            input.style.height = 'auto';
+            input.textContent = '';
             
             // Add message to chat immediately
             addOptimisticMessage(messageText);
@@ -3529,6 +3527,15 @@ function autoResizeTextarea(textarea) {
     // Set the height to scrollHeight (content height)
     const newHeight = Math.min(textarea.scrollHeight, 120); // Max 120px (about 4 lines)
     textarea.style.height = newHeight + 'px';
+}
+
+function handleChatInput(element) {
+    // Handle placeholder visibility for contenteditable
+    if (element.textContent.trim() === '') {
+        element.classList.add('empty');
+    } else {
+        element.classList.remove('empty');
+    }
 }
 
 // Image Upload for Chat
@@ -3608,13 +3615,12 @@ async function sendImageMessage() {
     if (!currentPlanDetail || !pendingImageData) return;
     
     const input = document.getElementById('planChatInput');
-    const caption = input.value.trim();
+    const caption = (input.innerText || input.textContent || '').trim();
     
     // Clear UI immediately
     const imageData = pendingImageData;
     const messageText = caption || '📷 Shared a photo';
-    input.value = '';
-    input.style.height = 'auto';
+    input.textContent = '';
     removeImagePreview();
     pendingImageData = null;
     
@@ -3672,20 +3678,24 @@ function selectAiSuggestion(type) {
         'custom': '@AI '
     };
     
-    input.value = prompts[type] || '@AI ';
+    input.textContent = prompts[type] || '@AI ';
     input.focus();
     
     // If custom, place cursor at the end after @AI
     if (type === 'custom') {
-        input.setSelectionRange(input.value.length, input.value.length);
+        // Move cursor to end for contenteditable
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(input);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
     }
     
     // Collapse the suggestions panel
     if (aiSuggestionsExpanded) {
         toggleAiSuggestions();
     }
-    
-    autoResizeTextarea(input);
 }
 
 async function sendAiRequest(prompt, type) {

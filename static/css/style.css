@@ -3200,7 +3200,7 @@ body:has(.guest-info) .container {
     padding-bottom: calc(12px + env(safe-area-inset-bottom));
 }
 
-.plan-chat-input textarea {
+.chat-input-editable {
     flex: 1;
     min-width: 0;
     background: rgba(255, 255, 255, 0.1);
@@ -3210,20 +3210,25 @@ body:has(.guest-info) .container {
     color: var(--text-light);
     font-size: 16px; /* Must be 16px+ to prevent iOS auto-zoom */
     font-family: inherit;
-    resize: none;
-    overflow-y: hidden;
-    min-height: 40px;
+    min-height: 20px;
     max-height: 120px;
     line-height: 1.4;
+    overflow-y: auto;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    -webkit-user-select: text;
+    user-select: text;
 }
 
-.plan-chat-input textarea:focus {
+.chat-input-editable:focus {
     outline: none;
     border-color: var(--accent-mint);
 }
 
-.plan-chat-input textarea::placeholder {
+.chat-input-editable:empty:before {
+    content: attr(data-placeholder);
     color: var(--text-muted);
+    pointer-events: none;
 }
 
 .chat-send-btn {
