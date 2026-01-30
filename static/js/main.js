@@ -3150,7 +3150,7 @@ function renderPlanDetail() {
                         </svg>
                     </button>
                     <textarea id="planChatInput" placeholder="Type a message..." maxlength="500" rows="1" oninput="autoResizeTextarea(this)" onkeydown="handleChatKeydown(event)"></textarea>
-                    <button class="chat-send-btn" onclick="sendPlanMessage()">
+                    <button class="chat-send-btn" onmousedown="event.preventDefault()" ontouchend="event.preventDefault(); sendPlanMessage()" onclick="sendPlanMessage()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="22" y1="2" x2="11" y2="13"></line>
                             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
