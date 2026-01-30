@@ -2998,7 +2998,7 @@ body:has(.guest-info) .container {
 
 /* AI Suggestions Section - Full width bar like Details */
 .ai-suggestions-section {
-    background: #1e3050;
+    background: var(--primary-bg);
 }
 
 .ai-suggestions-header {
