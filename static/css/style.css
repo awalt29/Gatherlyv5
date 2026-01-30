@@ -3005,7 +3005,7 @@ body:has(.guest-info) .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
+    padding: 10px 12px;
     background: rgba(255, 255, 255, 0.05);
     cursor: pointer;
     font-size: 14px;
@@ -3196,8 +3196,8 @@ body:has(.guest-info) .container {
     align-items: flex-end;
     gap: 8px;
     min-width: 0;
-    padding: 12px 16px;
-    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    padding: 8px 12px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
 }
 
 .chat-input-editable {
