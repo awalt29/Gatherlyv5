@@ -3137,9 +3137,8 @@ function renderPlanDetail() {
             <div class="plan-bottom-bar">
                 <div class="ai-suggestions-panel" id="aiSuggestionsPanel">
                     <div class="ai-suggestions-header" onclick="toggleAiSuggestions()">
-                        <span class="ai-suggestions-icon">✨</span>
                         <span class="ai-suggestions-title">Get suggestions</span>
-                        <span class="ai-suggestions-toggle" id="aiSuggestionsToggle">▲</span>
+                        <span class="ai-suggestions-toggle" id="aiSuggestionsToggle">▶</span>
                     </div>
                     <div class="ai-suggestions-options" id="aiSuggestionsOptions">
                         <button class="ai-suggestion-btn" onclick="selectAiSuggestion('dinner')">
@@ -3679,7 +3678,7 @@ function toggleAiSuggestions() {
         toggle.textContent = '▼';
     } else {
         options.classList.remove('expanded');
-        toggle.textContent = '▲';
+        toggle.textContent = '▶';
     }
 }
 
