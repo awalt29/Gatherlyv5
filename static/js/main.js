@@ -3509,72 +3509,19 @@ function handleChatKeydown(event) {
 }
 
 function handleChatFocus() {
-    // When keyboard opens, scroll the input into view and chat to bottom
-    const scrollIntoViewAndBottom = () => {
+    // When keyboard opens, scroll chat to bottom
+    const scrollToBottom = () => {
         const chatMessages = document.getElementById('planChatMessages');
-        const input = document.getElementById('planChatInput');
-        
         if (chatMessages) {
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
-        
-        // Scroll the input into view on iOS
-        if (input) {
-            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
     };
     
-    // Scroll immediately
-    scrollIntoViewAndBottom();
-    
-    // And again after delays to catch keyboard animation
-    setTimeout(scrollIntoViewAndBottom, 100);
-    setTimeout(scrollIntoViewAndBottom, 300);
-    setTimeout(scrollIntoViewAndBottom, 500);
+    // Scroll immediately and after delays
+    scrollToBottom();
+    setTimeout(scrollToBottom, 100);
+    setTimeout(scrollToBottom, 300);
 }
-
-// Set up visualViewport listener for keyboard changes
-function setupKeyboardListener() {
-    if (window.visualViewport) {
-        let prevHeight = window.visualViewport.height;
-        
-        window.visualViewport.addEventListener('resize', () => {
-            const modal = document.getElementById('planDetailModal');
-            if (!modal?.classList.contains('active')) return;
-            
-            const chatMessages = document.getElementById('planChatMessages');
-            const modalContent = modal.querySelector('.modal-content');
-            const currentHeight = window.visualViewport.height;
-            
-            // Keyboard opened (viewport got smaller)
-            if (currentHeight < prevHeight - 50) {
-                // Adjust modal height to visible viewport
-                if (modalContent) {
-                    modalContent.style.height = `${currentHeight}px`;
-                    modalContent.style.maxHeight = `${currentHeight}px`;
-                }
-                
-                // Scroll chat to bottom
-                if (chatMessages) {
-                    requestAnimationFrame(() => {
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
-                    });
-                }
-            } else if (currentHeight > prevHeight + 50) {
-                // Keyboard closed - reset height
-                if (modalContent) {
-                    modalContent.style.height = '';
-                    modalContent.style.maxHeight = '';
-                }
-            }
-            
-            prevHeight = currentHeight;
-        });
-    }
-}
-
-// Call setup on page load
-document.addEventListener('DOMContentLoaded', setupKeyboardListener);
 
 function autoResizeTextarea(textarea) {
     // Reset height to auto to get the correct scrollHeight

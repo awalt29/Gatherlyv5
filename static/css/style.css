@@ -3261,7 +3261,7 @@ body:has(.guest-info) .container {
         top: 0;
         left: 0;
         right: 0;
-        bottom: 0;
+        height: 100dvh; /* Use dynamic viewport height for iOS keyboard handling */
         max-height: none;
         border-radius: 0;
         display: flex;
