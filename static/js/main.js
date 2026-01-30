@@ -3424,25 +3424,28 @@ async function sendPlanMessage() {
             // Handle AI request
             const aiPrompt = message.substring(4).trim(); // Remove @AI prefix
             
+            // Clear input and show user's message immediately
+            input.value = '';
+            input.style.height = 'auto';
+            addOptimisticMessage(`🤖 ${aiPrompt}`);
+            
             // Determine suggestion type from prompt
             let type = 'custom';
             if (aiPrompt.toLowerCase().includes('dinner')) type = 'dinner';
             else if (aiPrompt.toLowerCase().includes('drinks') || aiPrompt.toLowerCase().includes('bar')) type = 'drinks';
             else if (aiPrompt.toLowerCase().includes('split') || aiPrompt.toLowerCase().includes('bill')) type = 'split';
             
-            // First send the user's question as a regular message
-            await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
+            // Send the user's question to server (in background)
+            fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: `🤖 ${aiPrompt}` })
             });
             
-            // Then get AI response
+            // Then get AI response (this takes time)
             const aiResult = await sendAiRequest(message, type);
             
             if (aiResult) {
-                input.value = '';
-                input.style.height = 'auto';
                 setSeenMessageId(currentPlanDetail.id, aiResult.message.id);
                 await loadPlanChatMessages(currentPlanDetail.id);
             }
