@@ -3521,6 +3521,30 @@ function handleChatFocus() {
     setTimeout(scrollToBottom, 300);
 }
 
+// Detect keyboard open/close using visualViewport
+function setupKeyboardDetection() {
+    if (window.visualViewport) {
+        let initialHeight = window.visualViewport.height;
+        
+        window.visualViewport.addEventListener('resize', () => {
+            const currentHeight = window.visualViewport.height;
+            const modal = document.getElementById('planDetailModal');
+            
+            // If viewport shrunk significantly, keyboard is open
+            if (currentHeight < initialHeight - 100) {
+                document.body.classList.add('keyboard-open');
+                if (modal) modal.classList.add('keyboard-open');
+            } else {
+                document.body.classList.remove('keyboard-open');
+                if (modal) modal.classList.remove('keyboard-open');
+            }
+        });
+    }
+}
+
+// Initialize keyboard detection
+document.addEventListener('DOMContentLoaded', setupKeyboardDetection);
+
 function autoResizeTextarea(textarea) {
     // Reset height to auto to get the correct scrollHeight
     textarea.style.height = 'auto';

@@ -3200,6 +3200,11 @@ body:has(.guest-info) .container {
     padding-bottom: max(4px, env(safe-area-inset-bottom));
 }
 
+/* When keyboard is open, reduce bottom padding */
+.keyboard-open .plan-chat-input {
+    padding-bottom: 4px;
+}
+
 .chat-input-editable {
     flex: 1;
     min-width: 0;
