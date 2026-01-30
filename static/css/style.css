@@ -3196,7 +3196,8 @@ body:has(.guest-info) .container {
     align-items: flex-end;
     gap: 8px;
     min-width: 0;
-    padding: 6px 12px 4px 12px;
+    padding: 6px 12px;
+    padding-bottom: max(4px, env(safe-area-inset-bottom));
 }
 
 .chat-input-editable {
