@@ -798,13 +798,13 @@ h1 {
 
 .friends-list {
     display: flex;
-    gap: 16px;
+    gap: 10px;
     flex-wrap: nowrap;
     justify-content: center;
     max-width: 100%;
     width: 100%;
     overflow-x: auto;
-    padding: 8px 20px;
+    padding: 4px 20px;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
 }
