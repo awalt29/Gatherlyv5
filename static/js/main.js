@@ -3130,33 +3130,35 @@ function renderPlanDetail() {
         </div>
     `;
     
-    // Build bottom bar with input and suggestions
+    // Build bottom bar with suggestions and input
     let bottomBar = '';
     if (!isPast) {
         bottomBar = `
             <div class="plan-bottom-bar">
-                <div class="ai-suggestions-panel" id="aiSuggestionsPanel">
+                <div class="ai-suggestions-section">
                     <div class="ai-suggestions-header" onclick="toggleAiSuggestions()">
-                        <span class="ai-suggestions-title">Get suggestions</span>
+                        <span class="ai-suggestions-title">✨ Get suggestions</span>
                         <span class="ai-suggestions-toggle" id="aiSuggestionsToggle">▶</span>
                     </div>
-                    <div class="ai-suggestions-options" id="aiSuggestionsOptions">
-                        <button class="ai-suggestion-btn" onclick="selectAiSuggestion('dinner')">
-                            <span class="ai-btn-icon">🍽️</span>
-                            <span class="ai-btn-label">Dinner</span>
-                        </button>
-                        <button class="ai-suggestion-btn" onclick="selectAiSuggestion('drinks')">
-                            <span class="ai-btn-icon">🍸</span>
-                            <span class="ai-btn-label">Drinks</span>
-                        </button>
-                        <button class="ai-suggestion-btn" onclick="selectAiSuggestion('split')">
-                            <span class="ai-btn-icon">🧾</span>
-                            <span class="ai-btn-label">Split bill</span>
-                        </button>
-                        <button class="ai-suggestion-btn" onclick="selectAiSuggestion('custom')">
-                            <span class="ai-btn-icon">💬</span>
-                            <span class="ai-btn-label">Ask anything</span>
-                        </button>
+                    <div class="ai-suggestions-content collapsed" id="aiSuggestionsContent">
+                        <div class="ai-suggestions-options" id="aiSuggestionsOptions">
+                            <button class="ai-suggestion-btn" onclick="selectAiSuggestion('dinner')">
+                                <span class="ai-btn-icon">🍽️</span>
+                                <span class="ai-btn-label">Dinner</span>
+                            </button>
+                            <button class="ai-suggestion-btn" onclick="selectAiSuggestion('drinks')">
+                                <span class="ai-btn-icon">🍸</span>
+                                <span class="ai-btn-label">Drinks</span>
+                            </button>
+                            <button class="ai-suggestion-btn" onclick="selectAiSuggestion('split')">
+                                <span class="ai-btn-icon">🧾</span>
+                                <span class="ai-btn-label">Split bill</span>
+                            </button>
+                            <button class="ai-suggestion-btn" onclick="selectAiSuggestion('custom')">
+                                <span class="ai-btn-icon">💬</span>
+                                <span class="ai-btn-label">Ask anything</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="plan-chat-input">
@@ -3668,16 +3670,16 @@ async function sendImageMessage() {
 let aiSuggestionsExpanded = false;
 
 function toggleAiSuggestions() {
-    const options = document.getElementById('aiSuggestionsOptions');
+    const content = document.getElementById('aiSuggestionsContent');
     const toggle = document.getElementById('aiSuggestionsToggle');
     
     aiSuggestionsExpanded = !aiSuggestionsExpanded;
     
     if (aiSuggestionsExpanded) {
-        options.classList.add('expanded');
+        content.classList.remove('collapsed');
         toggle.textContent = '▼';
     } else {
-        options.classList.remove('expanded');
+        content.classList.add('collapsed');
         toggle.textContent = '▶';
     }
 }

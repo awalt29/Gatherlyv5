@@ -2998,12 +2998,9 @@ body:has(.guest-info) .container {
     color: #a78bfa;
 }
 
-/* AI Suggestions Panel */
-.ai-suggestions-panel {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    margin-bottom: 12px;
-    overflow: hidden;
+/* AI Suggestions Section - Full width bar above input */
+.ai-suggestions-section {
+    border-top: 1px solid var(--border-color);
 }
 
 .ai-suggestions-header {
@@ -3011,8 +3008,8 @@ body:has(.guest-info) .container {
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
     cursor: pointer;
-    transition: background 0.2s ease;
 }
 
 .ai-suggestions-header:hover {
@@ -3031,15 +3028,22 @@ body:has(.guest-info) .container {
     transition: transform 0.2s ease;
 }
 
-.ai-suggestions-options {
-    display: none;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    padding: 0 12px 12px;
+.ai-suggestions-content {
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    max-height: 200px;
 }
 
-.ai-suggestions-options.expanded {
+.ai-suggestions-content.collapsed {
+    max-height: 0;
+}
+
+.ai-suggestions-options {
     display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.03);
 }
 
 .ai-suggestion-btn {
