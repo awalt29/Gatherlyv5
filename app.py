@@ -2309,7 +2309,7 @@ Just reply with something like "@AI Italian restaurant in Chelsea" and I'll find
                 
                 system_prompt = f"""You are helping friends find a dinner spot. Give 2-3 specific restaurant suggestions based on their preferences.
 For each suggestion include: name, why it's good for groups, and price range ($, $$, $$$).
-Keep it brief and friendly.{no_repeat}"""
+Keep it brief and friendly. Do NOT use markdown formatting (no asterisks, no bold, no headers).{no_repeat}"""
                 
                 user_prompt = prompt.replace('@ai ', '').strip()
                 
@@ -2359,7 +2359,7 @@ Reply with something like "@AI chill cocktail bar in Chelsea" and I'll hook you 
                 
                 system_prompt = f"""You are helping friends find a bar or place for drinks. Give 2-3 specific suggestions based on their preferences.
 For each suggestion include: name, vibe/atmosphere, and what they're known for.
-Keep it brief and friendly.{no_repeat}"""
+Keep it brief and friendly. Do NOT use markdown formatting (no asterisks, no bold, no headers).{no_repeat}"""
                 
                 user_prompt = prompt.replace('@ai ', '').strip()
                 
@@ -2387,7 +2387,8 @@ Event details:
 
 Keep your responses concise, friendly, and helpful. 
 Don't be overly formal - match the casual tone of friends planning to hang out.
-Keep responses under 150 words."""
+Keep responses under 150 words.
+Do NOT use markdown formatting (no asterisks, no bold, no headers)."""
 
             user_prompt = prompt.replace('@ai ', '').strip()
             
