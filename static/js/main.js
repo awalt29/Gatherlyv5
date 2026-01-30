@@ -3414,11 +3414,6 @@ async function sendPlanMessage() {
     // Check if this is an @AI message
     const isAiMessage = message.toLowerCase().startsWith('@ai ');
     
-    // Only disable input for AI messages (they take longer)
-    if (isAiMessage) {
-        input.disabled = true;
-    }
-    
     try {
         if (isAiMessage) {
             // Handle AI request
@@ -3477,12 +3472,6 @@ async function sendPlanMessage() {
     } catch (error) {
         console.error('Error sending message:', error);
         showStatus('Failed to send message', 'error');
-    } finally {
-        // Re-enable input if it was disabled (AI messages)
-        if (input.disabled) {
-            input.disabled = false;
-            input.focus();
-        }
     }
 }
 
