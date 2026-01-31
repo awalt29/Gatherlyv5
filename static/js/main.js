@@ -1719,6 +1719,76 @@ function openNewPlanModal() {
     document.getElementById('planModal').classList.add('active');
 }
 
+// Edit existing plan
+let editingPlanId = null;
+
+async function openEditPlanModal(planId) {
+    console.log('[EDIT PLAN] Opening edit modal for plan:', planId);
+    
+    // Close the plans modal first
+    closePlans();
+    
+    // Fetch the plan details
+    try {
+        const response = await fetch(`/api/hangouts/${planId}`);
+        if (!response.ok) {
+            showStatus('Failed to load plan details', 'error');
+            return;
+        }
+        const plan = await response.json();
+        
+        editingPlanId = planId;
+        isNewPlanMode = false;
+        selectedPlanFriends = plan.invitees.map(inv => inv.user_id);
+        selectedPlanTime = plan.time_slot.toLowerCase();
+        
+        // Show datetime section, hide slot info
+        document.getElementById('planSlotInfo').style.display = 'none';
+        document.getElementById('planDatetimeSection').style.display = 'block';
+        document.getElementById('planFriendsHeader').textContent = 'Invited friends (select more to add)';
+        document.getElementById('planModalTitle').textContent = 'Edit Plan';
+        
+        // Set date
+        document.getElementById('planDateInput').value = plan.date;
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('planDateInput').min = today;
+        
+        // Set time selection
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.classList.remove('selected');
+            if (btn.dataset.time === selectedPlanTime) {
+                btn.classList.add('selected');
+            }
+        });
+        
+        // Set message field
+        document.getElementById('planMessage').value = plan.description || '';
+        
+        // Show ALL friends with current invitees pre-selected
+        const friendsList = document.getElementById('planFriendsList');
+        if (linkedFriends && linkedFriends.length > 0) {
+            friendsList.innerHTML = linkedFriends.map(friend => {
+                const isSelected = selectedPlanFriends.includes(friend.id);
+                return `
+                    <div class="plan-friend-item ${isSelected ? 'selected' : ''}" data-user-id="${friend.id}" onclick="togglePlanFriend(this, ${friend.id})">
+                        <div class="friend-checkbox"></div>
+                        <div class="friend-avatar">${getInitials(friend.name)}</div>
+                        <div class="friend-name">${friend.name}</div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            friendsList.innerHTML = '<div class="plan-friends-empty">No friends yet. Add friends first!</div>';
+        }
+        
+        updateSendInviteButton();
+        document.getElementById('planModal').classList.add('active');
+    } catch (error) {
+        console.error('Error loading plan:', error);
+        showStatus('Failed to load plan details', 'error');
+    }
+}
+
 // Select time for new plan
 function selectPlanTime(time) {
     selectedPlanTime = time;
@@ -1805,12 +1875,12 @@ function togglePlanFriend(element, userId) {
 function updateSendInviteButton() {
     const btn = document.getElementById('sendInviteBtn');
     
-    // In new plan mode, also need date and time selected
-    if (isNewPlanMode) {
+    // In new plan mode or edit mode, also need date and time selected
+    if (isNewPlanMode || editingPlanId) {
         const dateValue = document.getElementById('planDateInput').value;
         if (selectedPlanFriends.length > 0 && dateValue && selectedPlanTime) {
             btn.disabled = false;
-            btn.textContent = `Send Invite${selectedPlanFriends.length > 1 ? 's' : ''} (${selectedPlanFriends.length})`;
+            btn.textContent = editingPlanId ? 'Save Changes' : `Send Invite${selectedPlanFriends.length > 1 ? 's' : ''} (${selectedPlanFriends.length})`;
         } else {
             btn.disabled = true;
             if (!dateValue || !selectedPlanTime) {
@@ -1836,7 +1906,7 @@ async function sendHangoutInvite() {
     
     let date, timeSlot;
     
-    if (isNewPlanMode) {
+    if (isNewPlanMode || editingPlanId) {
         date = document.getElementById('planDateInput').value;
         timeSlot = selectedPlanTime;
         if (!date || !timeSlot) return;
@@ -1848,25 +1918,43 @@ async function sendHangoutInvite() {
     
     const btn = document.getElementById('sendInviteBtn');
     btn.disabled = true;
-    btn.textContent = 'Sending...';
+    btn.textContent = editingPlanId ? 'Saving...' : 'Sending...';
     
     const message = document.getElementById('planMessage').value.trim();
     
     try {
-        const response = await fetch('/api/hangouts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                date: date,
-                time_slot: timeSlot,
-                description: message,
-                invitee_ids: selectedPlanFriends
-            })
-        });
+        let response;
+        
+        if (editingPlanId) {
+            // Update existing plan
+            response = await fetch(`/api/hangouts/${editingPlanId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    date: date,
+                    time_slot: timeSlot,
+                    description: message,
+                    invitee_ids: selectedPlanFriends
+                })
+            });
+        } else {
+            // Create new plan
+            response = await fetch('/api/hangouts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    date: date,
+                    time_slot: timeSlot,
+                    description: message,
+                    invitee_ids: selectedPlanFriends
+                })
+            });
+        }
         
         if (response.ok) {
             const data = await response.json();
-            showStatus('Hangout invite sent!', 'success');
+            showStatus(editingPlanId ? 'Plan updated!' : 'Hangout invite sent!', 'success');
+            editingPlanId = null;
             closePlanModal();
             // Refresh to show updated hangout status
             loadHangoutStatuses();
@@ -1874,13 +1962,13 @@ async function sendHangoutInvite() {
             const data = await response.json();
             showStatus(data.error || 'Error sending invite', 'error');
             btn.disabled = false;
-            btn.textContent = `Send Invite${selectedPlanFriends.length > 1 ? 's' : ''} (${selectedPlanFriends.length})`;
+            btn.textContent = editingPlanId ? 'Save Changes' : `Send Invite${selectedPlanFriends.length > 1 ? 's' : ''} (${selectedPlanFriends.length})`;
         }
     } catch (error) {
         console.error('Error sending hangout invite:', error);
         showStatus('Error sending invite', 'error');
         btn.disabled = false;
-        btn.textContent = `Send Invite${selectedPlanFriends.length > 1 ? 's' : ''} (${selectedPlanFriends.length})`;
+        btn.textContent = editingPlanId ? 'Save Changes' : `Send Invite${selectedPlanFriends.length > 1 ? 's' : ''} (${selectedPlanFriends.length})`;
     }
 }
 
@@ -1889,6 +1977,7 @@ function closePlanModal() {
     document.getElementById('planModal').classList.remove('active');
     currentPlanSlot = null;
     selectedPlanFriends = [];
+    editingPlanId = null;
 }
 
 // Get friends available for a specific slot
@@ -2975,11 +3064,22 @@ function renderPlanCard(plan, isPast) {
                       plan.latest_message_id > lastSeen && 
                       plan.latest_message_user_id !== plannerInfo?.id;
     
+    // Edit button only for hosts of upcoming plans
+    const editButton = (plan.role === 'host' && !isPast) ? `
+        <button class="plan-card-edit-btn" onclick="event.stopPropagation(); openEditPlanModal(${plan.id})" title="Edit plan">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+        </button>
+    ` : '';
+    
     return `
         <div class="plan-card ${isPast ? 'plan-card-past' : ''} ${hasUnread ? 'plan-card-unread' : ''}" onclick="openPlanDetail(${plan.id})">
             <div class="plan-card-role">
                 ${plan.role === 'host' ? '👑 You\'re hosting' : `📬 Invited by ${plan.creator_name}`}
                 ${hasUnread ? '<span class="plan-unread-dot"></span>' : ''}
+                ${editButton}
             </div>
             <div class="plan-card-header">
                 <div class="plan-card-date">${dateStr}</div>

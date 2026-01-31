@@ -1950,6 +1950,139 @@ def get_user_hangouts():
     })
 
 
+@app.route('/api/hangouts/<int:hangout_id>', methods=['GET'])
+def get_hangout(hangout_id):
+    """Get a single hangout by ID"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    hangout = Hangout.query.get_or_404(hangout_id)
+    
+    # Check if user is creator or invitee
+    is_creator = hangout.creator_id == user_id
+    is_invitee = any(inv.user_id == user_id for inv in hangout.invitees)
+    
+    if not is_creator and not is_invitee:
+        return jsonify({'error': 'Not authorized to view this plan'}), 403
+    
+    creator = User.query.get(hangout.creator_id)
+    
+    return jsonify({
+        'id': hangout.id,
+        'date': hangout.date,
+        'time_slot': hangout.time_slot,
+        'description': hangout.description,
+        'creator_id': hangout.creator_id,
+        'creator_name': creator.name if creator else 'Unknown',
+        'created_at': hangout.created_at.isoformat() if hangout.created_at else None,
+        'invitees': [{
+            'user_id': inv.user_id,
+            'user_name': User.query.get(inv.user_id).name if User.query.get(inv.user_id) else 'Unknown',
+            'status': inv.status
+        } for inv in hangout.invitees]
+    }), 200
+
+
+@app.route('/api/hangouts/<int:hangout_id>', methods=['PUT'])
+def update_hangout(hangout_id):
+    """Update a hangout (only by creator)"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    hangout = Hangout.query.get_or_404(hangout_id)
+    
+    # Only creator can update
+    if hangout.creator_id != user_id:
+        return jsonify({'error': 'Only the host can edit this plan'}), 403
+    
+    data = request.get_json()
+    creator = User.query.get(user_id)
+    
+    # Track what changed for notifications
+    date_changed = data.get('date') and data['date'] != hangout.date
+    time_changed = data.get('time_slot') and data['time_slot'] != hangout.time_slot
+    
+    # Update basic fields
+    if data.get('date'):
+        hangout.date = data['date']
+    if data.get('time_slot'):
+        hangout.time_slot = data['time_slot']
+    if 'description' in data:
+        hangout.description = data.get('description', '')
+    
+    # Handle invitee changes
+    if 'invitee_ids' in data:
+        current_invitee_ids = {inv.user_id for inv in hangout.invitees}
+        new_invitee_ids = set(data['invitee_ids'])
+        
+        # Remove invitees no longer in the list
+        removed_ids = current_invitee_ids - new_invitee_ids
+        for inv in list(hangout.invitees):
+            if inv.user_id in removed_ids:
+                # Notify removed invitee
+                notification = Notification(
+                    planner_id=inv.user_id,
+                    message=f"{creator.name} removed you from the plan on {hangout.date}",
+                    from_user_id=user_id
+                )
+                db.session.add(notification)
+                db.session.delete(inv)
+        
+        # Add new invitees
+        added_ids = new_invitee_ids - current_invitee_ids
+        for invitee_id in added_ids:
+            invitee = HangoutInvitee(
+                hangout_id=hangout.id,
+                user_id=invitee_id,
+                status='pending'
+            )
+            db.session.add(invitee)
+            
+            # Create notification for new invitee
+            notification = Notification(
+                planner_id=invitee_id,
+                message=f"{creator.name} invited you to hang out on {hangout.date} ({hangout.time_slot})",
+                notification_type='hangout_invite',
+                hangout_id=hangout.id,
+                from_user_id=user_id
+            )
+            db.session.add(notification)
+            
+            # Send push notification to new invitee
+            invitee_user = User.query.get(invitee_id)
+            if invitee_user:
+                push_sent = send_push_notification(
+                    invitee_id,
+                    f"{creator.name} invited you to hang out!",
+                    f"{hangout.date} ({hangout.time_slot})",
+                    {'type': 'hangout_invite', 'hangout_id': hangout.id}
+                )
+                # Fallback to SMS if push not available
+                if not push_sent and invitee_user.phone:
+                    base_url = os.environ.get('BASE_URL', 'https://gatherlyv5-production.up.railway.app')
+                    message = f"{creator.name} invited you to hang out on {hangout.date}. Open Gatherly to respond: {base_url}?open=notifications"
+                    send_sms(invitee_user.phone, message)
+    
+    # Notify existing invitees if date/time changed
+    if date_changed or time_changed:
+        for inv in hangout.invitees:
+            if inv.user_id != user_id and inv.user_id not in added_ids:
+                notification = Notification(
+                    planner_id=inv.user_id,
+                    message=f"{creator.name} updated the plan to {hangout.date} ({hangout.time_slot})",
+                    notification_type='hangout_update',
+                    hangout_id=hangout.id,
+                    from_user_id=user_id
+                )
+                db.session.add(notification)
+    
+    db.session.commit()
+    
+    return jsonify({'message': 'Plan updated', 'id': hangout.id}), 200
+
+
 @app.route('/api/hangouts/<int:hangout_id>', methods=['DELETE'])
 def delete_hangout(hangout_id):
     """Cancel/delete a hangout (only by creator)"""
