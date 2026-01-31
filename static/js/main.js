@@ -3668,6 +3668,168 @@ function handleChatFocus() {
     setTimeout(scrollToBottom, 300);
 }
 
+// =====================
+// AI Chat Functions
+// =====================
+
+async function openAiChat() {
+    document.getElementById('aiChatModal').classList.add('active');
+    await loadAiChatMessages();
+}
+
+function closeAiChat() {
+    document.getElementById('aiChatModal').classList.remove('active');
+}
+
+async function loadAiChatMessages() {
+    const container = document.getElementById('aiChatMessages');
+    if (!container) return;
+    
+    try {
+        const response = await fetch('/api/ai-chat/messages');
+        if (response.ok) {
+            const messages = await response.json();
+            renderAiChatMessages(messages);
+        }
+    } catch (error) {
+        console.error('Error loading AI chat messages:', error);
+    }
+}
+
+function renderAiChatMessages(messages) {
+    const container = document.getElementById('aiChatMessages');
+    if (!container) return;
+    
+    if (messages.length === 0) {
+        container.innerHTML = `
+            <div class="ai-chat-welcome">
+                <div class="ai-chat-welcome-icon">✨</div>
+                <div class="ai-chat-welcome-title">Hi! I'm your AI assistant</div>
+                <div class="ai-chat-welcome-text">Ask me anything - restaurant recommendations, activity ideas, travel tips, or just chat!</div>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = messages.map(msg => {
+        const isMe = !msg.is_ai_message;
+        const messageClass = isMe ? 'chat-message-me' : 'chat-message-ai';
+        const name = isMe ? 'You' : '✨ AI Assistant';
+        
+        return `
+            <div class="chat-message ${messageClass}">
+                <div class="chat-message-name">${name}</div>
+                <div class="chat-message-bubble">${msg.message}</div>
+            </div>
+        `;
+    }).join('');
+    
+    // Scroll to bottom
+    container.scrollTop = container.scrollHeight;
+}
+
+async function sendAiChatMessage() {
+    const input = document.getElementById('aiChatInput');
+    const message = input.textContent.trim();
+    
+    if (!message) return;
+    
+    // Clear input
+    input.textContent = '';
+    
+    // Add optimistic message
+    const container = document.getElementById('aiChatMessages');
+    
+    // Remove welcome message if present
+    const welcome = container.querySelector('.ai-chat-welcome');
+    if (welcome) {
+        welcome.remove();
+    }
+    
+    // Add user message optimistically
+    const userMsgHtml = `
+        <div class="chat-message chat-message-me">
+            <div class="chat-message-name">You</div>
+            <div class="chat-message-bubble">${message}</div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', userMsgHtml);
+    container.scrollTop = container.scrollHeight;
+    
+    // Add typing indicator
+    const typingHtml = `
+        <div class="chat-message chat-message-ai ai-typing">
+            <div class="chat-message-name">✨ AI Assistant</div>
+            <div class="chat-message-bubble">Thinking...</div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', typingHtml);
+    container.scrollTop = container.scrollHeight;
+    
+    try {
+        const response = await fetch('/api/ai-chat/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+        
+        // Remove typing indicator
+        const typing = container.querySelector('.ai-typing');
+        if (typing) typing.remove();
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.ai_message) {
+                const aiMsgHtml = `
+                    <div class="chat-message chat-message-ai">
+                        <div class="chat-message-name">✨ AI Assistant</div>
+                        <div class="chat-message-bubble">${data.ai_message.message}</div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', aiMsgHtml);
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+    } catch (error) {
+        console.error('Error sending AI chat message:', error);
+        // Remove typing indicator
+        const typing = container.querySelector('.ai-typing');
+        if (typing) typing.remove();
+    }
+}
+
+function handleAiChatKeydown(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendAiChatMessage();
+    }
+}
+
+function handleAiChatFocus() {
+    const scrollToBottom = () => {
+        const chatMessages = document.getElementById('aiChatMessages');
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    };
+    scrollToBottom();
+    setTimeout(scrollToBottom, 100);
+}
+
+async function clearAiChatHistory() {
+    if (!confirm('Clear all chat history with AI?')) return;
+    
+    try {
+        const response = await fetch('/api/ai-chat/clear', { method: 'POST' });
+        if (response.ok) {
+            await loadAiChatMessages();
+        }
+    } catch (error) {
+        console.error('Error clearing AI chat:', error);
+    }
+}
+
 // Detect keyboard open/close using visualViewport
 function setupKeyboardDetection() {
     if (window.visualViewport) {

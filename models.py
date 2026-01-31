@@ -518,3 +518,27 @@ class HangoutMessage(db.Model):
             'is_ai_message': self.is_ai_message or False,
             'created_at': self.created_at.isoformat() + 'Z'
         }
+
+
+class AiChatMessage(db.Model):
+    """Direct AI chat messages (not tied to a hangout)"""
+    __tablename__ = 'ai_chat_messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    is_ai_message = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='ai_chat_messages')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'user_name': self.user.name,
+            'message': self.message,
+            'is_ai_message': self.is_ai_message or False,
+            'created_at': self.created_at.isoformat() + 'Z'
+        }

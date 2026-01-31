@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
 from flask_migrate import Migrate
-from models import db, User, Contact, Plan, PlanGuest, Availability, Notification, PasswordReset, FriendRequest, Friendship, UserAvailability, Hangout, HangoutInvitee, PushSubscription, HangoutMessage
+from models import db, User, Contact, Plan, PlanGuest, Availability, Notification, PasswordReset, FriendRequest, Friendship, UserAvailability, Hangout, HangoutInvitee, PushSubscription, HangoutMessage, AiChatMessage
 from datetime import datetime, timedelta, date
 from twilio.rest import Client
 from sendgrid import SendGridAPIClient
@@ -2779,6 +2779,114 @@ with app.app_context():
         print(f"❌ Error creating database tables: {e}")
         import traceback
         traceback.print_exc()
+
+
+# =====================
+# AI CHAT ENDPOINTS
+# =====================
+
+@app.route('/api/ai-chat/messages', methods=['GET'])
+def get_ai_chat_messages():
+    """Get all AI chat messages for the current user"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    messages = AiChatMessage.query.filter_by(user_id=user_id).order_by(AiChatMessage.created_at.asc()).all()
+    
+    return jsonify([m.to_dict() for m in messages])
+
+
+@app.route('/api/ai-chat/messages', methods=['POST'])
+def send_ai_chat_message():
+    """Send a message in the AI chat and get a response"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    data = request.get_json()
+    
+    message_text = data.get('message', '').strip()
+    if not message_text:
+        return jsonify({'error': 'Message is required'}), 400
+    
+    # Save the user's message
+    user_message = AiChatMessage(
+        user_id=user_id,
+        message=message_text,
+        is_ai_message=False
+    )
+    db.session.add(user_message)
+    db.session.commit()
+    
+    # Get recent chat history for context
+    recent_messages = AiChatMessage.query.filter_by(user_id=user_id)\
+        .order_by(AiChatMessage.created_at.desc())\
+        .limit(20).all()
+    
+    chat_context = "\n".join([
+        f"{'AI' if m.is_ai_message else 'User'}: {m.message}"
+        for m in reversed(recent_messages)
+    ])
+    
+    # Generate AI response
+    try:
+        system_prompt = """You are a friendly AI assistant in a social planning app called Gatherly. 
+Users can ask you anything - recommendations for restaurants, bars, activities, travel tips, 
+general questions, or just chat casually.
+
+Be helpful, conversational, and concise. Keep responses relatively brief (2-4 sentences typically) 
+unless the user asks for detailed information.
+
+Do NOT use any markdown formatting like asterisks, bullet points, or headers. 
+Just use plain text with natural paragraph breaks when needed."""
+
+        response = openai.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Chat history:\n{chat_context}\n\nRespond to the latest message naturally."}
+            ],
+            max_tokens=500,
+            temperature=0.7
+        )
+        
+        ai_response = response.choices[0].message.content.strip()
+        
+        # Save AI response
+        ai_message = AiChatMessage(
+            user_id=user_id,
+            message=ai_response,
+            is_ai_message=True
+        )
+        db.session.add(ai_message)
+        db.session.commit()
+        
+        return jsonify({
+            'user_message': user_message.to_dict(),
+            'ai_message': ai_message.to_dict()
+        }), 200
+        
+    except Exception as e:
+        print(f"[AI Chat] Error: {e}")
+        return jsonify({
+            'user_message': user_message.to_dict(),
+            'error': 'Failed to get AI response'
+        }), 200
+
+
+@app.route('/api/ai-chat/clear', methods=['POST'])
+def clear_ai_chat():
+    """Clear all AI chat messages for the current user"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    AiChatMessage.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    
+    return jsonify({'message': 'Chat cleared'}), 200
 
 
 if __name__ == '__main__':

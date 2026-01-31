@@ -65,6 +65,13 @@
                 </svg>
                 <span>Friends</span>
             </button>
+            <button class="nav-item" onclick="openAiChat()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    <path d="M8 10h.01M12 10h.01M16 10h.01"></path>
+                </svg>
+                <span>AI Chat</span>
+            </button>
             <button class="nav-item" onclick="openNotifications()">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -365,6 +372,35 @@
             </div>
             <div class="plan-detail-content" id="planDetailContent">
                 <!-- Plan details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Chat Modal -->
+    <div class="modal" id="aiChatModal">
+        <div class="modal-content ai-chat-modal">
+            <div class="ai-chat-header-bar">
+                <button class="back-btn" onclick="closeAiChat()">←</button>
+                <div class="ai-chat-title">
+                    <span class="ai-chat-icon">✨</span>
+                    <span>AI Assistant</span>
+                </div>
+                <button class="ai-chat-clear-btn" onclick="clearAiChatHistory()">Clear</button>
+            </div>
+            <div class="ai-chat-content">
+                <div class="ai-chat-messages" id="aiChatMessages">
+                </div>
+            </div>
+            <div class="ai-chat-bottom-bar">
+                <div class="plan-chat-input">
+                    <div id="aiChatInput" class="chat-input-editable" contenteditable="true" data-placeholder="Ask me anything..." oninput="autoResizeTextarea(this)" onkeydown="handleAiChatKeydown(event)" onfocus="handleAiChatFocus()" enterkeyhint="send" inputmode="text"></div>
+                    <button class="send-btn" onclick="sendAiChatMessage()" onmousedown="event.preventDefault()" ontouchend="event.preventDefault()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
