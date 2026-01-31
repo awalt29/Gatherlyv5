@@ -1910,6 +1910,52 @@ def respond_to_hangout(hangout_id):
     }), 200
 
 
+@app.route('/api/hangouts/<int:hangout_id>/leave', methods=['POST'])
+def leave_hangout(hangout_id):
+    """Leave a hangout (for invitees only)"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    
+    # Find the invitation
+    invitee = HangoutInvitee.query.filter_by(
+        hangout_id=hangout_id,
+        user_id=user_id
+    ).first()
+    
+    if not invitee:
+        return jsonify({'error': 'You are not an invitee of this event'}), 404
+    
+    hangout = Hangout.query.get(hangout_id)
+    if not hangout:
+        return jsonify({'error': 'Hangout not found'}), 404
+    
+    # Can't leave if you're the creator
+    if hangout.creator_id == user_id:
+        return jsonify({'error': 'Hosts cannot leave their own event'}), 400
+    
+    # Delete the invitation
+    db.session.delete(invitee)
+    
+    # Notify the host
+    creator_notification = Notification(
+        planner_id=hangout.creator_id,
+        message=f"{user.name} left your event on {hangout.date}",
+        notification_type='hangout_update',
+        hangout_id=hangout_id,
+        from_user_id=user_id
+    )
+    db.session.add(creator_notification)
+    
+    db.session.commit()
+    
+    print(f"[HANGOUT] {user.name} left hangout {hangout_id}")
+    
+    return jsonify({'message': 'You have left the event'}), 200
+
+
 @app.route('/api/hangouts', methods=['GET'])
 def get_user_hangouts():
     """Get all hangouts for the current user (as creator or invitee)"""

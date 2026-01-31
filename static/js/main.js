@@ -3162,13 +3162,16 @@ function renderPlanDetail() {
             <button class="plan-option-item" onclick="editCurrentPlan(); closePlanOptions()">Edit Plan</button>
             <button class="plan-option-item plan-option-danger" onclick="cancelPlan(${plan.id}); closePlanOptions()">Cancel Plan</button>
         `;
-    } else {
-        optionsHtml = `<div class="plan-option-item plan-option-info">Created by ${plan.creator_name}</div>`;
+    } else if (!isPast) {
+        optionsHtml = `<button class="plan-option-item plan-option-danger" onclick="leaveEvent(${plan.id}); closePlanOptions()">Leave Event</button>`;
     }
     optionsMenu.innerHTML = optionsHtml;
     
-    // Build guest badges (inline)
-    const guestBadges = plan.invitees.map(inv => {
+    // Build guest badges (inline) - include host first with special styling
+    const hostFirstName = plan.creator_name.split(' ')[0];
+    const hostBadge = `<span class="guest-badge host"><span class="guest-badge-name">👑 ${hostFirstName}</span> <span class="guest-badge-status">Host</span></span>`;
+    
+    const inviteeBadges = plan.invitees.map(inv => {
         const statusClass = inv.status || 'pending';
         const statusText = inv.status === 'accepted' ? 'Going' : 
                           inv.status === 'declined' ? 'Can\'t' : 
@@ -3176,6 +3179,8 @@ function renderPlanDetail() {
         const firstName = inv.user_name.split(' ')[0];
         return `<span class="guest-badge ${statusClass}"><span class="guest-badge-name">${firstName}</span> <span class="guest-badge-status">${statusText}</span></span>`;
     }).join('');
+    
+    const guestBadges = hostBadge + inviteeBadges;
     
     // Check if user can respond (they're a guest and plan is not in the past)
     const myInvite = plan.invitees.find(inv => inv.user_id === plannerInfo.id);
@@ -3343,6 +3348,31 @@ async function cancelPlan(planId) {
     } catch (error) {
         console.error('Error cancelling plan:', error);
         showStatus('Failed to cancel plan', 'error');
+    }
+}
+
+async function leaveEvent(planId) {
+    if (!confirm('Are you sure you want to leave this event?')) {
+        return;
+    }
+    
+    try {
+        const res = await fetch(`/api/hangouts/${planId}/leave`, {
+            method: 'POST'
+        });
+        
+        if (res.ok) {
+            showStatus('You have left the event', 'success');
+            closePlanDetail();
+            await loadPlans();
+            loadHangoutStatuses();
+        } else {
+            const data = await res.json();
+            showStatus(data.error || 'Failed to leave event', 'error');
+        }
+    } catch (error) {
+        console.error('Error leaving event:', error);
+        showStatus('Failed to leave event', 'error');
     }
 }
 
