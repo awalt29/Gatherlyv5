@@ -3671,7 +3671,9 @@ function setupKeyboardDetection() {
         
         const updateViewport = () => {
             const currentHeight = window.visualViewport.height;
+            const offsetTop = window.visualViewport.offsetTop;
             const modal = document.getElementById('planDetailModal');
+            const modalContent = modal ? modal.querySelector('.modal-content') : null;
             
             // Set CSS variable for viewport height
             document.documentElement.style.setProperty('--viewport-height', currentHeight + 'px');
@@ -3680,9 +3682,17 @@ function setupKeyboardDetection() {
             if (currentHeight < initialHeight - 100) {
                 document.body.classList.add('keyboard-open');
                 if (modal) modal.classList.add('keyboard-open');
+                
+                // Counteract iOS scroll offset
+                if (modalContent && offsetTop > 0) {
+                    modalContent.style.transform = `translateY(${-offsetTop}px)`;
+                }
             } else {
                 document.body.classList.remove('keyboard-open');
                 if (modal) modal.classList.remove('keyboard-open');
+                if (modalContent) {
+                    modalContent.style.transform = '';
+                }
                 // Reset initial height when keyboard closes
                 initialHeight = window.visualViewport.height;
             }

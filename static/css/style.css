@@ -1300,6 +1300,8 @@ h1 {
     align-items: center;
     z-index: 1000;
     padding: 20px;
+    overflow: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal.active {
@@ -3324,7 +3326,7 @@ body:has(.guest-info) .container {
         left: 0;
         right: 0;
         bottom: 0;
-        height: auto;
+        height: 100%;
         max-height: none;
         border-radius: 0;
         display: flex;
@@ -3332,10 +3334,10 @@ body:has(.guest-info) .container {
         padding-top: env(safe-area-inset-top, 20px);
     }
     
-    /* When keyboard is open, use visual viewport height */
+    /* When keyboard is open, resize to visual viewport */
     #planDetailModal.keyboard-open .modal-content {
+        height: var(--viewport-height, 100%);
         bottom: auto;
-        height: calc(var(--viewport-height, 100vh));
     }
     
     #plansModal .plans-list {
