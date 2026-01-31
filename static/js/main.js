@@ -3113,7 +3113,6 @@ function renderPlanDetail() {
             </div>
             <div class="plan-info-content collapsed" id="planInfoContent">
                 <div class="plan-info-card">
-                    <div class="plan-info-description">${hostName} suggested: "${plan.description || 'hangout'}"</div>
                     <div class="plan-info-guests">${guestBadges}</div>
                 </div>
             </div>
@@ -3303,12 +3302,33 @@ function renderChatMessages(messages) {
     const container = document.getElementById('planChatMessages');
     if (!container) return;
     
-    if (messages.length === 0) {
+    // Create the event suggestion as the first message from the host
+    let suggestionMessage = '';
+    if (currentPlanDetail && currentPlanDetail.description) {
+        const hostName = currentPlanDetail.creator_name.split(' ')[0];
+        const isHostMe = currentPlanDetail.creator_id === plannerInfo.id;
+        const createdTime = new Date(currentPlanDetail.created_at).toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit' 
+        });
+        
+        suggestionMessage = `
+            <div class="chat-message ${isHostMe ? 'chat-message-me' : 'chat-message-other'} chat-message-suggestion">
+                ${!isHostMe ? `<div class="chat-message-name">${hostName}</div>` : ''}
+                <div class="chat-message-bubble">
+                    <div class="chat-message-text">${escapeHtml(currentPlanDetail.description)}</div>
+                    <div class="chat-message-time">${createdTime}</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (messages.length === 0 && !suggestionMessage) {
         container.innerHTML = '<div class="chat-empty">Start the conversation!</div>';
         return;
     }
     
-    container.innerHTML = messages.map(msg => {
+    const chatMessages = messages.map(msg => {
         const isMe = msg.user_id === plannerInfo.id;
         const isAi = msg.is_ai_message || msg.message.startsWith('✨ AI:');
         const hasImage = msg.image_data;
@@ -3346,6 +3366,9 @@ function renderChatMessages(messages) {
             </div>
         `;
     }).join('');
+    
+    // Combine suggestion message with chat messages
+    container.innerHTML = suggestionMessage + chatMessages;
     
     // Scroll to bottom after DOM renders - multiple attempts for reliability
     requestAnimationFrame(() => {
