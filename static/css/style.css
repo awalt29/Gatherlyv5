@@ -3570,7 +3570,7 @@ body:has(.guest-info) .container {
     -webkit-backdrop-filter: blur(10px);
     border-radius: 20px;
     padding: 8px 15px;
-    margin: 0 75px 0 60px;
+    margin: 0 75px 0 45px;
     margin-bottom: calc(16px + env(safe-area-inset-bottom));
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(108, 200, 190, 0.25);
