@@ -3224,7 +3224,6 @@ function renderPlanDetail() {
     const chatArea = `
         <div class="plan-chat-area">
             <div class="plan-chat-messages" id="planChatMessages">
-                <div class="chat-loading">Loading messages...</div>
             </div>
         </div>
     `;
