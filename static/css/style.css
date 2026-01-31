@@ -1300,8 +1300,6 @@ h1 {
     align-items: center;
     z-index: 1000;
     padding: 20px;
-    overflow: hidden;
-    -webkit-overflow-scrolling: touch;
 }
 
 .modal.active {
@@ -3332,12 +3330,6 @@ body:has(.guest-info) .container {
         display: flex;
         flex-direction: column;
         padding-top: env(safe-area-inset-top, 20px);
-    }
-    
-    /* When keyboard is open, resize to visual viewport */
-    #planDetailModal.keyboard-open .modal-content {
-        height: var(--viewport-height, 100%);
-        bottom: auto;
     }
     
     #plansModal .plans-list {

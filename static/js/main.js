@@ -3671,38 +3671,43 @@ function setupKeyboardDetection() {
         
         const updateViewport = () => {
             const currentHeight = window.visualViewport.height;
-            const offsetTop = window.visualViewport.offsetTop;
-            const modal = document.getElementById('planDetailModal');
-            const modalContent = modal ? modal.querySelector('.modal-content') : null;
-            
-            // Set CSS variable for viewport height
-            document.documentElement.style.setProperty('--viewport-height', currentHeight + 'px');
+            const bottomBar = document.querySelector('.plan-bottom-bar');
+            const chatMessages = document.getElementById('planChatMessages');
             
             // If viewport shrunk significantly, keyboard is open
             if (currentHeight < initialHeight - 100) {
                 document.body.classList.add('keyboard-open');
-                if (modal) modal.classList.add('keyboard-open');
                 
-                // Counteract iOS scroll offset
-                if (modalContent && offsetTop > 0) {
-                    modalContent.style.transform = `translateY(${-offsetTop}px)`;
+                // Position bottom bar at the top of the keyboard
+                if (bottomBar) {
+                    const keyboardHeight = initialHeight - currentHeight;
+                    bottomBar.style.bottom = keyboardHeight + 'px';
+                }
+                
+                // Adjust chat messages container to not overlap with repositioned bar
+                if (chatMessages && bottomBar) {
+                    chatMessages.style.paddingBottom = (bottomBar.offsetHeight + 10) + 'px';
+                    // Scroll to bottom
+                    setTimeout(() => {
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }, 50);
                 }
             } else {
                 document.body.classList.remove('keyboard-open');
-                if (modal) modal.classList.remove('keyboard-open');
-                if (modalContent) {
-                    modalContent.style.transform = '';
-                }
-                // Reset initial height when keyboard closes
                 initialHeight = window.visualViewport.height;
+                
+                // Reset positions
+                if (bottomBar) {
+                    bottomBar.style.bottom = '';
+                }
+                if (chatMessages) {
+                    chatMessages.style.paddingBottom = '';
+                }
             }
         };
         
         window.visualViewport.addEventListener('resize', updateViewport);
         window.visualViewport.addEventListener('scroll', updateViewport);
-        
-        // Set initial value
-        document.documentElement.style.setProperty('--viewport-height', initialHeight + 'px');
     }
 }
 
