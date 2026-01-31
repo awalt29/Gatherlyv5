@@ -86,7 +86,7 @@ body {
 }
 
 .login-link {
-    padding: 8px 20px;
+    padding: 8px 12px;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 20px;
@@ -3581,7 +3581,7 @@ body:has(.guest-info) .container {
     flex-direction: column;
     align-items: center;
     gap: 3px;
-    padding: 8px 20px;
+    padding: 8px 12px;
     background: transparent;
     border: none;
     color: white;
