@@ -3015,8 +3015,8 @@ body:has(.guest-info) .container {
 }
 
 .chat-message-me .chat-message-bubble {
-    background: var(--accent-mint);
-    color: var(--bg-dark);
+    background: rgba(91, 163, 155, 0.85);
+    color: #ffffff;
 }
 
 .chat-message-text {
@@ -3196,7 +3196,7 @@ body:has(.guest-info) .container {
 }
 
 .chat-message-image.chat-message-me .chat-message-bubble {
-    background: rgba(100, 200, 170, 0.2);
+    background: rgba(91, 163, 155, 0.3);
 }
 
 /* Fullscreen Image Overlay */
