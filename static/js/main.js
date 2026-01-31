@@ -3062,22 +3062,11 @@ function renderPlanCard(plan, isPast) {
                       plan.latest_message_id > lastSeen && 
                       plan.latest_message_user_id !== plannerInfo?.id;
     
-    // Edit button only for hosts of upcoming plans
-    const editButton = (plan.role === 'host' && !isPast) ? `
-        <button class="plan-card-edit-btn" onclick="event.stopPropagation(); openEditPlanModal(${plan.id})" title="Edit plan">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-            </svg>
-        </button>
-    ` : '';
-    
     return `
         <div class="plan-card ${isPast ? 'plan-card-past' : ''} ${hasUnread ? 'plan-card-unread' : ''}" onclick="openPlanDetail(${plan.id})">
             <div class="plan-card-role">
                 ${plan.role === 'host' ? '👑 You\'re hosting' : `📬 Invited by ${plan.creator_name}`}
                 ${hasUnread ? '<span class="plan-unread-dot"></span>' : ''}
-                ${editButton}
             </div>
             <div class="plan-card-header">
                 <div class="plan-card-date">${dateStr}</div>
@@ -3169,7 +3158,10 @@ function renderPlanDetail() {
     // Build options menu
     let optionsHtml = '';
     if (plan.role === 'host' && !isPast) {
-        optionsHtml = `<button class="plan-option-item plan-option-danger" onclick="cancelPlan(${plan.id}); closePlanOptions()">Cancel Plan</button>`;
+        optionsHtml = `
+            <button class="plan-option-item" onclick="editCurrentPlan(); closePlanOptions()">Edit Plan</button>
+            <button class="plan-option-item plan-option-danger" onclick="cancelPlan(${plan.id}); closePlanOptions()">Cancel Plan</button>
+        `;
     } else {
         optionsHtml = `<div class="plan-option-item plan-option-info">Created by ${plan.creator_name}</div>`;
     }
@@ -3928,6 +3920,59 @@ async function checkOpenPlanParam() {
 function togglePlanOptions() {
     const menu = document.getElementById('planOptionsMenu');
     menu.classList.toggle('active');
+}
+
+function editCurrentPlan() {
+    if (!currentPlanDetail) return;
+    
+    const plan = currentPlanDetail;
+    
+    editingPlanId = plan.id;
+    isNewPlanMode = false;
+    selectedPlanFriends = plan.invitees.map(inv => inv.user_id);
+    selectedPlanTime = plan.time_slot.toLowerCase();
+    
+    // Show datetime section, hide slot info
+    document.getElementById('planSlotInfo').style.display = 'none';
+    document.getElementById('planDatetimeSection').style.display = 'block';
+    document.getElementById('planFriendsHeader').textContent = 'Invited friends (select more to add)';
+    document.getElementById('planModalTitle').textContent = 'Edit Plan';
+    
+    // Set date
+    document.getElementById('planDateInput').value = plan.date;
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('planDateInput').min = today;
+    
+    // Set time selection
+    document.querySelectorAll('.time-btn').forEach(btn => {
+        btn.classList.remove('selected');
+        if (btn.dataset.time === selectedPlanTime) {
+            btn.classList.add('selected');
+        }
+    });
+    
+    // Set message field
+    document.getElementById('planMessage').value = plan.description || '';
+    
+    // Show ALL friends with current invitees pre-selected
+    const friendsList = document.getElementById('planFriendsList');
+    if (linkedFriends && linkedFriends.length > 0) {
+        friendsList.innerHTML = linkedFriends.map(friend => {
+            const isSelected = selectedPlanFriends.includes(friend.id);
+            return `
+                <div class="plan-friend-item ${isSelected ? 'selected' : ''}" data-user-id="${friend.id}" onclick="togglePlanFriend(this, ${friend.id})">
+                    <div class="friend-checkbox"></div>
+                    <div class="friend-avatar">${getInitials(friend.name)}</div>
+                    <div class="friend-name">${friend.name}</div>
+                </div>
+            `;
+        }).join('');
+    } else {
+        friendsList.innerHTML = '<div class="plan-friends-empty">No friends yet. Add friends first!</div>';
+    }
+    
+    updateSendInviteButton();
+    document.getElementById('planModal').classList.add('active');
 }
 
 function closePlanOptions() {

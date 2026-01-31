@@ -2551,34 +2551,6 @@ body:has(.guest-info) .container {
     gap: 8px;
 }
 
-.plan-card-edit-btn {
-    margin-left: auto;
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    border-radius: 6px;
-    padding: 6px 8px;
-    cursor: pointer;
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
-
-.plan-card-edit-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: var(--text-primary);
-}
-
-.plan-card-edit-btn:active {
-    transform: scale(0.95);
-}
-
-.plan-card-edit-btn svg {
-    width: 16px;
-    height: 16px;
-}
-
 .plan-unread-dot {
     width: 8px;
     height: 8px;
