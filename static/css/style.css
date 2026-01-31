@@ -3015,7 +3015,7 @@ body:has(.guest-info) .container {
 }
 
 .chat-message-me .chat-message-bubble {
-    background: rgba(147, 112, 219, 0.7);
+    background: linear-gradient(135deg, rgba(55, 85, 140, 0.9), rgba(30, 50, 90, 0.85));
     color: #ffffff;
 }
 
@@ -3196,7 +3196,7 @@ body:has(.guest-info) .container {
 }
 
 .chat-message-image.chat-message-me .chat-message-bubble {
-    background: rgba(147, 112, 219, 0.25);
+    background: linear-gradient(135deg, rgba(55, 85, 140, 0.4), rgba(30, 50, 90, 0.35));
 }
 
 /* Fullscreen Image Overlay */
