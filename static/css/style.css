@@ -2187,6 +2187,10 @@ body:has(.guest-info) .container {
 }
 
 /* Plan Modal */
+#planModal {
+    z-index: 1001; /* Above plans modal so it can layer on top */
+}
+
 #planModal .modal-content {
     max-width: 400px;
     max-height: 90vh;

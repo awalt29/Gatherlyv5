@@ -1734,9 +1734,7 @@ async function openEditPlanModal(planId) {
         }
         const plan = await response.json();
         
-        // Now close plans modal and open edit modal simultaneously
-        closePlans();
-        
+        // Keep plans modal open - edit modal will layer on top
         editingPlanId = planId;
         isNewPlanMode = false;
         selectedPlanFriends = plan.invitees.map(inv => inv.user_id);
