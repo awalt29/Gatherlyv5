@@ -3632,3 +3632,42 @@ body:has(.guest-info) .container {
     padding: 0 4px;
 }
 
+
+/* AI Chat Floating Bubble */
+.ai-chat-bubble {
+    position: fixed;
+    bottom: calc(26px + env(safe-area-inset-bottom));
+    right: 16px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(147, 112, 219, 0.9), rgba(64, 196, 255, 0.9));
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(147, 112, 219, 0.4);
+    z-index: 100;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ai-chat-bubble:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(147, 112, 219, 0.5);
+}
+
+.ai-chat-bubble:active {
+    transform: scale(0.95);
+}
+
+.ai-chat-bubble-icon {
+    font-size: 24px;
+}
+
+/* Adjust bottom nav margin to not overlap with bubble */
+@media (max-width: 480px) {
+    .bottom-nav {
+        margin-right: 80px;
+    }
+}
