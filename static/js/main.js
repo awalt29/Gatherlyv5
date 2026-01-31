@@ -3670,14 +3670,14 @@ function setupKeyboardDetection() {
         let initialHeight = window.visualViewport.height;
         
         const updateViewport = () => {
-            const currentHeight = window.visualViewport.height;
+            const vh = window.visualViewport.height;
             const offsetTop = window.visualViewport.offsetTop;
             const bottomBar = document.querySelector('.plan-bottom-bar');
             const chatMessages = document.getElementById('planChatMessages');
             const modalContent = document.querySelector('#planDetailModal .modal-content');
             
             // If viewport shrunk significantly, keyboard is open
-            if (currentHeight < initialHeight - 100) {
+            if (vh < initialHeight - 100) {
                 document.body.classList.add('keyboard-open');
                 
                 // Counteract the iOS scroll that pushes the modal up
@@ -3685,10 +3685,16 @@ function setupKeyboardDetection() {
                     modalContent.style.top = offsetTop + 'px';
                 }
                 
-                // Position bottom bar at the top of the keyboard
+                // Position bottom bar at bottom of visible viewport
+                // It needs to be at: offsetTop + vh - bottomBar height (from top)
+                // Or in terms of bottom: we need to account for the scroll offset
                 if (bottomBar) {
-                    const keyboardHeight = initialHeight - currentHeight;
-                    bottomBar.style.bottom = keyboardHeight + 'px';
+                    // Calculate where the bottom of visible area is relative to the document
+                    const visibleBottom = offsetTop + vh;
+                    // Position the bar so its bottom edge is at the visible bottom
+                    bottomBar.style.position = 'fixed';
+                    bottomBar.style.bottom = 'auto';
+                    bottomBar.style.top = (visibleBottom - bottomBar.offsetHeight) + 'px';
                 }
                 
                 // Adjust chat messages container
@@ -3707,7 +3713,9 @@ function setupKeyboardDetection() {
                     modalContent.style.top = '';
                 }
                 if (bottomBar) {
+                    bottomBar.style.position = '';
                     bottomBar.style.bottom = '';
+                    bottomBar.style.top = '';
                 }
                 if (chatMessages) {
                     chatMessages.style.paddingBottom = '';
