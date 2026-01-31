@@ -3686,19 +3686,25 @@ function setupKeyboardDetection() {
                 }
                 
                 // Position bottom bar at bottom of visible viewport
+                const bottomBarHeight = bottomBar ? bottomBar.offsetHeight : 0;
                 if (bottomBar) {
                     const visibleBottom = offsetTop + vh;
                     bottomBar.style.position = 'fixed';
                     bottomBar.style.bottom = 'auto';
-                    bottomBar.style.top = (visibleBottom - bottomBar.offsetHeight) + 'px';
+                    bottomBar.style.top = (visibleBottom - bottomBarHeight) + 'px';
                     bottomBar.style.left = '0';
                     bottomBar.style.right = '0';
                     bottomBar.style.width = '100%';
+                    bottomBar.style.zIndex = '1001';
                 }
                 
-                // Adjust chat messages container
-                if (chatMessages && bottomBar) {
-                    chatMessages.style.paddingBottom = (bottomBar.offsetHeight + 10) + 'px';
+                // Adjust chat messages container to fit above the bottom bar
+                if (chatMessages) {
+                    // Calculate how much space is available for chat
+                    const chatTop = chatMessages.getBoundingClientRect().top;
+                    const availableHeight = vh - (chatTop - offsetTop) - bottomBarHeight - 10;
+                    chatMessages.style.maxHeight = availableHeight + 'px';
+                    chatMessages.style.overflow = 'auto';
                     setTimeout(() => {
                         chatMessages.scrollTop = chatMessages.scrollHeight;
                     }, 50);
@@ -3720,7 +3726,8 @@ function setupKeyboardDetection() {
                     bottomBar.style.width = '';
                 }
                 if (chatMessages) {
-                    chatMessages.style.paddingBottom = '';
+                    chatMessages.style.maxHeight = '';
+                    chatMessages.style.overflow = '';
                 }
             }
         };
