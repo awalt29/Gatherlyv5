@@ -3669,9 +3669,12 @@ function setupKeyboardDetection() {
     if (window.visualViewport) {
         let initialHeight = window.visualViewport.height;
         
-        window.visualViewport.addEventListener('resize', () => {
+        const updateViewport = () => {
             const currentHeight = window.visualViewport.height;
             const modal = document.getElementById('planDetailModal');
+            
+            // Set CSS variable for viewport height
+            document.documentElement.style.setProperty('--viewport-height', currentHeight + 'px');
             
             // If viewport shrunk significantly, keyboard is open
             if (currentHeight < initialHeight - 100) {
@@ -3680,8 +3683,16 @@ function setupKeyboardDetection() {
             } else {
                 document.body.classList.remove('keyboard-open');
                 if (modal) modal.classList.remove('keyboard-open');
+                // Reset initial height when keyboard closes
+                initialHeight = window.visualViewport.height;
             }
-        });
+        };
+        
+        window.visualViewport.addEventListener('resize', updateViewport);
+        window.visualViewport.addEventListener('scroll', updateViewport);
+        
+        // Set initial value
+        document.documentElement.style.setProperty('--viewport-height', initialHeight + 'px');
     }
 }
 
