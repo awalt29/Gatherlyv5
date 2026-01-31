@@ -378,20 +378,19 @@
 
     <!-- AI Chat Modal -->
     <div class="modal" id="aiChatModal">
-        <div class="modal-content ai-chat-modal">
-            <div class="ai-chat-header-bar">
+        <div class="modal-content plan-detail-modal">
+            <div class="plan-detail-header-bar">
                 <button class="back-btn" onclick="closeAiChat()">←</button>
-                <div class="ai-chat-title">
-                    <span class="ai-chat-icon">✨</span>
-                    <span>AI Assistant</span>
-                </div>
-                <button class="ai-chat-clear-btn" onclick="clearAiChatHistory()">Clear</button>
+                <div class="plan-detail-title-info">✨ AI Assistant</div>
+                <button class="plan-options-btn" onclick="clearAiChatHistory()">Clear</button>
             </div>
-            <div class="ai-chat-content">
-                <div class="ai-chat-messages" id="aiChatMessages">
+            <div class="plan-detail-content">
+                <div class="plan-chat-area">
+                    <div class="plan-chat-messages" id="aiChatMessages">
+                    </div>
                 </div>
             </div>
-            <div class="ai-chat-bottom-bar">
+            <div class="plan-bottom-bar">
                 <div class="plan-chat-input">
                     <div id="aiChatInput" class="chat-input-editable" contenteditable="true" data-placeholder="Ask me anything..." oninput="autoResizeTextarea(this)" onkeydown="handleAiChatKeydown(event)" onfocus="handleAiChatFocus()" enterkeyhint="send" inputmode="text"></div>
                     <button class="send-btn" onclick="sendAiChatMessage()" onmousedown="event.preventDefault()" ontouchend="event.preventDefault()">

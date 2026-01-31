@@ -3318,7 +3318,8 @@ body:has(.guest-info) .container {
 /* Make plans modal fullscreen on mobile */
 @media (max-width: 480px) {
     #plansModal .modal-content,
-    #planDetailModal .modal-content {
+    #planDetailModal .modal-content,
+    #aiChatModal .modal-content {
         position: fixed;
         top: 0;
         left: 0;

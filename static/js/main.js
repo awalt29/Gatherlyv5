@@ -3702,10 +3702,10 @@ function renderAiChatMessages(messages) {
     
     if (messages.length === 0) {
         container.innerHTML = `
-            <div class="ai-chat-welcome">
-                <div class="ai-chat-welcome-icon">✨</div>
-                <div class="ai-chat-welcome-title">Hi! I'm your AI assistant</div>
-                <div class="ai-chat-welcome-text">Ask me anything - restaurant recommendations, activity ideas, travel tips, or just chat!</div>
+            <div class="chat-empty">
+                <div style="font-size: 48px; margin-bottom: 16px;">✨</div>
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Hi! I'm your AI assistant</div>
+                <div style="font-size: 14px; color: var(--text-muted);">Ask me anything - restaurant recommendations, activity ideas, travel tips, or just chat!</div>
             </div>
         `;
         return;
@@ -3715,11 +3715,15 @@ function renderAiChatMessages(messages) {
         const isMe = !msg.is_ai_message;
         const messageClass = isMe ? 'chat-message-me' : 'chat-message-ai';
         const name = isMe ? 'You' : '✨ AI Assistant';
+        const time = new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
         
         return `
             <div class="chat-message ${messageClass}">
                 <div class="chat-message-name">${name}</div>
-                <div class="chat-message-bubble">${msg.message}</div>
+                <div class="chat-message-bubble">
+                    ${msg.message}
+                    <div class="chat-message-time">${time}</div>
+                </div>
             </div>
         `;
     }).join('');
@@ -3741,16 +3745,21 @@ async function sendAiChatMessage() {
     const container = document.getElementById('aiChatMessages');
     
     // Remove welcome message if present
-    const welcome = container.querySelector('.ai-chat-welcome');
+    const welcome = container.querySelector('.chat-empty');
     if (welcome) {
         welcome.remove();
     }
+    
+    const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     
     // Add user message optimistically
     const userMsgHtml = `
         <div class="chat-message chat-message-me">
             <div class="chat-message-name">You</div>
-            <div class="chat-message-bubble">${message}</div>
+            <div class="chat-message-bubble">
+                ${message}
+                <div class="chat-message-time">${time}</div>
+            </div>
         </div>
     `;
     container.insertAdjacentHTML('beforeend', userMsgHtml);
@@ -3781,10 +3790,14 @@ async function sendAiChatMessage() {
             const data = await response.json();
             
             if (data.ai_message) {
+                const aiTime = new Date(data.ai_message.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
                 const aiMsgHtml = `
                     <div class="chat-message chat-message-ai">
                         <div class="chat-message-name">✨ AI Assistant</div>
-                        <div class="chat-message-bubble">${data.ai_message.message}</div>
+                        <div class="chat-message-bubble">
+                            ${data.ai_message.message}
+                            <div class="chat-message-time">${aiTime}</div>
+                        </div>
                     </div>
                 `;
                 container.insertAdjacentHTML('beforeend', aiMsgHtml);
