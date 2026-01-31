@@ -693,6 +693,12 @@ h1 {
     background: rgba(255, 255, 255, 0.1);
 }
 
+@media (max-width: 768px) {
+    .settings-btn:hover {
+        background: none;
+    }
+}
+
 /* Friends header row */
 .friends-header-row {
     display: flex;
