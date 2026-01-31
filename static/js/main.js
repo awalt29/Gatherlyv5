@@ -1725,10 +1725,7 @@ let editingPlanId = null;
 async function openEditPlanModal(planId) {
     console.log('[EDIT PLAN] Opening edit modal for plan:', planId);
     
-    // Close the plans modal first
-    closePlans();
-    
-    // Fetch the plan details
+    // Fetch the plan details first (while plans modal is still open)
     try {
         const response = await fetch(`/api/hangouts/${planId}`);
         if (!response.ok) {
@@ -1736,6 +1733,9 @@ async function openEditPlanModal(planId) {
             return;
         }
         const plan = await response.json();
+        
+        // Now close plans modal and open edit modal simultaneously
+        closePlans();
         
         editingPlanId = planId;
         isNewPlanMode = false;
