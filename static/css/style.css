@@ -3562,6 +3562,7 @@ body:has(.guest-info) .container {
 
 /* Bottom Navigation */
 .bottom-nav {
+    width: fit-content;
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -3668,6 +3669,6 @@ body:has(.guest-info) .container {
 /* Adjust bottom nav margin to not overlap with bubble */
 @media (max-width: 480px) {
     .bottom-nav {
-        margin-right: 70px;
+    width: fit-content;
     }
 }
