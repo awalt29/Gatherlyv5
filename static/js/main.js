@@ -3686,15 +3686,14 @@ function setupKeyboardDetection() {
                 }
                 
                 // Position bottom bar at bottom of visible viewport
-                // It needs to be at: offsetTop + vh - bottomBar height (from top)
-                // Or in terms of bottom: we need to account for the scroll offset
                 if (bottomBar) {
-                    // Calculate where the bottom of visible area is relative to the document
                     const visibleBottom = offsetTop + vh;
-                    // Position the bar so its bottom edge is at the visible bottom
                     bottomBar.style.position = 'fixed';
                     bottomBar.style.bottom = 'auto';
                     bottomBar.style.top = (visibleBottom - bottomBar.offsetHeight) + 'px';
+                    bottomBar.style.left = '0';
+                    bottomBar.style.right = '0';
+                    bottomBar.style.width = '100%';
                 }
                 
                 // Adjust chat messages container
@@ -3716,6 +3715,9 @@ function setupKeyboardDetection() {
                     bottomBar.style.position = '';
                     bottomBar.style.bottom = '';
                     bottomBar.style.top = '';
+                    bottomBar.style.left = '';
+                    bottomBar.style.right = '';
+                    bottomBar.style.width = '';
                 }
                 if (chatMessages) {
                     chatMessages.style.paddingBottom = '';
