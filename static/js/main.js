@@ -3672,39 +3672,22 @@ function setupKeyboardDetection() {
         const updateViewport = () => {
             const vh = window.visualViewport.height;
             const offsetTop = window.visualViewport.offsetTop;
-            const bottomBar = document.querySelector('.plan-bottom-bar');
+            const modal = document.getElementById('planDetailModal');
+            const modalContent = modal ? modal.querySelector('.modal-content') : null;
             const chatMessages = document.getElementById('planChatMessages');
-            const modalContent = document.querySelector('#planDetailModal .modal-content');
             
             // If viewport shrunk significantly, keyboard is open
             if (vh < initialHeight - 100) {
                 document.body.classList.add('keyboard-open');
                 
-                // Counteract the iOS scroll that pushes the modal up
-                if (modalContent && offsetTop > 0) {
+                // Resize the modal content to fit the visual viewport
+                if (modalContent) {
+                    modalContent.style.height = vh + 'px';
                     modalContent.style.top = offsetTop + 'px';
                 }
                 
-                // Position bottom bar at bottom of visible viewport
-                const bottomBarHeight = bottomBar ? bottomBar.offsetHeight : 0;
-                if (bottomBar) {
-                    const visibleBottom = offsetTop + vh;
-                    bottomBar.style.position = 'fixed';
-                    bottomBar.style.bottom = 'auto';
-                    bottomBar.style.top = (visibleBottom - bottomBarHeight) + 'px';
-                    bottomBar.style.left = '0';
-                    bottomBar.style.right = '0';
-                    bottomBar.style.width = '100%';
-                    bottomBar.style.zIndex = '1001';
-                }
-                
-                // Adjust chat messages container to fit above the bottom bar
+                // Scroll chat to bottom
                 if (chatMessages) {
-                    // Calculate how much space is available for chat
-                    const chatTop = chatMessages.getBoundingClientRect().top;
-                    const availableHeight = vh - (chatTop - offsetTop) - bottomBarHeight - 10;
-                    chatMessages.style.maxHeight = availableHeight + 'px';
-                    chatMessages.style.overflow = 'auto';
                     setTimeout(() => {
                         chatMessages.scrollTop = chatMessages.scrollHeight;
                     }, 50);
@@ -3713,21 +3696,10 @@ function setupKeyboardDetection() {
                 document.body.classList.remove('keyboard-open');
                 initialHeight = window.visualViewport.height;
                 
-                // Reset positions
+                // Reset
                 if (modalContent) {
+                    modalContent.style.height = '';
                     modalContent.style.top = '';
-                }
-                if (bottomBar) {
-                    bottomBar.style.position = '';
-                    bottomBar.style.bottom = '';
-                    bottomBar.style.top = '';
-                    bottomBar.style.left = '';
-                    bottomBar.style.right = '';
-                    bottomBar.style.width = '';
-                }
-                if (chatMessages) {
-                    chatMessages.style.maxHeight = '';
-                    chatMessages.style.overflow = '';
                 }
             }
         };
