@@ -3570,7 +3570,7 @@ body:has(.guest-info) .container {
     -webkit-backdrop-filter: blur(10px);
     border-radius: 20px;
     padding: 8px 25px;
-    margin: 0 15px 0 10px;
+    margin: 0 10px;
     margin-bottom: calc(16px + env(safe-area-inset-bottom));
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(108, 200, 190, 0.25);
@@ -3636,7 +3636,7 @@ body:has(.guest-info) .container {
 /* AI Chat Floating Bubble */
 .ai-chat-bubble {
     position: fixed;
-    bottom: calc(20px + env(safe-area-inset-bottom));
+    bottom: calc(24px + env(safe-area-inset-bottom));
     right: 12px;
     width: 52px;
     height: 52px;
