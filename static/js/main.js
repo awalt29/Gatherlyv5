@@ -3198,20 +3198,25 @@ function renderPlanDetail() {
         `;
     }
     
-    // Build info card (collapsible, default closed)
+    // Determine if details should be open by default (open until user RSVPs)
+    const needsRsvp = canRespond && myInvite && myInvite.status === 'pending';
+    const detailsCollapsed = needsRsvp ? '' : 'collapsed';
+    const detailsIcon = needsRsvp ? '▼' : '▶';
+    
+    // Build info card (collapsible, open until user RSVPs)
     const hostName = plan.creator_name.split(' ')[0];
     const infoCard = `
         <div class="plan-info-section">
             <div class="plan-info-header" onclick="togglePlanDetails()">
                 <span>Details</span>
-                <span class="plan-info-toggle" id="planInfoToggle">▶</span>
+                <span class="plan-info-toggle" id="planInfoToggle">${detailsIcon}</span>
             </div>
-            <div class="plan-info-content collapsed" id="planInfoContent">
+            <div class="plan-info-content ${detailsCollapsed}" id="planInfoContent">
+                ${rsvpPills}
                 <div class="plan-info-card">
                     <div class="plan-info-guests">${guestBadges}</div>
                 </div>
             </div>
-            ${rsvpPills}
         </div>
     `;
     
