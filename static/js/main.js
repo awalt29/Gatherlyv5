@@ -3671,12 +3671,19 @@ function setupKeyboardDetection() {
         
         const updateViewport = () => {
             const currentHeight = window.visualViewport.height;
+            const offsetTop = window.visualViewport.offsetTop;
             const bottomBar = document.querySelector('.plan-bottom-bar');
             const chatMessages = document.getElementById('planChatMessages');
+            const modalContent = document.querySelector('#planDetailModal .modal-content');
             
             // If viewport shrunk significantly, keyboard is open
             if (currentHeight < initialHeight - 100) {
                 document.body.classList.add('keyboard-open');
+                
+                // Counteract the iOS scroll that pushes the modal up
+                if (modalContent && offsetTop > 0) {
+                    modalContent.style.top = offsetTop + 'px';
+                }
                 
                 // Position bottom bar at the top of the keyboard
                 if (bottomBar) {
@@ -3684,10 +3691,9 @@ function setupKeyboardDetection() {
                     bottomBar.style.bottom = keyboardHeight + 'px';
                 }
                 
-                // Adjust chat messages container to not overlap with repositioned bar
+                // Adjust chat messages container
                 if (chatMessages && bottomBar) {
                     chatMessages.style.paddingBottom = (bottomBar.offsetHeight + 10) + 'px';
-                    // Scroll to bottom
                     setTimeout(() => {
                         chatMessages.scrollTop = chatMessages.scrollHeight;
                     }, 50);
@@ -3697,6 +3703,9 @@ function setupKeyboardDetection() {
                 initialHeight = window.visualViewport.height;
                 
                 // Reset positions
+                if (modalContent) {
+                    modalContent.style.top = '';
+                }
                 if (bottomBar) {
                     bottomBar.style.bottom = '';
                 }
