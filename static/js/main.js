@@ -3236,9 +3236,9 @@ function renderPlanDetail() {
                     </div>
                     <div class="ai-suggestions-content collapsed" id="aiSuggestionsContent">
                         <div class="ai-suggestions-options" id="aiSuggestionsOptions">
-                            <button class="ai-suggestion-btn" onclick="selectAiSuggestion('dinner')">
+                            <button class="ai-suggestion-btn" onclick="selectAiSuggestion('food')">
                                 <span class="ai-btn-icon">🍽️</span>
-                                <span class="ai-btn-label">Dinner</span>
+                                <span class="ai-btn-label">Food</span>
                             </button>
                             <button class="ai-suggestion-btn" onclick="selectAiSuggestion('drinks')">
                                 <span class="ai-btn-icon">🍸</span>
@@ -3589,7 +3589,7 @@ async function sendPlanMessage() {
             
             // Determine suggestion type from prompt
             let type = 'custom';
-            if (aiPrompt.toLowerCase().includes('dinner')) type = 'dinner';
+            if (aiPrompt.toLowerCase().includes('food') || aiPrompt.toLowerCase().includes('dinner') || aiPrompt.toLowerCase().includes('lunch') || aiPrompt.toLowerCase().includes('brunch')) type = 'food';
             else if (aiPrompt.toLowerCase().includes('drinks') || aiPrompt.toLowerCase().includes('bar')) type = 'drinks';
             else if (aiPrompt.toLowerCase().includes('split') || aiPrompt.toLowerCase().includes('bill')) type = 'split';
             
@@ -3839,7 +3839,7 @@ function selectAiSuggestion(type) {
     const input = document.getElementById('planChatInput');
     
     const prompts = {
-        'dinner': '@AI suggest dinner spots',
+        'food': '@AI suggest food spots',
         'drinks': '@AI suggest places for drinks',
         'split': '@AI split the bill',
         'custom': '@AI '

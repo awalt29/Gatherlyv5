@@ -2456,14 +2456,14 @@ That's it! No calculations shown, no formulas, just the items and final totals."
                 'ai_response': ai_response
             }), 200
         
-        # Handle dinner suggestions - check if they've provided preferences
-        elif suggestion_type == 'dinner':
+        # Handle food suggestions - check if they've provided preferences
+        elif suggestion_type == 'food':
             # Check if this is just the initial request or if they've provided details
-            has_preferences = any(word in prompt for word in ['neighborhood', 'near', 'area', 'cuisine', 'type', 'mexican', 'italian', 'asian', 'chinese', 'japanese', 'indian', 'thai', 'american', 'french', 'mediterranean', 'sushi', 'pizza', 'burgers', 'seafood', 'steakhouse', 'vegetarian', 'vegan', 'downtown', 'midtown', 'uptown'])
+            has_preferences = any(word in prompt for word in ['neighborhood', 'near', 'area', 'cuisine', 'type', 'mexican', 'italian', 'asian', 'chinese', 'japanese', 'indian', 'thai', 'american', 'french', 'mediterranean', 'sushi', 'pizza', 'burgers', 'seafood', 'steakhouse', 'vegetarian', 'vegan', 'downtown', 'midtown', 'uptown', 'brunch', 'lunch', 'breakfast', 'cafe', 'coffee'])
             
-            if not has_preferences and 'suggest dinner' in prompt:
+            if not has_preferences and 'suggest food' in prompt:
                 # First request - ask for preferences
-                ai_response = """🍽️ I'd love to help find dinner spots!
+                ai_response = """🍽️ I'd love to help find food spots!
 
 To give you the best suggestions, tell me:
 • What neighborhood or area?
@@ -2491,7 +2491,7 @@ Just reply with something like "@AI Italian restaurant in Chelsea" and I'll find
                 if previous_suggestions:
                     no_repeat = f"\n\nIMPORTANT: Do NOT suggest any places already mentioned. Previous suggestions to avoid:\n{previous_suggestions}"
                 
-                system_prompt = f"""You are helping friends find a dinner spot. Give 2-3 specific restaurant suggestions based on their preferences.
+                system_prompt = f"""You are helping friends find a place to eat. Give 2-3 specific restaurant or cafe suggestions based on their preferences.
 For each suggestion include: name, why it's good for groups, and price range ($, $$, $$$).
 Keep it brief and friendly. Do NOT use markdown formatting (no asterisks, no bold, no headers).{no_repeat}"""
                 
