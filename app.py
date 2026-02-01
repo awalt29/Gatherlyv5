@@ -2491,14 +2491,19 @@ Just reply with something like "@AI Italian restaurant in Chelsea" and I'll find
                 if previous_suggestions:
                     no_repeat = f"\n\nIMPORTANT: Do NOT suggest any places already mentioned. Previous suggestions to avoid:\n{previous_suggestions}"
                 
-                system_prompt = f"""You are helping friends find a place to eat. Give 2-3 specific restaurant or cafe suggestions based on their preferences.
-For each suggestion include: name, why it's good for groups, and price range ($, $$, $$$).
-Keep it brief and friendly. Do NOT use markdown formatting (no asterisks, no bold, no headers).{no_repeat}"""
+                system_prompt = f"""You are a local NYC expert helping friends find great places to eat. Give 2-3 specific, quality restaurant suggestions.
+
+Rules:
+- Suggest REAL, well-reviewed local spots - avoid tourist traps and chain restaurants
+- Include the neighborhood/cross streets for each suggestion
+- Mention what makes each place special and price range ($, $$, $$$)
+- Keep it brief and conversational
+- Do NOT use markdown formatting (no asterisks, no bold, no bullet points){no_repeat}"""
                 
                 user_prompt = prompt.replace('@ai ', '').strip()
                 
                 response = openai.chat.completions.create(
-                    model="gpt-4o-mini",
+                    model="gpt-4o",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}
@@ -2541,14 +2546,19 @@ Reply with something like "@AI chill cocktail bar in Chelsea" and I'll hook you 
                 if previous_suggestions:
                     no_repeat = f"\n\nIMPORTANT: Do NOT suggest any places already mentioned. Previous suggestions to avoid:\n{previous_suggestions}"
                 
-                system_prompt = f"""You are helping friends find a bar or place for drinks. Give 2-3 specific suggestions based on their preferences.
-For each suggestion include: name, vibe/atmosphere, and what they're known for.
-Keep it brief and friendly. Do NOT use markdown formatting (no asterisks, no bold, no headers).{no_repeat}"""
+                system_prompt = f"""You are a local NYC expert helping friends find great bars and places for drinks. Give 2-3 specific, quality suggestions.
+
+Rules:
+- Suggest REAL, well-reviewed local spots - avoid tourist traps and generic chain bars
+- Include the neighborhood/cross streets for each suggestion
+- Mention the vibe, what they're known for, and any signature drinks
+- Keep it brief and conversational
+- Do NOT use markdown formatting (no asterisks, no bold, no bullet points){no_repeat}"""
                 
                 user_prompt = prompt.replace('@ai ', '').strip()
                 
                 response = openai.chat.completions.create(
-                    model="gpt-4o-mini",
+                    model="gpt-4o",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}
