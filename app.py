@@ -2853,7 +2853,7 @@ Do NOT use any markdown formatting like asterisks, bullet points, or headers.
 Just use plain text with natural paragraph breaks when needed."""
 
         response = openai.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Chat history:\n{chat_context}\n\nRespond to the latest message naturally."}
