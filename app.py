@@ -2587,7 +2587,7 @@ Do NOT use markdown formatting (no asterisks, no bold, no headers)."""
             user_prompt = prompt.replace('@ai ', '').strip()
             
             response = openai.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
