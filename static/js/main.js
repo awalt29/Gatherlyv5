@@ -1125,14 +1125,16 @@ function handleManageTouchMove(e) {
     
     if (closestItem) {
         if (insertBefore) {
-            if (closestItem.previousElementSibling !== placeholder) {
+            // Insert placeholder before this item
+            if (placeholder.nextElementSibling !== closestItem) {
                 manageList.insertBefore(placeholder, closestItem);
             }
         } else {
-            const nextSibling = closestItem.nextElementSibling;
-            if (nextSibling !== placeholder) {
-                if (nextSibling && nextSibling !== touchedItem) {
-                    manageList.insertBefore(placeholder, nextSibling);
+            // Insert placeholder after this item
+            const targetPosition = closestItem.nextElementSibling;
+            if (targetPosition !== placeholder) {
+                if (targetPosition) {
+                    manageList.insertBefore(placeholder, targetPosition);
                 } else {
                     manageList.appendChild(placeholder);
                 }
