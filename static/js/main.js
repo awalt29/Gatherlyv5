@@ -1101,38 +1101,42 @@ function handleManageTouchMove(e) {
     const manageList = document.getElementById('friendsManageList');
     const allItems = Array.from(manageList.querySelectorAll('.friend-manage-item:not(.dragging)'));
     
-    // Find which item the finger is over - use top 40% as threshold for "above"
+    if (allItems.length === 0) return;
+    
+    // Simple approach: find the item whose vertical center is closest to the touch point
+    // and insert placeholder either before or after based on touch position
+    let closestItem = null;
+    let closestDistance = Infinity;
+    let insertBefore = true;
+    
     for (let i = 0; i < allItems.length; i++) {
         const item = allItems[i];
         const rect = item.getBoundingClientRect();
+        const itemCenter = rect.top + rect.height / 2;
+        const distance = Math.abs(touchY - itemCenter);
         
-        // If finger is in the top 40% of this item, insert before it
-        if (touchY < rect.top + rect.height * 0.4) {
-            if (item !== placeholder.nextElementSibling) {
-                manageList.insertBefore(placeholder, item);
-            }
-            return;
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closestItem = item;
+            // If touch is above center, insert before; otherwise insert after
+            insertBefore = touchY < itemCenter;
         }
-        
-        // If finger is anywhere on this item (but not top 40%), insert after it
-        if (touchY >= rect.top && touchY <= rect.bottom) {
-            const nextSibling = item.nextElementSibling;
+    }
+    
+    if (closestItem) {
+        if (insertBefore) {
+            if (closestItem.previousElementSibling !== placeholder) {
+                manageList.insertBefore(placeholder, closestItem);
+            }
+        } else {
+            const nextSibling = closestItem.nextElementSibling;
             if (nextSibling !== placeholder) {
-                if (nextSibling) {
+                if (nextSibling && nextSibling !== touchedItem) {
                     manageList.insertBefore(placeholder, nextSibling);
                 } else {
                     manageList.appendChild(placeholder);
                 }
             }
-            return;
-        }
-    }
-    
-    // If we're past all items, put placeholder at the end
-    if (allItems.length > 0) {
-        const lastItem = allItems[allItems.length - 1];
-        if (placeholder !== lastItem.nextElementSibling) {
-            manageList.appendChild(placeholder);
         }
     }
 }
