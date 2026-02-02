@@ -1604,9 +1604,8 @@ h1 {
 
 .friend-manage-placeholder {
     background: transparent;
-    border: none;
-    border-top: 2px solid var(--accent-mint);
-    border-radius: 0;
+    border: 1px solid rgba(139, 213, 202, 0.4);
+    border-radius: 12px;
     transition: all 0.2s ease;
 }
 
