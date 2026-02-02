@@ -12,61 +12,6 @@ let lastNotificationData = null; // Track last rendered data to avoid unnecessar
 let pushSubscription = null; // Store current push subscription
 
 // =====================
-// Modal Navigation Helper
-// =====================
-
-// Show the bottom nav inside a modal (for modals where we want nav visible)
-function showNavInModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-    
-    // Remove any existing modal nav first
-    const existing = modal.querySelector('.modal-bottom-nav');
-    if (existing) existing.remove();
-    
-    // Clone the original bottom nav
-    const originalNav = document.querySelector('.bottom-nav');
-    if (!originalNav) return;
-    
-    const navClone = originalNav.cloneNode(true);
-    navClone.classList.add('modal-bottom-nav');
-    
-    // Update click handlers to close current modal first
-    const buttons = navClone.querySelectorAll('.nav-item');
-    buttons.forEach(btn => {
-        const originalOnclick = btn.getAttribute('onclick');
-        if (originalOnclick) {
-            // Close current modal before opening new one
-            btn.setAttribute('onclick', `closeModalById('${modalId}'); ${originalOnclick}`);
-        }
-    });
-    
-    // Add to the modal (not modal-content, so it's positioned at bottom of overlay)
-    modal.appendChild(navClone);
-}
-
-// Helper to close any modal by ID
-function closeModalById(modalId) {
-    hideNavInModal(modalId);
-    const modal = document.getElementById(modalId);
-    if (modal) modal.classList.remove('active');
-    
-    // Reset specific modal states
-    if (modalId === 'manageFriendsModal') {
-        showFriendsListView();
-    }
-}
-
-// Remove cloned nav from modal when closing
-function hideNavInModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-    
-    const navClone = modal.querySelector('.modal-bottom-nav');
-    if (navClone) navClone.remove();
-}
-
-// =====================
 // Push Notifications
 // =====================
 
@@ -1316,12 +1261,10 @@ async function addFriendFromManage(event) {
 function openManageFriendsModal() {
     renderManageFriends();
     document.getElementById('manageFriendsModal').classList.add('active');
-    showNavInModal('manageFriendsModal');
 }
 
 // Close manage friends modal
 function closeManageFriendsModal() {
-    hideNavInModal('manageFriendsModal');
     document.getElementById('manageFriendsModal').classList.remove('active');
     // Reset to list view for next time
     showFriendsListView();
@@ -2945,12 +2888,10 @@ let currentPlanDetail = null;
 
 async function openPlans() {
     document.getElementById('plansModal').classList.add('active');
-    showNavInModal('plansModal');
     await loadPlans();
 }
 
 function closePlans() {
-    hideNavInModal('plansModal');
     document.getElementById('plansModal').classList.remove('active');
 }
 
@@ -4340,7 +4281,6 @@ async function openSettings() {
     updatePushNotificationStatus();
     
     document.getElementById('settingsModal').classList.add('active');
-    showNavInModal('settingsModal');
 }
 
 function updatePushNotificationStatus() {
@@ -4436,7 +4376,6 @@ async function disablePushNotifications() {
 }
 
 function closeSettings() {
-    hideNavInModal('settingsModal');
     document.getElementById('settingsModal').classList.remove('active');
 }
 

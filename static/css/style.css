@@ -1310,6 +1310,7 @@ h1 {
 #planDetailModal,
 #aiChatModal {
     z-index: 2000;
+    bottom: 0; /* These modals cover the full screen including nav */
 }
 
 .modal-content {
@@ -3567,6 +3568,10 @@ body:has(.guest-info) .container {
 
 /* Bottom Navigation */
 .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -3575,21 +3580,25 @@ body:has(.guest-info) .container {
     -webkit-backdrop-filter: blur(10px);
     border-radius: 20px;
     padding: 8px 25px;
-    margin: 0 15px;
     margin-bottom: calc(16px + env(safe-area-inset-bottom));
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(108, 200, 190, 0.25);
+    z-index: 1001; /* Above modal overlays for plans/friends/settings */
 }
 
-/* Bottom nav cloned inside modals */
-.modal-bottom-nav {
-    position: fixed;
-    bottom: calc(16px + env(safe-area-inset-bottom));
-    left: 50%;
-    transform: translateX(-50%);
-    margin: 0; /* Override the original margin */
-    margin-bottom: 0;
-    z-index: 1001;
+/* Modals that should show the bottom nav - leave space at bottom */
+#plansModal,
+#manageFriendsModal,
+#settingsModal,
+#notificationsModal {
+    bottom: calc(90px + env(safe-area-inset-bottom)); /* Leave room for nav */
+}
+
+#plansModal .modal-content,
+#manageFriendsModal .modal-content,
+#settingsModal .modal-content,
+#notificationsModal .modal-content {
+    max-height: calc(100vh - 110px - env(safe-area-inset-bottom));
 }
 
 .nav-item {
