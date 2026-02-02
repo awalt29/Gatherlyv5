@@ -1588,12 +1588,9 @@ h1 {
     border-radius: 12px;
     margin-bottom: 10px;
     user-select: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
     transition: transform 0.25s ease, opacity 0.2s ease, box-shadow 0.2s ease;
     gap: 10px;
     flex-wrap: nowrap;
-    cursor: grab;
 }
 
 .friend-manage-item.dragging {
@@ -1606,9 +1603,10 @@ h1 {
 }
 
 .friend-manage-placeholder {
-    background: rgba(127, 231, 220, 0.15);
-    border: 2px dashed var(--accent-mint);
-    border-radius: 12px;
+    background: transparent;
+    border: none;
+    border-top: 2px solid var(--accent-mint);
+    border-radius: 0;
     transition: all 0.2s ease;
 }
 
@@ -1621,8 +1619,11 @@ h1 {
     font-size: 18px;
     margin-right: 10px;
     cursor: grab;
-    padding: 5px;
+    padding: 10px;
     touch-action: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    user-select: none;
 }
 
 .friend-manage-drag-handle:active {

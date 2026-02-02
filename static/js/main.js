@@ -1056,10 +1056,8 @@ let itemHeight = 0;
 let placeholder = null;
 
 function handleManageTouchStart(e) {
-    // Don't start drag if touching the delete button
-    if (e.target.closest('.btn-delete')) return;
-    
-    touchedItem = e.currentTarget;
+    // Get the parent item from the drag handle
+    touchedItem = e.currentTarget.closest('.friend-manage-item');
     if (!touchedItem) return;
     
     e.preventDefault(); // Prevent text selection and copy menu
@@ -1390,20 +1388,26 @@ function renderManageFriends() {
         const deleteBtn = item.querySelector('.btn-delete');
         deleteBtn.onclick = () => deleteFriend(friend.id);
         
-        // Prevent context menu on long press
-        item.addEventListener('contextmenu', (e) => e.preventDefault());
+        // Get the drag handle
+        const dragHandle = item.querySelector('.friend-manage-drag-handle');
         
-        // Add drag handlers for desktop - entire row is draggable
-        item.draggable = true;
+        // Prevent context menu on long press (only on drag handle)
+        dragHandle.addEventListener('contextmenu', (e) => e.preventDefault());
+        
+        // Add drag handlers for desktop
+        dragHandle.addEventListener('mousedown', () => { item.draggable = true; });
         item.addEventListener('dragstart', handleManageDragStart);
         item.addEventListener('dragover', handleManageDragOver);
         item.addEventListener('drop', handleManageDrop);
-        item.addEventListener('dragend', handleManageDragEnd);
+        item.addEventListener('dragend', (e) => {
+            handleManageDragEnd(e);
+            item.draggable = false;
+        });
         
-        // Add touch handlers for mobile - entire row is draggable
-        item.addEventListener('touchstart', handleManageTouchStart, { passive: false });
-        item.addEventListener('touchmove', handleManageTouchMove, { passive: false });
-        item.addEventListener('touchend', handleManageTouchEnd);
+        // Add touch handlers for mobile - only on drag handle
+        dragHandle.addEventListener('touchstart', handleManageTouchStart, { passive: false });
+        dragHandle.addEventListener('touchmove', handleManageTouchMove, { passive: false });
+        dragHandle.addEventListener('touchend', handleManageTouchEnd);
         
         manageList.appendChild(item);
     });
