@@ -21,7 +21,13 @@ function closeAllNavModals() {
     document.getElementById('manageFriendsModal')?.classList.remove('active');
     document.getElementById('settingsModal')?.classList.remove('active');
     document.getElementById('notificationsModal')?.classList.remove('active');
-    // Note: AI chat and plan detail are not included - they cover the nav
+    document.getElementById('aiChatModal')?.classList.remove('active');
+    document.getElementById('planDetailModal')?.classList.remove('active');
+}
+
+// Go back to home/calendar screen
+function goHome() {
+    closeAllNavModals();
 }
 
 // =====================
@@ -2588,19 +2594,19 @@ async function loadNotifications() {
         // Update badge count (unread notifications + pending friend requests)
         const unreadCount = notifications.filter(n => !n.read).length + friendRequests.length;
         const badge = document.getElementById('notificationBadge');
-        const navBadge = document.getElementById('notificationBadgeNav');
+        const headerBadge = document.getElementById('notificationBadgeHeader');
         if (unreadCount > 0) {
             if (badge) {
                 badge.textContent = unreadCount;
                 badge.style.display = 'flex';
             }
-            if (navBadge) {
-                navBadge.textContent = unreadCount;
-                navBadge.style.display = 'flex';
+            if (headerBadge) {
+                headerBadge.textContent = unreadCount;
+                headerBadge.style.display = 'flex';
             }
         } else {
             if (badge) badge.style.display = 'none';
-            if (navBadge) navBadge.style.display = 'none';
+            if (headerBadge) headerBadge.style.display = 'none';
         }
         
         // Only re-render if data has changed (prevents icon blinking)
@@ -2863,9 +2869,9 @@ async function openNotifications() {
         
         // Hide badges immediately
         const badge = document.getElementById('notificationBadge');
-        const navBadge = document.getElementById('notificationBadgeNav');
+        const headerBadge = document.getElementById('notificationBadgeHeader');
         if (badge) badge.style.display = 'none';
-        if (navBadge) navBadge.style.display = 'none';
+        if (headerBadge) headerBadge.style.display = 'none';
     }
     
     // Update timestamps every 5 seconds while modal is open
