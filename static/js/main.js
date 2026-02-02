@@ -2928,7 +2928,16 @@ function updatePlansBadge() {
     // Check all plans for new messages
     const allPlansList = [...allPlans.created, ...allPlans.invited];
     
+    // Get today's date for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
     allPlansList.forEach(plan => {
+        // Skip past plans - don't show badges for them
+        const planDate = new Date(plan.date + 'T23:59:59');
+        const daysPast = Math.floor((today - planDate) / (1000 * 60 * 60 * 24));
+        if (daysPast > 7) return; // Skip plans more than 7 days past
+        
         if (plan.latest_message_id) {
             const lastSeen = seen[plan.id] || 0;
             // Only count as unread if:
@@ -3055,10 +3064,11 @@ function renderPlanCard(plan, isPast) {
         return `<span class="plan-guest-chip ${statusClass}">${inv.user_name}</span>`;
     }).join('');
     
-    // Check if this plan has unread messages
+    // Check if this plan has unread messages (but not for past plans)
     const seen = getSeenMessageIds();
     const lastSeen = seen[plan.id] || 0;
-    const hasUnread = plan.latest_message_id && 
+    const hasUnread = !isPast && 
+                      plan.latest_message_id && 
                       plan.latest_message_id > lastSeen && 
                       plan.latest_message_user_id !== plannerInfo?.id;
     
