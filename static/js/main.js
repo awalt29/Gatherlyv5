@@ -1098,22 +1098,31 @@ function handleManageTouchMove(e) {
     const itemTop = touchY - touchOffsetY;
     touchedItem.style.top = itemTop + 'px';
     
-    // Use the center of the dragged card for drop detection (more sensitive)
-    const draggedCenter = itemTop + itemHeight / 2;
-    
     const manageList = document.getElementById('friendsManageList');
     const allItems = Array.from(manageList.querySelectorAll('.friend-manage-item:not(.dragging)'));
     
-    // Find which item we're over based on the dragged card's center vs item midpoints
+    // Find which item the finger is over - use top 40% as threshold for "above"
     for (let i = 0; i < allItems.length; i++) {
         const item = allItems[i];
         const rect = item.getBoundingClientRect();
-        const midpoint = rect.top + rect.height / 2;
         
-        if (draggedCenter < midpoint) {
-            // Insert placeholder before this item
+        // If finger is in the top 40% of this item, insert before it
+        if (touchY < rect.top + rect.height * 0.4) {
             if (item !== placeholder.nextElementSibling) {
                 manageList.insertBefore(placeholder, item);
+            }
+            return;
+        }
+        
+        // If finger is anywhere on this item (but not top 40%), insert after it
+        if (touchY >= rect.top && touchY <= rect.bottom) {
+            const nextSibling = item.nextElementSibling;
+            if (nextSibling !== placeholder) {
+                if (nextSibling) {
+                    manageList.insertBefore(placeholder, nextSibling);
+                } else {
+                    manageList.appendChild(placeholder);
+                }
             }
             return;
         }
@@ -1123,7 +1132,7 @@ function handleManageTouchMove(e) {
     if (allItems.length > 0) {
         const lastItem = allItems[allItems.length - 1];
         if (placeholder !== lastItem.nextElementSibling) {
-            lastItem.parentNode.insertBefore(placeholder, lastItem.nextSibling);
+            manageList.appendChild(placeholder);
         }
     }
 }
