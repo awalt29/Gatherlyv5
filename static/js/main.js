@@ -1054,10 +1054,13 @@ let touchStartY = 0;
 let touchCurrentY = 0;
 
 function handleManageTouchStart(e) {
-    // Get the parent item from the drag handle
-    touchedItem = e.currentTarget.closest('.friend-manage-item');
+    // Don't start drag if touching the delete button
+    if (e.target.closest('.btn-delete')) return;
+    
+    touchedItem = e.currentTarget;
     if (!touchedItem) return;
     
+    e.preventDefault(); // Prevent text selection and copy menu
     touchStartY = e.touches[0].clientY;
     touchedItem.classList.add('dragging');
     console.log('Touch started');
@@ -1338,25 +1341,20 @@ function renderManageFriends() {
         const deleteBtn = item.querySelector('.btn-delete');
         deleteBtn.onclick = () => deleteFriend(friend.id);
         
-        // Get the drag handle
-        const dragHandle = item.querySelector('.friend-manage-drag-handle');
+        // Prevent context menu on long press
+        item.addEventListener('contextmenu', (e) => e.preventDefault());
         
-        // Add drag handlers for desktop - only to the handle
-        dragHandle.addEventListener('mousedown', (e) => {
-            item.draggable = true;
-        });
+        // Add drag handlers for desktop - entire row is draggable
+        item.draggable = true;
         item.addEventListener('dragstart', handleManageDragStart);
         item.addEventListener('dragover', handleManageDragOver);
         item.addEventListener('drop', handleManageDrop);
-        item.addEventListener('dragend', (e) => {
-            handleManageDragEnd(e);
-            item.draggable = false;
-        });
+        item.addEventListener('dragend', handleManageDragEnd);
         
-        // Add touch handlers for mobile - only to the handle
-        dragHandle.addEventListener('touchstart', handleManageTouchStart, { passive: false });
-        dragHandle.addEventListener('touchmove', handleManageTouchMove, { passive: false });
-        dragHandle.addEventListener('touchend', handleManageTouchEnd);
+        // Add touch handlers for mobile - entire row is draggable
+        item.addEventListener('touchstart', handleManageTouchStart, { passive: false });
+        item.addEventListener('touchmove', handleManageTouchMove, { passive: false });
+        item.addEventListener('touchend', handleManageTouchEnd);
         
         manageList.appendChild(item);
     });
