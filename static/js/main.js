@@ -12,6 +12,19 @@ let lastNotificationData = null; // Track last rendered data to avoid unnecessar
 let pushSubscription = null; // Store current push subscription
 
 // =====================
+// Modal Navigation Helper
+// =====================
+
+// Close all nav-related modals (called before opening a new one)
+function closeAllNavModals() {
+    document.getElementById('plansModal')?.classList.remove('active');
+    document.getElementById('manageFriendsModal')?.classList.remove('active');
+    document.getElementById('settingsModal')?.classList.remove('active');
+    document.getElementById('notificationsModal')?.classList.remove('active');
+    // Note: AI chat and plan detail are not included - they cover the nav
+}
+
+// =====================
 // Push Notifications
 // =====================
 
@@ -1259,6 +1272,7 @@ async function addFriendFromManage(event) {
 
 // Open manage friends modal
 function openManageFriendsModal() {
+    closeAllNavModals();
     renderManageFriends();
     document.getElementById('manageFriendsModal').classList.add('active');
 }
@@ -2837,6 +2851,7 @@ function getTimeAgo(date) {
 let notificationUpdateInterval = null;
 
 async function openNotifications() {
+    closeAllNavModals();
     document.getElementById('notificationsModal').classList.add('active');
     await loadNotifications();
     
@@ -2887,6 +2902,7 @@ let allPlans = { created: [], invited: [] };
 let currentPlanDetail = null;
 
 async function openPlans() {
+    closeAllNavModals();
     document.getElementById('plansModal').classList.add('active');
     await loadPlans();
 }
@@ -3705,6 +3721,7 @@ function handleChatFocus() {
 // =====================
 
 async function openAiChat() {
+    closeAllNavModals();
     document.getElementById('aiChatModal').classList.add('active');
     await loadAiChatMessages();
 }
@@ -4252,6 +4269,7 @@ function backToPlans() {
 
 // Settings functions
 async function openSettings() {
+    closeAllNavModals();
     if (!plannerInfo) {
         showStatus('Please set up your account first', 'error');
         return;
