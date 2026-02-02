@@ -1103,43 +1103,25 @@ function handleManageTouchMove(e) {
     
     if (allItems.length === 0) return;
     
-    // Simple approach: find the item whose vertical center is closest to the touch point
-    // and insert placeholder either before or after based on touch position
-    let closestItem = null;
-    let closestDistance = Infinity;
-    let insertBefore = true;
-    
+    // Go through items top to bottom
+    // Insert placeholder BEFORE the first item whose center is BELOW the finger
     for (let i = 0; i < allItems.length; i++) {
         const item = allItems[i];
         const rect = item.getBoundingClientRect();
         const itemCenter = rect.top + rect.height / 2;
-        const distance = Math.abs(touchY - itemCenter);
         
-        if (distance < closestDistance) {
-            closestDistance = distance;
-            closestItem = item;
-            // If touch is above center, insert before; otherwise insert after
-            insertBefore = touchY < itemCenter;
+        if (touchY < itemCenter) {
+            // Finger is above this item's center - insert placeholder before it
+            if (placeholder.nextElementSibling !== item) {
+                manageList.insertBefore(placeholder, item);
+            }
+            return;
         }
     }
     
-    if (closestItem) {
-        if (insertBefore) {
-            // Insert placeholder before this item
-            if (placeholder.nextElementSibling !== closestItem) {
-                manageList.insertBefore(placeholder, closestItem);
-            }
-        } else {
-            // Insert placeholder after this item
-            const targetPosition = closestItem.nextElementSibling;
-            if (targetPosition !== placeholder) {
-                if (targetPosition) {
-                    manageList.insertBefore(placeholder, targetPosition);
-                } else {
-                    manageList.appendChild(placeholder);
-                }
-            }
-        }
+    // Finger is below all items - put placeholder at the end
+    if (placeholder.nextElementSibling !== null) {
+        manageList.appendChild(placeholder);
     }
 }
 
