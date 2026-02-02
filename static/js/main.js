@@ -965,7 +965,7 @@ let draggedManageItem = null;
 function handleManageDragStart(e) {
     console.log('Drag started');
     draggedManageItem = e.currentTarget; // Use currentTarget instead of target
-    e.currentTarget.style.opacity = '0.5';
+    e.currentTarget.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
 }
@@ -1038,12 +1038,13 @@ function handleManageDrop(e) {
 
 function handleManageDragEnd(e) {
     console.log('Drag ended');
-    e.currentTarget.style.opacity = '1';
+    e.currentTarget.classList.remove('dragging');
     
-    // Remove all border highlights
+    // Remove all border highlights and drag-over classes
     const manageList = document.getElementById('friendsManageList');
     manageList.querySelectorAll('.friend-manage-item').forEach(item => {
         item.style.borderTop = '';
+        item.classList.remove('drag-over');
     });
 }
 
@@ -1058,7 +1059,7 @@ function handleManageTouchStart(e) {
     if (!touchedItem) return;
     
     touchStartY = e.touches[0].clientY;
-    touchedItem.style.opacity = '0.5';
+    touchedItem.classList.add('dragging');
     console.log('Touch started');
 }
 
@@ -1092,7 +1093,7 @@ function handleManageTouchEnd(e) {
     if (!touchedItem) return;
     
     console.log('Touch ended');
-    touchedItem.style.opacity = '1';
+    touchedItem.classList.remove('dragging');
     
     // Get final order from DOM
     const manageList = document.getElementById('friendsManageList');
