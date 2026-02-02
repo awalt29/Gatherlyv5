@@ -3579,7 +3579,15 @@ body:has(.guest-info) .container {
     margin-bottom: calc(16px + env(safe-area-inset-bottom));
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(108, 200, 190, 0.25);
-    z-index: 1500; /* Above most modals but below plan detail/AI chat */
+}
+
+/* Bottom nav cloned inside modals */
+.modal-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1001;
 }
 
 .nav-item {
