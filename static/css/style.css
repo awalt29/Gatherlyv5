@@ -3586,19 +3586,20 @@ body:has(.guest-info) .container {
     z-index: 1001; /* Above modal overlays for plans/friends/settings */
 }
 
-/* Modals that should show the bottom nav - leave space at bottom */
+/* Modals that should show the bottom nav */
 #plansModal,
 #manageFriendsModal,
 #settingsModal,
 #notificationsModal {
-    bottom: calc(90px + env(safe-area-inset-bottom)); /* Leave room for nav */
+    /* Full screen - nav overlays on top */
 }
 
-#plansModal .modal-content,
-#manageFriendsModal .modal-content,
-#settingsModal .modal-content,
-#notificationsModal .modal-content {
-    max-height: calc(100vh - 110px - env(safe-area-inset-bottom));
+/* Add padding at bottom of scrollable content so it's not hidden behind nav */
+#plansModal .plans-list,
+#manageFriendsModal .friends-manage-list,
+#settingsModal .settings-content,
+#notificationsModal .notifications-list {
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
 }
 
 .nav-item {
