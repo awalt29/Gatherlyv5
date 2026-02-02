@@ -1095,18 +1095,22 @@ function handleManageTouchMove(e) {
     const touchY = e.touches[0].clientY;
     
     // Move the item with the finger
-    touchedItem.style.top = (touchY - touchOffsetY) + 'px';
+    const itemTop = touchY - touchOffsetY;
+    touchedItem.style.top = itemTop + 'px';
+    
+    // Use the center of the dragged card for drop detection (more sensitive)
+    const draggedCenter = itemTop + itemHeight / 2;
     
     const manageList = document.getElementById('friendsManageList');
     const allItems = Array.from(manageList.querySelectorAll('.friend-manage-item:not(.dragging)'));
     
-    // Find which item we're over based on midpoint
+    // Find which item we're over based on the dragged card's center vs item midpoints
     for (let i = 0; i < allItems.length; i++) {
         const item = allItems[i];
         const rect = item.getBoundingClientRect();
         const midpoint = rect.top + rect.height / 2;
         
-        if (touchY < midpoint) {
+        if (draggedCenter < midpoint) {
             // Insert placeholder before this item
             if (item !== placeholder.nextElementSibling) {
                 manageList.insertBefore(placeholder, item);
