@@ -673,18 +673,10 @@ h1 {
     letter-spacing: 0.5px;
 }
 
-/* Header Buttons (Top Right) */
-.header-buttons {
-    position: absolute;
-    right: 5px;
-    top: env(safe-area-inset-top, 0px);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
+/* Header Buttons */
 .header-btn {
-    position: relative;
+    position: absolute;
+    top: env(safe-area-inset-top, 0px);
     background: none;
     border: none;
     color: white;
@@ -692,6 +684,14 @@ h1 {
     padding: 8px;
     border-radius: 8px;
     transition: all 0.2s ease;
+}
+
+.header-btn-left {
+    left: 5px;
+}
+
+.header-btn-right {
+    right: 5px;
 }
 
 .header-badge {
