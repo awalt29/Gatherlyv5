@@ -3631,7 +3631,7 @@ body:has(.guest-info) .container {
     flex-direction: column;
     align-items: center;
     gap: 3px;
-    padding: 8px 20px;
+    padding: 8px 25px;
     background: transparent;
     border: none;
     color: white;
