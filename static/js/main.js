@@ -2900,6 +2900,8 @@ async function loadPlans() {
         const response = await fetch('/api/hangouts');
         if (response.ok) {
             allPlans = await response.json();
+            // On fresh install, auto-mark existing messages as seen
+            initializeSeenMessagesIfNeeded(allPlans);
             renderPlans();
             updatePlansBadge();
         }
@@ -2919,6 +2921,25 @@ function setSeenMessageId(planId, messageId) {
     localStorage.setItem('seenPlanMessages', JSON.stringify(seen));
 }
 
+// On fresh install, auto-mark all existing messages as seen
+// This prevents old messages from showing as unread after reinstall
+function initializeSeenMessagesIfNeeded(plans) {
+    const seenData = localStorage.getItem('seenPlanMessages');
+    
+    // If there's already seen data, this isn't a fresh install
+    if (seenData && seenData !== '{}') return;
+    
+    // Fresh install - mark all current messages as seen
+    const seen = {};
+    const allPlansList = [...plans.created, ...plans.invited];
+    allPlansList.forEach(plan => {
+        if (plan.latest_message_id) {
+            seen[plan.id] = plan.latest_message_id;
+        }
+    });
+    localStorage.setItem('seenPlanMessages', JSON.stringify(seen));
+}
+
 function updatePlansBadge() {
     if (!allPlans || !plannerInfo) return;
     
@@ -2933,9 +2954,11 @@ function updatePlansBadge() {
     today.setHours(0, 0, 0, 0);
     
     allPlansList.forEach(plan => {
-        // Skip past plans - don't show badges for them
+        // Skip plans more than 7 days past - don't show badges for them
+        // (7-day window allows for bill splitting discussions after the event)
         const planDate = new Date(plan.date + 'T23:59:59');
-        if (planDate < today) return; // Skip any past plans
+        const daysPast = Math.floor((today - planDate) / (1000 * 60 * 60 * 24));
+        if (daysPast > 7) return; // Skip plans more than 7 days past
         
         if (plan.latest_message_id) {
             const lastSeen = seen[plan.id] || 0;
