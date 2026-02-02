@@ -677,7 +677,7 @@ h1 {
 .header-buttons {
     position: absolute;
     right: 10px;
-    top: calc(12px + env(safe-area-inset-top));
+    top: env(safe-area-inset-top, 0px);
     display: flex;
     align-items: center;
     gap: 4px;
