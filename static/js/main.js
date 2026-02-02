@@ -1051,7 +1051,9 @@ function handleManageDragEnd(e) {
 // Touch event handlers for mobile drag-and-drop
 let touchedItem = null;
 let touchStartY = 0;
-let touchCurrentY = 0;
+let touchOffsetY = 0;
+let itemHeight = 0;
+let placeholder = null;
 
 function handleManageTouchStart(e) {
     // Don't start drag if touching the delete button
@@ -1061,33 +1063,65 @@ function handleManageTouchStart(e) {
     if (!touchedItem) return;
     
     e.preventDefault(); // Prevent text selection and copy menu
+    
+    const rect = touchedItem.getBoundingClientRect();
     touchStartY = e.touches[0].clientY;
+    touchOffsetY = touchStartY - rect.top;
+    itemHeight = rect.height;
+    
+    // Create a placeholder to hold the space
+    placeholder = document.createElement('div');
+    placeholder.className = 'friend-manage-placeholder';
+    placeholder.style.height = itemHeight + 'px';
+    placeholder.style.marginBottom = '10px';
+    
+    // Make the dragged item fixed position
+    touchedItem.style.position = 'fixed';
+    touchedItem.style.left = rect.left + 'px';
+    touchedItem.style.top = rect.top + 'px';
+    touchedItem.style.width = rect.width + 'px';
+    touchedItem.style.zIndex = '1000';
+    touchedItem.style.transition = 'none'; // Disable transition while dragging
     touchedItem.classList.add('dragging');
+    
+    // Insert placeholder where the item was
+    touchedItem.parentNode.insertBefore(placeholder, touchedItem);
+    
     console.log('Touch started');
 }
 
 function handleManageTouchMove(e) {
-    if (!touchedItem) return;
+    if (!touchedItem || !placeholder) return;
     
     e.preventDefault(); // Prevent scrolling while dragging
-    touchCurrentY = e.touches[0].clientY;
+    const touchY = e.touches[0].clientY;
+    
+    // Move the item with the finger
+    touchedItem.style.top = (touchY - touchOffsetY) + 'px';
     
     const manageList = document.getElementById('friendsManageList');
-    const allItems = Array.from(manageList.querySelectorAll('.friend-manage-item'));
+    const allItems = Array.from(manageList.querySelectorAll('.friend-manage-item:not(.dragging)'));
     
-    // Find which item we're over
-    const currentIndex = allItems.indexOf(touchedItem);
-    const touchedIndex = allItems.findIndex(item => {
+    // Find which item we're over based on midpoint
+    for (let i = 0; i < allItems.length; i++) {
+        const item = allItems[i];
         const rect = item.getBoundingClientRect();
-        return touchCurrentY >= rect.top && touchCurrentY <= rect.bottom;
-    });
+        const midpoint = rect.top + rect.height / 2;
+        
+        if (touchY < midpoint) {
+            // Insert placeholder before this item
+            if (item !== placeholder.nextElementSibling) {
+                manageList.insertBefore(placeholder, item);
+            }
+            return;
+        }
+    }
     
-    if (touchedIndex !== -1 && touchedIndex !== currentIndex) {
-        // Swap in DOM
-        if (touchedIndex < currentIndex) {
-            manageList.insertBefore(touchedItem, allItems[touchedIndex]);
-        } else {
-            manageList.insertBefore(touchedItem, allItems[touchedIndex].nextSibling);
+    // If we're past all items, put placeholder at the end
+    if (allItems.length > 0) {
+        const lastItem = allItems[allItems.length - 1];
+        if (placeholder !== lastItem.nextElementSibling) {
+            lastItem.parentNode.insertBefore(placeholder, lastItem.nextSibling);
         }
     }
 }
@@ -1096,7 +1130,22 @@ function handleManageTouchEnd(e) {
     if (!touchedItem) return;
     
     console.log('Touch ended');
+    
+    // Reset the item's style
+    touchedItem.style.position = '';
+    touchedItem.style.left = '';
+    touchedItem.style.top = '';
+    touchedItem.style.width = '';
+    touchedItem.style.zIndex = '';
+    touchedItem.style.transition = '';
     touchedItem.classList.remove('dragging');
+    
+    // Replace placeholder with the actual item
+    if (placeholder && placeholder.parentNode) {
+        placeholder.parentNode.insertBefore(touchedItem, placeholder);
+        placeholder.remove();
+    }
+    placeholder = null;
     
     // Get final order from DOM
     const manageList = document.getElementById('friendsManageList');

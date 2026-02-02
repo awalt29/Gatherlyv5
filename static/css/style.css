@@ -1597,12 +1597,19 @@ h1 {
 }
 
 .friend-manage-item.dragging {
-    opacity: 0.9;
+    opacity: 0.95;
     transform: scale(1.02);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-    z-index: 100;
+    z-index: 1000;
     background: var(--primary-bg);
     cursor: grabbing;
+}
+
+.friend-manage-placeholder {
+    background: rgba(127, 231, 220, 0.15);
+    border: 2px dashed var(--accent-mint);
+    border-radius: 12px;
+    transition: all 0.2s ease;
 }
 
 .friend-manage-item.drag-over {
