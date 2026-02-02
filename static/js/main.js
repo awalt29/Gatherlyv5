@@ -31,8 +31,30 @@ function showNavInModal(modalId) {
     const navClone = originalNav.cloneNode(true);
     navClone.classList.add('modal-bottom-nav');
     
+    // Update click handlers to close current modal first
+    const buttons = navClone.querySelectorAll('.nav-item');
+    buttons.forEach(btn => {
+        const originalOnclick = btn.getAttribute('onclick');
+        if (originalOnclick) {
+            // Close current modal before opening new one
+            btn.setAttribute('onclick', `closeModalById('${modalId}'); ${originalOnclick}`);
+        }
+    });
+    
     // Add to the modal (not modal-content, so it's positioned at bottom of overlay)
     modal.appendChild(navClone);
+}
+
+// Helper to close any modal by ID
+function closeModalById(modalId) {
+    hideNavInModal(modalId);
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.remove('active');
+    
+    // Reset specific modal states
+    if (modalId === 'manageFriendsModal') {
+        showFriendsListView();
+    }
 }
 
 // Remove cloned nav from modal when closing
