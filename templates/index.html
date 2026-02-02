@@ -174,7 +174,6 @@
             <div id="manageFriendsListView">
                 <div class="modal-header">
                     <h2 class="modal-title">Manage Friends</h2>
-                    <button class="close-btn" onclick="closeManageFriendsModal()">×</button>
                 </div>
                 <button class="btn-add-friend" onclick="showAddFriendView()">
                     <span class="plus-icon">+</span> Add New Friend
@@ -189,7 +188,6 @@
                 <div class="modal-header">
                     <button class="back-btn" onclick="showFriendsListView()">←</button>
                     <h2 class="modal-title">Add Friend</h2>
-                    <button class="close-btn" onclick="closeManageFriendsModal()">×</button>
                 </div>
                 <form onsubmit="addFriendFromManage(event)">
                     <div class="form-group">
@@ -208,7 +206,6 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Notifications</h2>
-                <button class="close-btn" onclick="closeNotifications()">×</button>
             </div>
             <div class="notifications-list" id="notificationsList">
                 <!-- Notifications will be populated here -->
@@ -345,7 +342,6 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">My Plans</h2>
-                <button class="close-btn" onclick="closePlans()">×</button>
             </div>
             <button class="btn-primary new-plan-btn" onclick="openNewPlanModal()">+ New Plan</button>
             <div class="plans-list" id="plansList">
