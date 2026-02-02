@@ -2935,8 +2935,7 @@ function updatePlansBadge() {
     allPlansList.forEach(plan => {
         // Skip past plans - don't show badges for them
         const planDate = new Date(plan.date + 'T23:59:59');
-        const daysPast = Math.floor((today - planDate) / (1000 * 60 * 60 * 24));
-        if (daysPast > 7) return; // Skip plans more than 7 days past
+        if (planDate < today) return; // Skip any past plans
         
         if (plan.latest_message_id) {
             const lastSeen = seen[plan.id] || 0;
