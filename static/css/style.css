@@ -676,13 +676,11 @@ h1 {
 /* Header Buttons (Top Right) */
 .header-buttons {
     position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
+    right: 10px;
+    top: calc(12px + env(safe-area-inset-top));
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding-top: calc(env(safe-area-inset-top) / 2);
+    gap: 4px;
 }
 
 .header-btn {
