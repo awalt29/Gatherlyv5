@@ -3584,9 +3584,11 @@ body:has(.guest-info) .container {
 /* Bottom nav cloned inside modals */
 .modal-bottom-nav {
     position: fixed;
-    bottom: 0;
+    bottom: calc(16px + env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
+    margin: 0; /* Override the original margin */
+    margin-bottom: 0;
     z-index: 1001;
 }
 
