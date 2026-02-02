@@ -3583,7 +3583,7 @@ body:has(.guest-info) .container {
     margin-bottom: calc(16px + env(safe-area-inset-bottom));
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(108, 200, 190, 0.25);
-    z-index: 1001; /* Above modal overlays for plans/friends/settings */
+    z-index: 1500; /* Above modal overlays for plans/friends/settings */
 }
 
 /* Modals that should show the bottom nav */
