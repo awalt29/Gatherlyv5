@@ -3225,6 +3225,9 @@ function openPlanDetail(planId) {
         return;
     }
     
+    // Close plans modal to prevent scroll events leaking through on iOS
+    document.getElementById('plansModal').classList.remove('active');
+    
     currentPlanDetail = { ...plan, role };
     
     // Mark messages as seen for this plan
@@ -4324,6 +4327,8 @@ function closePlanOptions() {
 function backToPlans() {
     closePlanOptions();
     closePlanDetail();
+    // Reopen plans modal
+    document.getElementById('plansModal').classList.add('active');
 }
 
 // Settings functions
