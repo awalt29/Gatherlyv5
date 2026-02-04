@@ -3400,11 +3400,15 @@ function renderPlanDetail() {
         `;
     }
     
+    // Put info and chat in the content area
     content.innerHTML = `
         ${infoCard}
         ${chatArea}
-        ${bottomBar}
     `;
+    
+    // Put bottom bar in its own container (sibling of content, like AI Chat modal)
+    const bottomBarContainer = document.getElementById('planDetailBottomBar');
+    bottomBarContainer.innerHTML = bottomBar;
     
     // Load chat messages
     loadPlanChatMessages(plan.id);
