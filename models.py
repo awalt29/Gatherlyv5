@@ -65,7 +65,7 @@ class User(db.Model):
             'is_active_this_week': self.is_active_this_week(),
             'weekly_reminders_enabled': self.weekly_reminders_enabled if self.weekly_reminders_enabled is not None else True,
             'has_seen_install_prompt': self.has_seen_install_prompt if self.has_seen_install_prompt is not None else False,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat() + 'Z'
         }
 
 
@@ -142,7 +142,7 @@ class Contact(db.Model):
             'is_linked': is_linked,
             'is_pending': is_pending,
             'linked_user_id': linked_user_id,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat() + 'Z'
         }
 
 
@@ -217,7 +217,7 @@ class Friendship(db.Model):
             'user_id_2': self.user_id_2,
             'user_1_name': self.user_1.name,
             'user_2_name': self.user_2.name,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat() + 'Z'
         }
 
 
@@ -240,7 +240,7 @@ class Plan(db.Model):
             'planner_name': self.planner.name,
             'week_start_date': self.week_start_date.isoformat(),
             'status': self.status,
-            'created_at': self.created_at.isoformat(),
+            'created_at': self.created_at.isoformat() + 'Z',
             'total_guests': len(self.guests),
             'responded_guests': len([g for g in self.guests if g.has_responded])
         }
@@ -266,8 +266,8 @@ class PlanGuest(db.Model):
             'contact_phone': self.contact.phone_number,
             'unique_token': self.unique_token,
             'has_responded': self.has_responded,
-            'notified_at': self.notified_at.isoformat() if self.notified_at else None,
-            'link_clicked_at': self.link_clicked_at.isoformat() if self.link_clicked_at else None
+            'notified_at': self.notified_at.isoformat() + 'Z' if self.notified_at else None,
+            'link_clicked_at': self.link_clicked_at.isoformat() + 'Z' if self.link_clicked_at else None
         }
 
 
@@ -304,8 +304,8 @@ class Availability(db.Model):
             'user_name': name,
             'time_slots': self.time_slots,
             'message': self.message,
-            'submitted_at': self.submitted_at.isoformat(),
-            'updated_at': self.updated_at.isoformat()
+            'submitted_at': self.submitted_at.isoformat() + 'Z',
+            'updated_at': self.updated_at.isoformat() + 'Z'
         }
 
 
@@ -335,8 +335,8 @@ class UserAvailability(db.Model):
             'user_name': self.user.name,
             'week_start_date': self.week_start_date.isoformat(),
             'time_slots': self.time_slots,
-            'submitted_at': self.submitted_at.isoformat(),
-            'updated_at': self.updated_at.isoformat()
+            'submitted_at': self.submitted_at.isoformat() + 'Z',
+            'updated_at': self.updated_at.isoformat() + 'Z'
         }
 
 
@@ -401,8 +401,8 @@ class PasswordReset(db.Model):
         return {
             'id': self.id,
             'email': self.email,
-            'created_at': self.created_at.isoformat(),
-            'expires_at': self.expires_at.isoformat(),
+            'created_at': self.created_at.isoformat() + 'Z',
+            'expires_at': self.expires_at.isoformat() + 'Z',
             'used': self.used
         }
 
@@ -432,7 +432,7 @@ class Hangout(db.Model):
             'time_slot': self.time_slot,
             'description': self.description,
             'status': self.status,
-            'created_at': self.created_at.isoformat(),
+            'created_at': self.created_at.isoformat() + 'Z',
             'invitees': [inv.to_dict() for inv in self.invitees]
         }
 
@@ -463,8 +463,8 @@ class HangoutInvitee(db.Model):
             'user_id': self.user_id,
             'user_name': self.user.name,
             'status': self.status,
-            'responded_at': self.responded_at.isoformat() if self.responded_at else None,
-            'created_at': self.created_at.isoformat()
+            'responded_at': self.responded_at.isoformat() + 'Z' if self.responded_at else None,
+            'created_at': self.created_at.isoformat() + 'Z'
         }
 
 
@@ -487,7 +487,7 @@ class PushSubscription(db.Model):
             'id': self.id,
             'user_id': self.user_id,
             'endpoint': self.endpoint,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat() + 'Z'
         }
 
 
