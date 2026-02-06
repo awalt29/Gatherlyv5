@@ -838,9 +838,9 @@ def invite_contact(contact_id):
     
     # Use custom message if provided, otherwise use default
     if custom_message:
-        message = f"{custom_message}\n\n- {user.name}\n\nSign up here: {signup_url}"
+        message = f"{custom_message}\n\nSign up here: {signup_url}"
     else:
-        message = f"Hey! {user.name} wants to share availability with you on Gatherly. Sign up here: {signup_url}"
+        message = f"{user.name} has shared their availability on Gatherly. Join and add yours to see when they're free!\n\nSign up here: {signup_url}"
     print(f"[INVITE] Message: {message}")
     print(f"[INVITE] Sending to: {contact.phone_number}")
     
