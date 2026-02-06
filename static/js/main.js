@@ -4384,6 +4384,7 @@ function backToPlans() {
 // Settings functions
 async function openSettings() {
     closeAllNavModals();
+    document.querySelector('.bottom-nav').style.display = 'none';
     if (!plannerInfo) {
         showStatus('Please set up your account first', 'error');
         return;
@@ -4509,6 +4510,7 @@ async function disablePushNotifications() {
 
 function closeSettings() {
     document.getElementById('settingsModal').classList.remove('active');
+    document.querySelector('.bottom-nav').style.display = '';
 }
 
 function editAccount() {
