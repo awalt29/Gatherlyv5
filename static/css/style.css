@@ -1332,6 +1332,87 @@ h1 {
     display: flex;
 }
 
+/* Invite Modals */
+#inviteConfirmModal,
+#inviteMessageModal {
+    z-index: 3000; /* Above everything else */
+}
+
+.invite-modal-content {
+    max-width: 320px;
+    text-align: center;
+    padding: 28px 24px;
+}
+
+.invite-modal-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.invite-modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
+
+.invite-modal-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.invite-modal-subtext {
+    text-align: left;
+    margin-bottom: 12px;
+}
+
+.invite-message-textarea {
+    width: 100%;
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 14px;
+    color: var(--text-light);
+    resize: none;
+    margin-bottom: 20px;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+.invite-message-textarea:focus {
+    outline: none;
+    border-color: var(--accent-mint);
+}
+
+.invite-modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.invite-modal-buttons .btn-secondary,
+.invite-modal-buttons .btn-primary {
+    flex: 1;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.invite-modal-buttons .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+}
+
+.invite-modal-buttons .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-light);
+}
+
 /* Plan detail and AI chat modals should cover the bottom nav */
 #planDetailModal,
 #aiChatModal {

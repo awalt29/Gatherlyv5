@@ -826,12 +826,20 @@ def invite_contact(contact_id):
         print(f"[INVITE] Contact already on platform")
         return jsonify({'error': 'This person is already on Gatherly'}), 400
     
+    # Get custom message from request if provided
+    data = request.get_json() or {}
+    custom_message = data.get('message')
+    
     # Send invite SMS
     app_url = os.getenv('APP_BASE_URL', 'https://trygatherly.com')
     if not app_url.startswith('http'):
         app_url = f'https://{app_url}'
     
-    message = f"Hey! {user.name} wants to share availability with you on Gatherly. Join here: {app_url}"
+    # Use custom message if provided, otherwise use default
+    if custom_message:
+        message = f"{custom_message}\n\n- {user.name}\n\nJoin here: {app_url}"
+    else:
+        message = f"Hey! {user.name} wants to share availability with you on Gatherly. Join here: {app_url}"
     print(f"[INVITE] Message: {message}")
     print(f"[INVITE] Sending to: {contact.phone_number}")
     

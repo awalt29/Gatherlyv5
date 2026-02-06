@@ -402,6 +402,33 @@
         </div>
     </div>
 
+    <!-- Invite Confirmation Modal -->
+    <div class="modal" id="inviteConfirmModal">
+        <div class="modal-content invite-modal-content">
+            <div class="invite-modal-icon">👋</div>
+            <h3 class="invite-modal-title" id="inviteConfirmTitle">Friend isn't on Gatherly yet</h3>
+            <p class="invite-modal-text">Would you like to send them a text invite to join?</p>
+            <div class="invite-modal-buttons">
+                <button class="btn-secondary" onclick="closeInviteConfirm(false)">Not Now</button>
+                <button class="btn-primary" onclick="closeInviteConfirm(true)">Yes, Invite</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite Message Modal -->
+    <div class="modal" id="inviteMessageModal">
+        <div class="modal-content invite-modal-content">
+            <div class="invite-modal-icon">📱</div>
+            <h3 class="invite-modal-title">Send Invite</h3>
+            <p class="invite-modal-text invite-modal-subtext">Customize your message:</p>
+            <textarea id="inviteMessageText" class="invite-message-textarea" rows="4"></textarea>
+            <div class="invite-modal-buttons">
+                <button class="btn-secondary" onclick="closeInviteMessage(false)">Cancel</button>
+                <button class="btn-primary" onclick="closeInviteMessage(true)">Send Invite</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Add to Home Screen Popup (iOS) -->
     <div class="install-popup-overlay" id="installPopupOverlay" onclick="closeInstallPopup()"></div>
     <div class="install-popup" id="installPopup">

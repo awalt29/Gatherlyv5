@@ -1450,24 +1450,67 @@ async function deleteFriend(friendId) {
     }
 }
 
+// Invite modal state
+let pendingInviteContact = null;
+let inviteConfirmResolve = null;
+let inviteMessageResolve = null;
+
 // Show invite prompt for contacts not on the platform
 function showInvitePrompt(contact) {
-    const shouldInvite = confirm(
-        `${contact.name} isn't on Gatherly yet.\n\nWould you like to send them a text invite to join?`
-    );
+    pendingInviteContact = contact;
     
-    if (shouldInvite) {
-        sendInvite(contact.id, contact.name);
+    // Update the modal title with the contact's name
+    document.getElementById('inviteConfirmTitle').textContent = `${contact.name} isn't on Gatherly yet`;
+    
+    // Show the confirmation modal
+    document.getElementById('inviteConfirmModal').classList.add('active');
+}
+
+// Close invite confirmation modal
+function closeInviteConfirm(shouldInvite) {
+    document.getElementById('inviteConfirmModal').classList.remove('active');
+    
+    if (shouldInvite && pendingInviteContact) {
+        // Show the message modal with pre-populated text
+        showInviteMessageModal();
     } else {
         showStatus('Friend added! You can invite them later from Manage Friends.', 'success');
+        pendingInviteContact = null;
     }
 }
 
+// Show the invite message modal
+function showInviteMessageModal() {
+    const defaultMessage = `Hey! I'm using Gatherly to plan hangouts with friends. It makes it super easy to see when everyone's free and coordinate plans. Join me! 🎉`;
+    
+    document.getElementById('inviteMessageText').value = defaultMessage;
+    document.getElementById('inviteMessageModal').classList.add('active');
+    
+    // Focus the textarea
+    setTimeout(() => {
+        document.getElementById('inviteMessageText').focus();
+    }, 100);
+}
+
+// Close invite message modal
+function closeInviteMessage(shouldSend) {
+    document.getElementById('inviteMessageModal').classList.remove('active');
+    
+    if (shouldSend && pendingInviteContact) {
+        const customMessage = document.getElementById('inviteMessageText').value.trim();
+        sendInvite(pendingInviteContact.id, pendingInviteContact.name, customMessage);
+    }
+    
+    pendingInviteContact = null;
+}
+
 // Send invite SMS to contact
-async function sendInvite(contactId, contactName) {
+async function sendInvite(contactId, contactName, customMessage = null) {
     try {
         const response = await fetch(`/api/contacts/${contactId}/invite`, {
-            method: 'POST'
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: customMessage })
         });
         
         if (response.ok) {
