@@ -2352,6 +2352,7 @@ function displayFriendsAvailability() {
 
 // Track hangout RSVP statuses for calendar display
 let hangoutStatuses = {}; // key: "date-slot-userId", value: "pending" | "accepted" | "declined"
+let confirmedPlanCells = new Set(); // key: "date-slot" - cells where user has a confirmed plan
 
 // Load hangout statuses for calendar display
 async function loadHangoutStatuses() {
@@ -2360,9 +2361,14 @@ async function loadHangoutStatuses() {
         if (response.ok) {
             const data = await response.json();
             hangoutStatuses = {};
+            confirmedPlanCells = new Set();
             
             // Process hangouts created by user (to see invitee responses)
             data.created.forEach(hangout => {
+                // User is host - they have a confirmed plan on this cell
+                const cellKey = `${hangout.date}-${hangout.time_slot}`;
+                confirmedPlanCells.add(cellKey);
+                
                 hangout.invitees.forEach(invitee => {
                     const key = `${hangout.date}-${hangout.time_slot}-${invitee.user_id}`;
                     hangoutStatuses[key] = invitee.status;
@@ -2377,8 +2383,15 @@ async function loadHangoutStatuses() {
                     // Mark the creator's bubble as green on my calendar
                     const key = `${hangout.date}-${hangout.time_slot}-${hangout.creator_id}`;
                     hangoutStatuses[key] = 'accepted';
+                    
+                    // User accepted - they have a confirmed plan on this cell
+                    const cellKey = `${hangout.date}-${hangout.time_slot}`;
+                    confirmedPlanCells.add(cellKey);
                 }
             });
+            
+            // Apply confirmed plan styling to cells
+            applyConfirmedPlanStyling();
             
             // Refresh the calendar display
             displayFriendsAvailability();
@@ -2386,6 +2399,23 @@ async function loadHangoutStatuses() {
     } catch (error) {
         console.error('Error loading hangout statuses:', error);
     }
+}
+
+// Apply green highlight to cells where user has a confirmed plan
+function applyConfirmedPlanStyling() {
+    // Remove previous confirmed plan styling
+    document.querySelectorAll('.time-slot.has-confirmed-plan').forEach(slot => {
+        slot.classList.remove('has-confirmed-plan');
+    });
+    
+    // Apply to confirmed cells
+    confirmedPlanCells.forEach(cellKey => {
+        const [date, slot] = [cellKey.substring(0, 10), cellKey.substring(11)];
+        const element = document.querySelector(`.time-slot[data-date="${date}"][data-slot="${slot}"]`);
+        if (element) {
+            element.classList.add('has-confirmed-plan');
+        }
+    });
 }
 
 // Get hangout RSVP status for a specific friend/slot
