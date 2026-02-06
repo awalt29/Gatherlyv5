@@ -1247,6 +1247,15 @@ h1 {
     border-color: var(--accent-mint);
 }
 
+/* Confirmed plan takes precedence over has-friends border */
+.time-slot.has-confirmed-plan.has-friends {
+    border-color: #16a34a;
+}
+
+.time-slot.has-confirmed-plan.has-friends.selected {
+    border-color: #16a34a;
+}
+
 /* Planner's availability shown to guest (subtle highlight) */
 .time-slot.planner-available {
     background: rgba(91, 163, 255, 0.2);
