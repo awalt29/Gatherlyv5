@@ -834,12 +834,13 @@ def invite_contact(contact_id):
     app_url = os.getenv('APP_BASE_URL', 'https://trygatherly.com')
     if not app_url.startswith('http'):
         app_url = f'https://{app_url}'
+    signup_url = f"{app_url}/signup"
     
     # Use custom message if provided, otherwise use default
     if custom_message:
-        message = f"{custom_message}\n\n- {user.name}\n\nJoin here: {app_url}"
+        message = f"{custom_message}\n\n- {user.name}\n\nSign up here: {signup_url}"
     else:
-        message = f"Hey! {user.name} wants to share availability with you on Gatherly. Join here: {app_url}"
+        message = f"Hey! {user.name} wants to share availability with you on Gatherly. Sign up here: {signup_url}"
     print(f"[INVITE] Message: {message}")
     print(f"[INVITE] Sending to: {contact.phone_number}")
     
