@@ -1482,7 +1482,7 @@ function closeInviteConfirm(shouldInvite) {
 // Show the invite message modal
 function showInviteMessageModal() {
     const inviterName = plannerInfo?.name || 'Your friend';
-    const defaultMessage = `${inviterName} has shared their availability on Gatherly. Join and add yours to see when they're free!`;
+    const defaultMessage = `${inviterName} has shared their availability with you on Gatherly. Join and add yours to see when they're free!`;
     
     document.getElementById('inviteMessageText').value = defaultMessage;
     document.getElementById('inviteMessageModal').classList.add('active');
