@@ -601,9 +601,19 @@ def get_user(user_id):
             HangoutInvitee.query.filter_by(user_id=user_id).delete()
             print(f"[DELETE ACCOUNT] Deleted hangout invitations (as invitee)")
             
-            # Delete hangouts created by user (and their invitees)
+            # Delete hangout messages sent by this user (in other people's hangouts)
+            HangoutMessage.query.filter_by(user_id=user_id).delete()
+            print(f"[DELETE ACCOUNT] Deleted hangout messages (as sender)")
+            
+            # Delete AI chat messages for this user
+            AiChatMessage.query.filter_by(user_id=user_id).delete()
+            print(f"[DELETE ACCOUNT] Deleted AI chat messages")
+            
+            # Delete hangouts created by user (and their invitees and messages)
             hangouts = Hangout.query.filter_by(creator_id=user_id).all()
             for hangout in hangouts:
+                # Delete messages first
+                HangoutMessage.query.filter_by(hangout_id=hangout.id).delete()
                 HangoutInvitee.query.filter_by(hangout_id=hangout.id).delete()
                 # Also delete notifications referencing this hangout
                 Notification.query.filter_by(hangout_id=hangout.id).delete()
