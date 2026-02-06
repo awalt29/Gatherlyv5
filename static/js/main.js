@@ -2956,6 +2956,7 @@ let notificationUpdateInterval = null;
 async function openNotifications() {
     closeAllNavModals();
     document.getElementById('notificationsModal').classList.add('active');
+    document.querySelector('.bottom-nav').style.display = 'none';
     await loadNotifications();
     
     // Mark all as read
@@ -2982,6 +2983,7 @@ async function openNotifications() {
 
 function closeNotifications() {
     document.getElementById('notificationsModal').classList.remove('active');
+    document.querySelector('.bottom-nav').style.display = '';
     
     // Stop updating timestamps when modal closes
     if (notificationUpdateInterval) {
