@@ -3201,7 +3201,6 @@ body:has(.guest-info) .container {
 .chat-message-me .chat-link {
     color: #7fe7dc;
 }
-}
 
 .chat-message-time {
     font-size: 10px;
