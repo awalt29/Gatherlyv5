@@ -3187,6 +3187,22 @@ body:has(.guest-info) .container {
     white-space: pre-wrap;
 }
 
+/* Clickable links in chat messages */
+.chat-link {
+    color: var(--accent-mint);
+    text-decoration: underline;
+    word-break: break-all;
+}
+
+.chat-link:hover {
+    opacity: 0.8;
+}
+
+.chat-message-me .chat-link {
+    color: #7fe7dc;
+}
+}
+
 .chat-message-time {
     font-size: 10px;
     opacity: 0.6;

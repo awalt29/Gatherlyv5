@@ -3630,7 +3630,7 @@ function renderChatMessages(messages) {
             <div class="chat-message ${isHostMe ? 'chat-message-me' : 'chat-message-other'} chat-message-suggestion">
                 ${!isHostMe ? `<div class="chat-message-name">${hostName}</div>` : ''}
                 <div class="chat-message-bubble">
-                    <div class="chat-message-text">${escapeHtml(currentPlanDetail.description)}</div>
+                    <div class="chat-message-text">${linkifyText(currentPlanDetail.description)}</div>
                     <div class="chat-message-time">${createdTime}</div>
                 </div>
             </div>
@@ -3667,7 +3667,7 @@ function renderChatMessages(messages) {
         // Only show text if it's not just the default "Shared a photo" or if there's a caption
         const messageText = msg.message.replace('✨ AI: ', '');
         if (messageText && messageText !== '📷 Shared a photo') {
-            messageContent += `<div class="chat-message-text">${escapeHtml(messageText)}</div>`;
+            messageContent += `<div class="chat-message-text">${linkifyText(messageText)}</div>`;
         }
         
         return `
@@ -3718,6 +3718,15 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Convert URLs in text to clickable links
+function linkifyText(text) {
+    // First escape HTML to prevent XSS
+    const escaped = escapeHtml(text);
+    // Then convert URLs to links
+    const urlPattern = /(https?:\/\/[^\s<]+)/g;
+    return escaped.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer" class="chat-link">$1</a>');
+}
+
 // Add message to chat immediately (optimistic UI)
 function addOptimisticMessage(message, imageData = null) {
     const container = document.getElementById('planChatMessages');
@@ -3735,7 +3744,7 @@ function addOptimisticMessage(message, imageData = null) {
         messageContent += `<img class="chat-image" src="data:image/jpeg;base64,${imageData}" alt="Shared image" onclick="openImageFullscreen(this.src)">`;
     }
     if (message && message !== '📷 Shared a photo') {
-        messageContent += `<div class="chat-message-text">${escapeHtml(message)}</div>`;
+        messageContent += `<div class="chat-message-text">${linkifyText(message)}</div>`;
     }
     
     const messageHtml = `
@@ -3912,7 +3921,7 @@ function renderAiChatMessages(messages) {
             <div class="chat-message ${messageClass}">
                 <div class="chat-message-name">${name}</div>
                 <div class="chat-message-bubble">
-                    ${msg.message}
+                    ${linkifyText(msg.message)}
                     <div class="chat-message-time">${time}</div>
                 </div>
             </div>
