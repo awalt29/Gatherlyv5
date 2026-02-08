@@ -4110,6 +4110,7 @@ function handleChatInput(element) {
 
 // Image Upload for Chat
 let pendingImageData = null;
+let pendingImages = []; // For multiple image uploads
 
 async function handleImageSelect(event) {
     const files = Array.from(event.target.files);
@@ -4122,74 +4123,43 @@ async function handleImageSelect(event) {
         return;
     }
     
-    // If multiple images selected, send each one immediately
-    if (imageFiles.length > 1) {
-        showStatus(`Uploading ${imageFiles.length} images...`, 'success');
-        
-        for (const file of imageFiles) {
-            try {
-                const compressedData = await compressImage(file, 800, 0.7);
-                await sendImageDirectly(compressedData);
-            } catch (error) {
-                console.error('Error processing image:', error);
-            }
+    console.log(`[IMAGE] Selected ${imageFiles.length} image(s)`);
+    
+    // Always show preview for the first image
+    // If multiple images, queue them all
+    pendingImages = [];
+    
+    for (const file of imageFiles) {
+        try {
+            const compressedData = await compressImage(file, 800, 0.7);
+            pendingImages.push(compressedData);
+        } catch (error) {
+            console.error('Error processing image:', error);
         }
-        
-        // Clear the file input
+    }
+    
+    if (pendingImages.length === 0) {
+        showStatus('Failed to process images', 'error');
         event.target.value = '';
         return;
     }
     
-    // Single image - show preview as before
-    const file = imageFiles[0];
+    // Show preview of first image
+    pendingImageData = pendingImages[0];
+    const preview = document.getElementById('chatImagePreview');
+    const previewImg = document.getElementById('chatImagePreviewImg');
+    previewImg.src = `data:image/jpeg;base64,${pendingImages[0]}`;
+    preview.style.display = 'flex';
     
-    // Compress and convert to base64
-    try {
-        const compressedData = await compressImage(file, 800, 0.7);
-        pendingImageData = compressedData;
-        
-        // Show preview
-        const preview = document.getElementById('chatImagePreview');
-        const previewImg = document.getElementById('chatImagePreviewImg');
-        previewImg.src = `data:image/jpeg;base64,${compressedData}`;
-        preview.style.display = 'flex';
-    } catch (error) {
-        console.error('Error compressing image:', error);
-        showStatus('Failed to process image', 'error');
+    // Show count if multiple
+    if (pendingImages.length > 1) {
+        showStatus(`${pendingImages.length} images selected - tap send to upload`, 'success');
     }
     
     // Clear the file input
     event.target.value = '';
 }
 
-// Send image directly without preview (for multiple image upload)
-async function sendImageDirectly(imageData) {
-    if (!currentPlanDetail) return;
-    
-    const hangoutId = currentPlanDetail.id;
-    
-    // Add optimistic message
-    addOptimisticMessage('📷 Shared a photo', imageData);
-    
-    try {
-        const response = await fetch(`/api/hangouts/${hangoutId}/messages`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: '',
-                image_data: imageData
-            })
-        });
-        
-        if (!response.ok) {
-            const data = await response.json();
-            showStatus(data.error || 'Failed to send image', 'error');
-        }
-    } catch (error) {
-        console.error('Error sending image:', error);
-        showStatus('Failed to send image', 'error');
-    }
-}
 
 function compressImage(file, maxWidth, quality) {
     return new Promise((resolve, reject) => {
@@ -4228,46 +4198,52 @@ function compressImage(file, maxWidth, quality) {
 
 function removeImagePreview() {
     pendingImageData = null;
+    pendingImages = [];
     const preview = document.getElementById('chatImagePreview');
     preview.style.display = 'none';
 }
 
 async function sendImageMessage() {
-    if (!currentPlanDetail || !pendingImageData) return;
+    if (!currentPlanDetail || pendingImages.length === 0) return;
     
     const input = document.getElementById('planChatInput');
     const caption = (input.innerText || input.textContent || '').trim();
     
     // Clear UI immediately
-    const imageData = pendingImageData;
-    const messageText = caption || '📷 Shared a photo';
+    const imagesToSend = [...pendingImages];
     input.textContent = '';
     removeImagePreview();
-    pendingImageData = null;
     
-    // Show message immediately (optimistic UI)
-    addOptimisticMessage(messageText, imageData);
-    
-    try {
-        const response = await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                message: messageText,
-                image_data: imageData 
-            })
-        });
+    // Send all pending images
+    for (let i = 0; i < imagesToSend.length; i++) {
+        const imageData = imagesToSend[i];
+        // Only first image gets the caption
+        const messageText = (i === 0 && caption) ? caption : '📷 Shared a photo';
         
-        if (response.ok) {
-            const newMessage = await response.json();
-            setSeenMessageId(currentPlanDetail.id, newMessage.id);
-        } else {
-            const data = await response.json();
-            showStatus(data.error || 'Failed to send image', 'error');
+        // Show message immediately (optimistic UI)
+        addOptimisticMessage(messageText, imageData);
+        
+        try {
+            const response = await fetch(`/api/hangouts/${currentPlanDetail.id}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message: messageText,
+                    image_data: imageData 
+                })
+            });
+            
+            if (response.ok) {
+                const newMessage = await response.json();
+                setSeenMessageId(currentPlanDetail.id, newMessage.id);
+            } else {
+                const data = await response.json();
+                showStatus(data.error || 'Failed to send image', 'error');
+            }
+        } catch (error) {
+            console.error('Error sending image:', error);
+            showStatus('Failed to send image', 'error');
         }
-    } catch (error) {
-        console.error('Error sending image:', error);
-        showStatus('Failed to send image', 'error');
     }
 }
 
