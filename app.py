@@ -2410,14 +2410,18 @@ CRITICAL RULES:
 2. If instructions say "X people" - there are EXACTLY X people, no more no less
 3. Use known participant names first, then "Person 1", "Person 2" etc. for unnamed people
 4. Count carefully: your output must have EXACTLY the number of people stated
-5. Split shared items equally among stated number of people
-6. Apply tax & tip proportionally
-7. Do NOT show calculations - just final results
+5. IMPORTANT: "Each had 1 drink" means each person pays for THEIR OWN drink based on its actual price - NOT an even split!
+6. ONLY split items that are EXPLICITLY said to be shared (e.g. "split the bottle")
+7. Individual items have DIFFERENT PRICES - charge each person based on what their item actually costs
+8. Apply tax & tip PROPORTIONALLY based on each person's subtotal (if someone's items cost more, they pay more tax/tip)
+9. Do NOT show calculations - just final results
+
+EXAMPLE: If 5 people each had 1 drink and one drink was $5 while others were $20, the $5 drink person pays LESS (about $6.50 with tax/tip) not the same as others.
 
 OUTPUT FORMAT (only this, nothing else):
 
 **Items:**
-- [Name]: [their items]
+- [Name]: [item name] ($XX.XX)
 
 **Each Person Owes:**
 - [Name]: $XX.XX"""
@@ -2425,7 +2429,7 @@ OUTPUT FORMAT (only this, nothing else):
             import re
             
             # Build image content for all receipts
-            image_content = [{"type": "text", "text": f"Please analyze these {receipt_text} and split the combined bill based on what everyone said they ordered in the chat."}]
+            image_content = [{"type": "text", "text": f"Please analyze these {receipt_text}. Each person pays for THEIR OWN items at actual prices (not an even split) unless they explicitly said to split something. Calculate each person's proportional share of tax and tip based on their item costs."}]
             
             for i, receipt_image in enumerate(receipt_images):
                 # Clean up base64 string (remove any whitespace or line breaks)
