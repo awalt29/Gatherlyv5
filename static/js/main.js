@@ -3446,7 +3446,7 @@ function renderPlanDetail() {
                     </div>
                 </div>
                 <div class="plan-chat-input">
-                    <input type="file" id="chatImageInput" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
+                    <input type="file" id="chatImageInput" accept="image/*" multiple style="display: none;" onchange="handleImageSelect(event)">
                     <button class="chat-image-btn" onclick="document.getElementById('chatImageInput').click()">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -4112,14 +4112,36 @@ function handleChatInput(element) {
 let pendingImageData = null;
 
 async function handleImageSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+    const files = Array.from(event.target.files);
+    if (!files.length) return;
     
-    // Check file type
-    if (!file.type.startsWith('image/')) {
-        showStatus('Please select an image file', 'error');
+    // Filter to only image files
+    const imageFiles = files.filter(f => f.type.startsWith('image/'));
+    if (imageFiles.length === 0) {
+        showStatus('Please select image files', 'error');
         return;
     }
+    
+    // If multiple images selected, send each one immediately
+    if (imageFiles.length > 1) {
+        showStatus(`Uploading ${imageFiles.length} images...`, 'success');
+        
+        for (const file of imageFiles) {
+            try {
+                const compressedData = await compressImage(file, 800, 0.7);
+                await sendImageDirectly(compressedData);
+            } catch (error) {
+                console.error('Error processing image:', error);
+            }
+        }
+        
+        // Clear the file input
+        event.target.value = '';
+        return;
+    }
+    
+    // Single image - show preview as before
+    const file = imageFiles[0];
     
     // Compress and convert to base64
     try {
@@ -4138,6 +4160,35 @@ async function handleImageSelect(event) {
     
     // Clear the file input
     event.target.value = '';
+}
+
+// Send image directly without preview (for multiple image upload)
+async function sendImageDirectly(imageData) {
+    if (!currentPlanDetail) return;
+    
+    const hangoutId = currentPlanDetail.id;
+    
+    // Add optimistic message
+    addOptimisticMessage('📷 Shared a photo', imageData);
+    
+    try {
+        const response = await fetch(`/api/hangouts/${hangoutId}/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: '',
+                image_data: imageData
+            })
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            showStatus(data.error || 'Failed to send image', 'error');
+        }
+    } catch (error) {
+        console.error('Error sending image:', error);
+        showStatus('Failed to send image', 'error');
+    }
 }
 
 function compressImage(file, maxWidth, quality) {
