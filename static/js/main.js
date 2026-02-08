@@ -4144,16 +4144,23 @@ async function handleImageSelect(event) {
         return;
     }
     
-    // Show preview of first image
+    // Show preview of all images
     pendingImageData = pendingImages[0];
     const preview = document.getElementById('chatImagePreview');
-    const previewImg = document.getElementById('chatImagePreviewImg');
-    previewImg.src = `data:image/jpeg;base64,${pendingImages[0]}`;
+    
+    // Build preview HTML for all images
+    let previewHtml = '';
+    pendingImages.forEach((imgData, index) => {
+        previewHtml += `<img class="preview-thumb" src="data:image/jpeg;base64,${imgData}" alt="Preview ${index + 1}">`;
+    });
+    previewHtml += `<button class="chat-image-remove" onclick="removeImagePreview()">×</button>`;
+    
+    preview.innerHTML = previewHtml;
     preview.style.display = 'flex';
     
     // Show count if multiple
     if (pendingImages.length > 1) {
-        showStatus(`${pendingImages.length} images selected - tap send to upload`, 'success');
+        showStatus(`${pendingImages.length} images selected - tap send to upload all`, 'success');
     }
     
     // Clear the file input

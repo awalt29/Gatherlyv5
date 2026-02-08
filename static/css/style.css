@@ -3341,6 +3341,13 @@ body:has(.guest-info) .container {
     object-fit: cover;
 }
 
+/* Smaller thumbnails when multiple images */
+.chat-image-preview img.preview-thumb {
+    max-width: 60px;
+    max-height: 60px;
+    flex-shrink: 0;
+}
+
 .chat-image-remove {
     width: 24px;
     height: 24px;
