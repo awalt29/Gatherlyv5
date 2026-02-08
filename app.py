@@ -2384,30 +2384,37 @@ def ai_suggest(hangout_id):
             num_receipts = len(receipt_images)
             receipt_text = "receipt" if num_receipts == 1 else f"{num_receipts} receipts"
             
-            system_prompt = f"""You are helping split a restaurant bill for a group of friends.
+            system_prompt = f"""You are a precise calculator helping split restaurant bills.
 
-Participants: {', '.join(all_participants)}
+PARTICIPANTS (use these exact names): {', '.join(all_participants)}
 
-Recent chat where people mentioned what they ordered:
+CHAT CONTEXT (what people ordered):
 {chat_context}
 
-Instructions:
-1. Look at ALL the receipt images carefully (there are {num_receipts})
-2. Combine items from all receipts into one bill split
-3. Match items on the receipts to people based on what they said in chat
-4. Calculate each person's TOTAL across all receipts (including their proportional share of tax and tip from each)
+STEP-BY-STEP INSTRUCTIONS:
+1. Read EACH receipt carefully - note subtotal, tax, and tip for each
+2. Match menu items to people based on chat messages
+3. For shared items (like a bottle split 5 ways), divide the item cost equally
+4. For each person, calculate: (their items subtotal) × (1 + tax% + tip%) from each receipt
+5. Add up each person's totals across ALL receipts
 
-Keep your response SHORT and SIMPLE. Use this exact format:
+MATH TIPS:
+- Tax and tip are percentages of subtotal, apply them proportionally to each person's items
+- If receipt shows Tax $7 on Subtotal $100, that's 7% - apply 7% to each person's item costs
+- Same for tip percentage
+- Double-check your arithmetic!
 
-**Items Ordered:**
-- [Name]: [their items from all receipts]
-- [Name]: [their items from all receipts]
+OUTPUT FORMAT (use the EXACT participant names listed above, not "Person 1"):
 
-**Final Amounts (including tax & tip):**
-- [Name]: $XX.XX (total across all receipts)
-- [Name]: $XX.XX (total across all receipts)
+**Items:**
+- {all_participants[0] if all_participants else 'Name'}: [items]
+- [continue for each participant...]
 
-That's it! No calculations shown, no formulas, just the items and final combined totals."""
+**Each Person Owes:**
+- {all_participants[0] if all_participants else 'Name'}: $XX.XX
+- [continue for each participant...]
+
+**Total Check:** $XXX.XX (should match sum of all receipts)"""
 
             import re
             
@@ -2442,8 +2449,8 @@ That's it! No calculations shown, no formulas, just the items and final combined
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": image_content}
                 ],
-                max_tokens=700,
-                temperature=0.3
+                max_tokens=1000,
+                temperature=0.2  # Lower for more precise calculations
             )
         
         # Handle split bill without image (just give instructions)
