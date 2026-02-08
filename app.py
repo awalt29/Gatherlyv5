@@ -2357,20 +2357,13 @@ def ai_suggest(hangout_id):
     
     # Check if this is a "split it" request (actually calculate the split)
     # Only trigger calculation when user says "split it" - NOT on initial "split the bill" request
-    # Will automatically detect and process ALL receipt images that were uploaded
     is_split_calculation = suggestion_type == 'split' and ('split it' in prompt or 'calculate' in prompt or 'do the split' in prompt)
-    
-    # For split calculation, look for ALL receipt images
-    receipt_images = []
-    if is_split_calculation:
-        for msg in recent_messages:
-            if msg.image_data:
-                receipt_images.append(msg.image_data)
     
     chat_context = ""
     previous_suggestions = ""
+    receipt_images = []
     
-    # For bill splitting, only get messages since the last AI split response
+    # For bill splitting, only get messages/images since the last AI response
     # This prevents old context from confusing the calculation
     if is_split_calculation:
         # Find messages only since the last AI response (fresh context for this split)
@@ -2379,11 +2372,17 @@ def ai_suggest(hangout_id):
             if msg.is_ai_message or msg.message.startswith('✨ AI:'):
                 break  # Stop at the last AI response
             fresh_messages.insert(0, msg)
+            # Collect images from fresh messages only
+            if msg.image_data:
+                receipt_images.append(msg.image_data)
         
         if fresh_messages:
             chat_context = "\n\nRECENT INSTRUCTIONS (use ONLY this for the split):\n"
             for msg in fresh_messages:
-                chat_context += f"- {msg.user.name}: {msg.message}\n"
+                if msg.message and msg.message != '📷 Shared a photo':
+                    chat_context += f"- {msg.user.name}: {msg.message}\n"
+        
+        print(f"[AI] Found {len(receipt_images)} fresh images for split")
     else:
         # For non-split requests, use all context
         if recent_messages:
