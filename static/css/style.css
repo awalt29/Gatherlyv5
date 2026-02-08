@@ -2354,7 +2354,7 @@ body:has(.guest-info) .container {
 
 /* Plan Modal */
 #planModal {
-    z-index: 1001; /* Above plans modal so it can layer on top */
+    z-index: 2500; /* Above plan detail modal so edit can layer on top */
 }
 
 #planModal .modal-content {
