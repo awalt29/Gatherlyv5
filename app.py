@@ -2357,15 +2357,14 @@ def ai_suggest(hangout_id):
     
     # Check if this is a "split it" request (actually calculate the split)
     # Only trigger calculation when user says "split it" - NOT on initial "split the bill" request
-    is_split_calculation = suggestion_type == 'split' and ('split it' in prompt or 'calculate' in prompt or 'do the split' in prompt)
+    is_split_calculation = suggestion_type == 'split' and ('split it' in prompt or 'calculate' in prompt or 'do the split' in prompt or 'both' in prompt)
     
-    # For split calculation, look for receipt image
-    receipt_image = None
+    # For split calculation, look for ALL receipt images
+    receipt_images = []
     if is_split_calculation:
         for msg in recent_messages:
             if msg.image_data:
-                receipt_image = msg.image_data
-                break
+                receipt_images.append(msg.image_data)
     
     chat_context = ""
     previous_suggestions = ""
@@ -2379,8 +2378,11 @@ def ai_suggest(hangout_id):
                 chat_context += f"- {msg.user.name}: {msg.message}\n"
     
     try:
-        # Handle split bill with image (vision API)
-        if is_split_calculation and receipt_image:
+        # Handle split bill with image(s) (vision API)
+        if is_split_calculation and receipt_images:
+            num_receipts = len(receipt_images)
+            receipt_text = "receipt" if num_receipts == 1 else f"{num_receipts} receipts"
+            
             system_prompt = f"""You are helping split a restaurant bill for a group of friends.
 
 Participants: {', '.join(all_participants)}
@@ -2389,49 +2391,57 @@ Recent chat where people mentioned what they ordered:
 {chat_context}
 
 Instructions:
-1. Look at the receipt image carefully
-2. Match items on the receipt to people based on what they said in chat
-3. Calculate each person's total (including their proportional share of tax and tip)
+1. Look at ALL the receipt images carefully (there are {num_receipts})
+2. Combine items from all receipts into one bill split
+3. Match items on the receipts to people based on what they said in chat
+4. Calculate each person's TOTAL across all receipts (including their proportional share of tax and tip from each)
 
 Keep your response SHORT and SIMPLE. Use this exact format:
 
 **Items Ordered:**
-- [Name]: [their items]
-- [Name]: [their items]
+- [Name]: [their items from all receipts]
+- [Name]: [their items from all receipts]
 
 **Final Amounts (including tax & tip):**
-- [Name]: $XX.XX
-- [Name]: $XX.XX
+- [Name]: $XX.XX (total across all receipts)
+- [Name]: $XX.XX (total across all receipts)
 
-That's it! No calculations shown, no formulas, just the items and final totals."""
+That's it! No calculations shown, no formulas, just the items and final combined totals."""
 
-            # Clean up base64 string (remove any whitespace or line breaks)
             import re
-            clean_image = re.sub(r'\s+', '', receipt_image)
             
-            # Detect image type from base64 header or default to jpeg
-            image_type = 'jpeg'
-            if clean_image.startswith('/9j/'):
+            # Build image content for all receipts
+            image_content = [{"type": "text", "text": f"Please analyze these {receipt_text} and split the combined bill based on what everyone said they ordered in the chat."}]
+            
+            for i, receipt_image in enumerate(receipt_images):
+                # Clean up base64 string (remove any whitespace or line breaks)
+                clean_image = re.sub(r'\s+', '', receipt_image)
+                
+                # Detect image type from base64 header or default to jpeg
                 image_type = 'jpeg'
-            elif clean_image.startswith('iVBOR'):
-                image_type = 'png'
-            elif clean_image.startswith('R0lGOD'):
-                image_type = 'gif'
-            elif clean_image.startswith('UklGR'):
-                image_type = 'webp'
-            
-            print(f"[AI] Processing image, type detected: {image_type}, length: {len(clean_image)}")
+                if clean_image.startswith('/9j/'):
+                    image_type = 'jpeg'
+                elif clean_image.startswith('iVBOR'):
+                    image_type = 'png'
+                elif clean_image.startswith('R0lGOD'):
+                    image_type = 'gif'
+                elif clean_image.startswith('UklGR'):
+                    image_type = 'webp'
+                
+                print(f"[AI] Processing image {i+1}/{num_receipts}, type: {image_type}, length: {len(clean_image)}")
+                
+                image_content.append({
+                    "type": "image_url", 
+                    "image_url": {"url": f"data:image/{image_type};base64,{clean_image}"}
+                })
             
             response = openai.chat.completions.create(
                 model="gpt-4o",  # Need GPT-4o for vision
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": [
-                        {"type": "text", "text": "Please analyze this receipt and split the bill based on what everyone said they ordered in the chat."},
-                        {"type": "image_url", "image_url": {"url": f"data:image/{image_type};base64,{clean_image}"}}
-                    ]}
+                    {"role": "user", "content": image_content}
                 ],
-                max_tokens=500,
+                max_tokens=700,
                 temperature=0.3
             )
         
@@ -2458,7 +2468,7 @@ That's it! No calculations shown, no formulas, just the items and final totals."
             }), 200
         
         # Handle split without receipt image
-        elif is_split_calculation and not receipt_image:
+        elif is_split_calculation and not receipt_images:
             ai_response = "I don't see a receipt photo! Please upload a picture of the bill first, then try again."
             
             ai_message = HangoutMessage(
