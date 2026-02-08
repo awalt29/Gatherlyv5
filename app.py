@@ -2400,36 +2400,51 @@ def ai_suggest(hangout_id):
             num_receipts = len(receipt_images)
             receipt_text = "receipt" if num_receipts == 1 else f"{num_receipts} receipts"
             
-            system_prompt = f"""You are a precise calculator helping split restaurant bills.
+            system_prompt = f"""You are a bill-splitting calculator. Follow these steps EXACTLY in order:
 
-KNOWN PARTICIPANTS IN THIS EVENT: {', '.join(all_participants)}
+CONTEXT:
+- Known participants: {', '.join(all_participants)}
 {chat_context}
 
-CRITICAL RULES:
-1. ONLY use names/info from the RECENT INSTRUCTIONS above - ignore any old context
-2. If instructions say "X people" - there are EXACTLY X people, no more no less
-3. Use known participant names first, then "Person 1", "Person 2" etc. for unnamed people
-4. Count carefully: your output must have EXACTLY the number of people stated
-5. IMPORTANT: "Each had 1 drink" means each person pays for THEIR OWN drink based on its actual price - NOT an even split!
-6. ONLY split items that are EXPLICITLY said to be shared (e.g. "split the bottle")
-7. Individual items have DIFFERENT PRICES - charge each person based on what their item actually costs
-8. Apply tax & tip PROPORTIONALLY based on each person's subtotal (if someone's items cost more, they pay more tax/tip)
-9. Do NOT show calculations - just final results
+STEP 1 - COUNT PEOPLE:
+Read how many people are mentioned. If it says "5 people", there are EXACTLY 5.
+Name them using known participants first, then Person 1, Person 2, etc.
 
-EXAMPLE: If 5 people each had 1 drink and one drink was $5 while others were $20, the $5 drink person pays LESS (about $6.50 with tax/tip) not the same as others.
+STEP 2 - LIST ALL RECEIPT ITEMS:
+From the receipt images, list every item and its price.
 
-OUTPUT FORMAT (only this, nothing else):
+STEP 3 - IDENTIFY SHARED vs INDIVIDUAL:
+- SHARED: Items explicitly said to "split" (e.g., "split the bottle") → divide cost equally
+- INDIVIDUAL: "Each had 1 drink" means 5 people = 5 separate drinks, each person pays for ONE drink
+
+STEP 4 - ASSIGN INDIVIDUAL ITEMS:
+If there are 5 people and 5 drinks, assign one drink to each person.
+If prices differ, assign cheapest to Person 1, next to Person 2, etc. (or by name if specified).
+
+STEP 5 - CALCULATE EACH PERSON'S SUBTOTAL:
+Add up each person's individual items + their share of any shared items.
+
+STEP 6 - ADD PROPORTIONAL TAX & TIP:
+For each receipt, calculate: (person's subtotal / receipt subtotal) × receipt total
+This gives proportional tax and tip.
+
+STEP 7 - SUM ACROSS RECEIPTS:
+Add each person's totals from all receipts.
+
+OUTPUT FORMAT (show final results only):
 
 **Items:**
-- [Name]: [item name] ($XX.XX)
+- [Name]: [their items with prices]
 
 **Each Person Owes:**
-- [Name]: $XX.XX"""
+- [Name]: $XX.XX
+
+Total: $XXX.XX (should match sum of all receipts)"""
 
             import re
             
             # Build image content for all receipts
-            image_content = [{"type": "text", "text": f"Please analyze these {receipt_text}. Each person pays for THEIR OWN items at actual prices (not an even split) unless they explicitly said to split something. Calculate each person's proportional share of tax and tip based on their item costs."}]
+            image_content = [{"type": "text", "text": f"Follow the 7 steps exactly. Here are the {receipt_text} to analyze:"}]
             
             for i, receipt_image in enumerate(receipt_images):
                 # Clean up base64 string (remove any whitespace or line breaks)
@@ -2459,8 +2474,8 @@ OUTPUT FORMAT (only this, nothing else):
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": image_content}
                 ],
-                max_tokens=1000,
-                temperature=0.2  # Lower for more precise calculations
+                max_tokens=1500,
+                temperature=0.1  # Very low for consistent math calculations
             )
         
         # Handle split bill without image (just give instructions)
