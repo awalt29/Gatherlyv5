@@ -2367,22 +2367,23 @@ def ai_suggest(hangout_id):
     # This prevents old context from confusing the calculation
     if is_split_calculation:
         # Find messages only since the last AI response (fresh context for this split)
+        # recent_messages is already in DESC order (newest first)
         fresh_messages = []
-        for msg in reversed(recent_messages):
+        for msg in recent_messages:
             if msg.is_ai_message or msg.message.startswith('✨ AI:'):
-                break  # Stop at the last AI response
-            fresh_messages.insert(0, msg)
+                break  # Stop at the most recent AI response
+            fresh_messages.insert(0, msg)  # Insert at beginning to maintain chronological order
             # Collect images from fresh messages only
             if msg.image_data:
                 receipt_images.append(msg.image_data)
+        
+        print(f"[AI] Found {len(receipt_images)} fresh images for split")
         
         if fresh_messages:
             chat_context = "\n\nRECENT INSTRUCTIONS (use ONLY this for the split):\n"
             for msg in fresh_messages:
                 if msg.message and msg.message != '📷 Shared a photo':
                     chat_context += f"- {msg.user.name}: {msg.message}\n"
-        
-        print(f"[AI] Found {len(receipt_images)} fresh images for split")
     else:
         # For non-split requests, use all context
         if recent_messages:
