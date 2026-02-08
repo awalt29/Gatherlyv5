@@ -2357,7 +2357,8 @@ def ai_suggest(hangout_id):
     
     # Check if this is a "split it" request (actually calculate the split)
     # Only trigger calculation when user says "split it" - NOT on initial "split the bill" request
-    is_split_calculation = suggestion_type == 'split' and ('split it' in prompt or 'calculate' in prompt or 'do the split' in prompt or 'both' in prompt)
+    # Will automatically detect and process ALL receipt images that were uploaded
+    is_split_calculation = suggestion_type == 'split' and ('split it' in prompt or 'calculate' in prompt or 'do the split' in prompt)
     
     # For split calculation, look for ALL receipt images
     receipt_images = []
