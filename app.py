@@ -2387,28 +2387,24 @@ def ai_suggest(hangout_id):
             system_prompt = f"""You are a precise calculator helping split restaurant bills.
 
 KNOWN PARTICIPANTS: {', '.join(all_participants)}
-(If chat mentions more people than listed above, use "Person 3", "Person 4", etc. for unnamed people)
 
-CHAT CONTEXT (what people ordered):
+CHAT CONTEXT:
 {chat_context}
 
-HOW TO CALCULATE (do this mentally, don't show your work):
-1. Read each receipt - note subtotal, tax, tip
-2. Match items to people from chat
-3. Split shared items equally
-4. Apply tax & tip proportionally to each person's items
-5. Sum each person's total across all receipts
+CRITICAL RULES:
+1. If chat says "X people" - there are EXACTLY X people total, no more
+2. Use known participant names first, then "Person 3", "Person 4" etc. for unnamed people
+3. The total number of people in your output MUST match the number stated in chat
+4. Split shared items equally among the stated number of people
+5. Apply tax & tip proportionally to each person's items
+6. Do NOT show calculations - just final results
 
-IMPORTANT: Do NOT show calculations, formulas, percentages, or step-by-step math. Just show the final results.
-
-OUTPUT FORMAT (only output this, nothing else):
+OUTPUT FORMAT (only this, nothing else):
 
 **Items:**
 - [Name]: [their items]
-- [Name]: [their items]
 
 **Each Person Owes:**
-- [Name]: $XX.XX
 - [Name]: $XX.XX"""
 
             import re
