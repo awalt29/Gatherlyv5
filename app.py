@@ -2386,7 +2386,8 @@ def ai_suggest(hangout_id):
             
             system_prompt = f"""You are a precise calculator helping split restaurant bills.
 
-PARTICIPANTS (use these exact names): {', '.join(all_participants)}
+KNOWN PARTICIPANTS: {', '.join(all_participants)}
+(If chat mentions more people than listed above, use "Person 3", "Person 4", etc. for unnamed people)
 
 CHAT CONTEXT (what people ordered):
 {chat_context}
@@ -2404,15 +2405,15 @@ MATH TIPS:
 - Same for tip percentage
 - Double-check your arithmetic!
 
-OUTPUT FORMAT (use the EXACT participant names listed above, not "Person 1"):
+OUTPUT FORMAT:
 
 **Items:**
-- {all_participants[0] if all_participants else 'Name'}: [items]
-- [continue for each participant...]
+- [Name]: [items]
+- [continue for each person...]
 
 **Each Person Owes:**
-- {all_participants[0] if all_participants else 'Name'}: $XX.XX
-- [continue for each participant...]
+- [Name]: $XX.XX
+- [continue for each person...]
 
 **Total Check:** $XXX.XX (should match sum of all receipts)"""
 
