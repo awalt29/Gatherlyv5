@@ -2369,14 +2369,30 @@ def ai_suggest(hangout_id):
     
     chat_context = ""
     previous_suggestions = ""
-    if recent_messages:
-        chat_context = "\n\nRecent chat messages:\n"
+    
+    # For bill splitting, only get messages since the last AI split response
+    # This prevents old context from confusing the calculation
+    if is_split_calculation:
+        # Find messages only since the last AI response (fresh context for this split)
+        fresh_messages = []
         for msg in reversed(recent_messages):
             if msg.is_ai_message or msg.message.startswith('✨ AI:'):
-                # Track AI suggestions to avoid repeats
-                previous_suggestions += msg.message + "\n"
-            else:
+                break  # Stop at the last AI response
+            fresh_messages.insert(0, msg)
+        
+        if fresh_messages:
+            chat_context = "\n\nRECENT INSTRUCTIONS (use ONLY this for the split):\n"
+            for msg in fresh_messages:
                 chat_context += f"- {msg.user.name}: {msg.message}\n"
+    else:
+        # For non-split requests, use all context
+        if recent_messages:
+            chat_context = "\n\nRecent chat messages:\n"
+            for msg in reversed(recent_messages):
+                if msg.is_ai_message or msg.message.startswith('✨ AI:'):
+                    previous_suggestions += msg.message + "\n"
+                else:
+                    chat_context += f"- {msg.user.name}: {msg.message}\n"
     
     try:
         # Handle split bill with image(s) (vision API)
@@ -2386,18 +2402,17 @@ def ai_suggest(hangout_id):
             
             system_prompt = f"""You are a precise calculator helping split restaurant bills.
 
-KNOWN PARTICIPANTS: {', '.join(all_participants)}
-
-CHAT CONTEXT:
+KNOWN PARTICIPANTS IN THIS EVENT: {', '.join(all_participants)}
 {chat_context}
 
 CRITICAL RULES:
-1. If chat says "X people" - there are EXACTLY X people total, no more
-2. Use known participant names first, then "Person 3", "Person 4" etc. for unnamed people
-3. The total number of people in your output MUST match the number stated in chat
-4. Split shared items equally among the stated number of people
-5. Apply tax & tip proportionally to each person's items
-6. Do NOT show calculations - just final results
+1. ONLY use names/info from the RECENT INSTRUCTIONS above - ignore any old context
+2. If instructions say "X people" - there are EXACTLY X people, no more no less
+3. Use known participant names first, then "Person 1", "Person 2" etc. for unnamed people
+4. Count carefully: your output must have EXACTLY the number of people stated
+5. Split shared items equally among stated number of people
+6. Apply tax & tip proportionally
+7. Do NOT show calculations - just final results
 
 OUTPUT FORMAT (only this, nothing else):
 
