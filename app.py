@@ -2392,30 +2392,24 @@ KNOWN PARTICIPANTS: {', '.join(all_participants)}
 CHAT CONTEXT (what people ordered):
 {chat_context}
 
-STEP-BY-STEP INSTRUCTIONS:
-1. Read EACH receipt carefully - note subtotal, tax, and tip for each
-2. Match menu items to people based on chat messages
-3. For shared items (like a bottle split 5 ways), divide the item cost equally
-4. For each person, calculate: (their items subtotal) × (1 + tax% + tip%) from each receipt
-5. Add up each person's totals across ALL receipts
+HOW TO CALCULATE (do this mentally, don't show your work):
+1. Read each receipt - note subtotal, tax, tip
+2. Match items to people from chat
+3. Split shared items equally
+4. Apply tax & tip proportionally to each person's items
+5. Sum each person's total across all receipts
 
-MATH TIPS:
-- Tax and tip are percentages of subtotal, apply them proportionally to each person's items
-- If receipt shows Tax $7 on Subtotal $100, that's 7% - apply 7% to each person's item costs
-- Same for tip percentage
-- Double-check your arithmetic!
+IMPORTANT: Do NOT show calculations, formulas, percentages, or step-by-step math. Just show the final results.
 
-OUTPUT FORMAT:
+OUTPUT FORMAT (only output this, nothing else):
 
 **Items:**
-- [Name]: [items]
-- [continue for each person...]
+- [Name]: [their items]
+- [Name]: [their items]
 
 **Each Person Owes:**
 - [Name]: $XX.XX
-- [continue for each person...]
-
-**Total Check:** $XXX.XX (should match sum of all receipts)"""
+- [Name]: $XX.XX"""
 
             import re
             
