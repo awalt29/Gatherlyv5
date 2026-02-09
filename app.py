@@ -2378,7 +2378,6 @@ def ai_suggest(hangout_id):
                 receipt_images.append(msg.image_data)
         
         print(f"[AI] Found {len(receipt_images)} fresh images for split")
-        print(f"[AI] Fresh messages: {[m.message for m in fresh_messages]}")
         
         if fresh_messages:
             chat_context = "\n\nRECENT INSTRUCTIONS (use ONLY this for the split):\n"
@@ -2431,8 +2430,6 @@ Total: $XXX.XX"""
             # Build image content for all receipts
             # Include the chat context directly in the image message for clarity
             user_instructions = chat_context.replace('\n\nRECENT INSTRUCTIONS (use ONLY this for the split):\n', '').strip()
-            print(f"[AI] Chat context: {chat_context}")
-            print(f"[AI] User instructions: {user_instructions}")
             image_content = [{"type": "text", "text": f"User says: {user_instructions}\n\nHere is the {receipt_text}:"}]
             
             for i, receipt_image in enumerate(receipt_images):
