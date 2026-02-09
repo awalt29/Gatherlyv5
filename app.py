@@ -2400,25 +2400,18 @@ def ai_suggest(hangout_id):
             num_receipts = len(receipt_images)
             receipt_text = "receipt" if num_receipts == 1 else f"{num_receipts} receipts"
             
-            system_prompt = f"""You are splitting restaurant bills. Read the receipts carefully.
+            system_prompt = f"""Split this bill. Participants: {', '.join(all_participants)}
 
-PARTICIPANTS: {', '.join(all_participants)}
-USER INSTRUCTIONS: {chat_context}
+Instructions from chat: {chat_context}
 
-HOW TO INTERPRET INSTRUCTIONS:
-- "split [item]" or "shared [item]" = Everyone pays equal share of that ONE item
-- "each had 1 [item]" = Look at receipt - if there are N people and N individual items of that type, each person gets ONE item. They pay for that specific item's price (prices may differ).
-- "Person X had [item]" = Assign that specific item to that person
+Rules:
+1. If "X people" stated, output exactly X people (use known names, then Person 1, Person 2...)
+2. "split X" = divide that item equally
+3. "each had 1 X" = assign individual items to each person (they may have different prices!)
+4. Include tax & tip proportionally: person pays (their subtotal / receipt subtotal) × receipt total
+5. Process each receipt separately, then sum
 
-HOW TO CALCULATE:
-1. For each receipt separately:
-   - Figure out each person's items from that receipt
-   - Calculate: (person's items cost / receipt subtotal) × receipt total
-2. Add up each person's totals from all receipts
-
-The final Total MUST equal the sum of all receipt totals.
-
-OUTPUT (no explanations):
+Output ONLY:
 **Items:**
 - [Name]: [items]
 
