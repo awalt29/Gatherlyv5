@@ -2400,29 +2400,29 @@ def ai_suggest(hangout_id):
             num_receipts = len(receipt_images)
             receipt_text = "receipt" if num_receipts == 1 else f"{num_receipts} receipts"
             
-            system_prompt = f"""Split this bill among the people mentioned.
+            system_prompt = f"""You are splitting restaurant bills. Read the receipts carefully.
 
-Known participants: {', '.join(all_participants)}
-{chat_context}
+PARTICIPANTS: {', '.join(all_participants)}
+USER INSTRUCTIONS: {chat_context}
 
-ITEM ASSIGNMENT RULES:
-1. "split" or "shared" → Divide that item's cost equally among all people
-2. "each had 1 [item]" → N people means N individual items on receipt. Assign one item to each person at ITS ACTUAL PRICE (items may have different prices)
-3. Specific assignments like "I had the burger" → Honor exactly as stated
+HOW TO INTERPRET INSTRUCTIONS:
+- "split [item]" or "shared [item]" = Everyone pays equal share of that ONE item
+- "each had 1 [item]" = Look at receipt - if there are N people and N individual items of that type, each person gets ONE item. They pay for that specific item's price (prices may differ).
+- "Person X had [item]" = Assign that specific item to that person
 
-TAX & TIP:
-Process each receipt independently. For each person on each receipt:
-  Amount = (person's item subtotal / receipt subtotal) × receipt total
-Then sum each person's amounts across all receipts.
+HOW TO CALCULATE:
+1. For each receipt separately:
+   - Figure out each person's items from that receipt
+   - Calculate: (person's items cost / receipt subtotal) × receipt total
+2. Add up each person's totals from all receipts
 
-Name people using known participants first, then Person 1, Person 2, etc.
+The final Total MUST equal the sum of all receipt totals.
 
-OUTPUT FORMAT (final results only, no calculations):
-
+OUTPUT (no explanations):
 **Items:**
-- [Name]: [their items]
+- [Name]: [items]
 
-**Each Person Owes:**
+**Owes:**
 - [Name]: $XX.XX
 
 Total: $XXX.XX"""
@@ -2461,7 +2461,7 @@ Total: $XXX.XX"""
                     {"role": "user", "content": image_content}
                 ],
                 max_tokens=1500,
-                temperature=0.1  # Very low for consistent math calculations
+                temperature=0  # Zero for deterministic math
             )
         
         # Handle split bill without image (just give instructions)
