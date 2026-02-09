@@ -2402,18 +2402,24 @@ def ai_suggest(hangout_id):
             
             system_prompt = f"""Split this bill. Participants: {', '.join(all_participants)}
 
-Instructions from chat: {chat_context}
+Instructions: {chat_context}
 
 Rules:
-1. If "X people" stated, output exactly X people (use known names, then Person 1, Person 2...)
-2. "split X" = divide that item equally
-3. "each had 1 X" = assign individual items to each person (they may have different prices!)
-4. Include tax & tip proportionally: person pays (their subtotal / receipt subtotal) × receipt total
-5. Process each receipt separately, then sum
+1. Count people exactly as stated. Use known names, then Person 1, Person 2...
+2. "split X" = divide item equally
+3. "each had 1 X" = assign one item to each person at its actual price
 
-Output ONLY:
+FORMULA: person owes = (their item price ÷ subtotal) × total
+
+Example: Subtotal $85.39, Total $110.08
+- $4.59 item: ($4.59 ÷ $85.39) × $110.08 = $5.91
+- $20.20 item: ($20.20 ÷ $85.39) × $110.08 = $26.02
+
+VERIFY: All "owes" amounts must add up to the receipt total!
+
+Output:
 **Items:**
-- [Name]: [items]
+- [Name]: [item] ($X.XX)
 
 **Owes:**
 - [Name]: $XX.XX
@@ -2448,13 +2454,13 @@ Total: $XXX.XX"""
                 })
             
             response = openai.chat.completions.create(
-                model="gpt-5.1",  # GPT-5.1 for better reasoning
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": image_content}
                 ],
-                max_completion_tokens=1500,
-                temperature=0  # Zero for deterministic math
+                max_tokens=1500,
+                temperature=0
             )
         
         # Handle split bill without image (just give instructions)
