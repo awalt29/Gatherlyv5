@@ -1277,9 +1277,11 @@ async function copyShareLink() {
     const signupUrl = `${window.location.origin}/signup`;
     const shareText = `${inviterName} has shared their availability with you on Gatherly. Join and add yours to see when they're free!\n\n${signupUrl}`;
     
+    const button = document.querySelector('.share-link-btn');
+    const originalText = button.textContent;
+    
     try {
         await navigator.clipboard.writeText(shareText);
-        showStatus('Link copied to clipboard!', 'success');
     } catch (err) {
         // Fallback for older browsers
         const textarea = document.createElement('textarea');
@@ -1290,8 +1292,17 @@ async function copyShareLink() {
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        showStatus('Link copied to clipboard!', 'success');
     }
+    
+    // Visual feedback - change button text and style
+    button.textContent = '✓ Copied!';
+    button.classList.add('copied');
+    
+    // Reset after 2 seconds
+    setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('copied');
+    }, 2000);
 }
 
 // Add friend from manage modal

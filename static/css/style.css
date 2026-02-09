@@ -609,10 +609,17 @@ body {
     background: transparent;
     border: 1px solid var(--accent-mint);
     color: var(--accent-mint);
+    transition: all 0.2s ease;
 }
 
 .share-link-btn:hover {
     background: rgba(127, 231, 220, 0.1);
+}
+
+.share-link-btn.copied {
+    background: var(--accent-mint);
+    color: var(--primary-bg);
+    font-weight: 600;
 }
 
 .btn-danger {
