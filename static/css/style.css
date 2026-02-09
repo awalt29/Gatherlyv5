@@ -603,6 +603,18 @@ body {
     background: rgba(255, 255, 255, 0.15);
 }
 
+/* Share link button with mint accent */
+.share-link-btn {
+    margin-top: 12px;
+    background: transparent;
+    border: 1px solid var(--accent-mint);
+    color: var(--accent-mint);
+}
+
+.share-link-btn:hover {
+    background: rgba(127, 231, 220, 0.1);
+}
+
 .btn-danger {
     width: 100%;
     padding: 14px;

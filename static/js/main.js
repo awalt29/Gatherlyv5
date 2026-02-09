@@ -1271,6 +1271,29 @@ function showFriendsListView() {
     document.getElementById('manageFriendPhone').value = '';
 }
 
+// Copy share link to clipboard
+async function copyShareLink() {
+    const inviterName = plannerInfo?.name || 'Your friend';
+    const signupUrl = `${window.location.origin}/signup`;
+    const shareText = `${inviterName} has shared their availability with you on Gatherly. Join and add yours to see when they're free!\n\n${signupUrl}`;
+    
+    try {
+        await navigator.clipboard.writeText(shareText);
+        showStatus('Link copied to clipboard!', 'success');
+    } catch (err) {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = shareText;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showStatus('Link copied to clipboard!', 'success');
+    }
+}
+
 // Add friend from manage modal
 async function addFriendFromManage(event) {
     event.preventDefault();
