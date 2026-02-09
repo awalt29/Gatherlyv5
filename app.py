@@ -2405,21 +2405,21 @@ def ai_suggest(hangout_id):
 Instructions: {chat_context}
 
 Rules:
-1. Count people exactly as stated. Use known names, then Person 1, Person 2...
-2. "split X" = divide item equally
-3. "each had 1 X" = assign one item to each person at its actual price
+1. "split X ways" or "X people" = divide TOTAL equally among X people
+   Example: $100 total split 5 ways = $20 each for 5 people
+2. "split [item]" = divide that item equally among all people mentioned
+3. "each had 1 X" = assign individual items to each person at actual prices
 
-FORMULA: person owes = (their item price ÷ subtotal) × total
+For uneven splits with tax/tip:
+- person owes = (their item price ÷ subtotal) × total
 
-Example: Subtotal $85.39, Total $110.08
-- $4.59 item: ($4.59 ÷ $85.39) × $110.08 = $5.91
-- $20.20 item: ($20.20 ÷ $85.39) × $110.08 = $26.02
+Name people: use known names first, then Person 1, Person 2...
 
-VERIFY: All "owes" amounts must add up to the receipt total!
+VERIFY: All amounts must sum to the receipt total!
 
 Output:
 **Items:**
-- [Name]: [item] ($X.XX)
+- [Name]: [item or share]
 
 **Owes:**
 - [Name]: $XX.XX
