@@ -2400,52 +2400,45 @@ def ai_suggest(hangout_id):
             num_receipts = len(receipt_images)
             receipt_text = "receipt" if num_receipts == 1 else f"{num_receipts} receipts"
             
-            system_prompt = f"""You are a bill-splitting calculator. Follow these steps EXACTLY in order:
-
-CONTEXT:
-- Known participants: {', '.join(all_participants)}
+            system_prompt = f"""Split this bill. Known participants: {', '.join(all_participants)}
 {chat_context}
 
-STEP 1 - COUNT PEOPLE:
-Read how many people are mentioned. If it says "5 people", there are EXACTLY 5.
-Name them using known participants first, then Person 1, Person 2, etc.
+CRITICAL - "EACH HAD 1 DRINK" MEANS:
+If 5 people each had 1 drink and there are 5 drinks on the receipt, assign ONE SPECIFIC DRINK to each person.
+DO NOT divide the total by 5. Each person pays for THEIR drink's actual price.
 
-STEP 2 - PROCESS EACH RECEIPT SEPARATELY:
-For EACH receipt, do the following independently:
+Example: 5 drinks priced $4.59, $20.20, $20.20, $20.20, $20.20
+- Person 1 gets the $4.59 drink
+- Person 2 gets a $20.20 drink
+- Person 3 gets a $20.20 drink
+- Person 4 gets a $20.20 drink
+- Person 5 gets a $20.20 drink
+Person 1 pays LESS because their drink cost less.
 
-  A) List items on THIS receipt only
-  B) Identify which items are SHARED vs INDIVIDUAL for this receipt
-     - SHARED: Items explicitly said to "split" → divide cost equally among all people
-     - INDIVIDUAL: "Each had 1 drink" = one drink per person, each pays for their own
-  C) Calculate each person's SUBTOTAL for THIS receipt only
-  D) Apply THIS receipt's tax & tip proportionally:
-     Person's receipt total = (person's subtotal / receipt subtotal) × receipt total
+"SPLIT THE BOTTLE" MEANS:
+Divide that item's cost equally among all people.
 
-CRITICAL: Tax and tip from one receipt may ONLY be applied to items on THAT receipt.
-Never mix items from different receipts when calculating tax/tip.
+TAX & TIP RULE:
+Process each receipt separately. For each receipt:
+Person's total = (their items subtotal / receipt subtotal) × receipt total
 
-STEP 3 - SUM ACROSS RECEIPTS:
-Add each person's totals from all receipts to get their final amount.
+FINAL STEP:
+Sum each person's totals from all receipts.
 
-EXAMPLE with 2 receipts and 5 people splitting a bottle + each having 1 drink:
-- Receipt 1 (drinks $110 total): Each person's drink → proportional tax/tip from Receipt 1
-- Receipt 2 (bottle $103 total): $103 ÷ 5 = $20.60 each (already includes tax/tip)
-- Final: Person's Receipt 1 share + Person's Receipt 2 share
-
-OUTPUT FORMAT:
+OUTPUT ONLY THIS (no steps, no explanation):
 
 **Items:**
-- [Name]: [items from all receipts with prices]
+- [Name]: [their items]
 
 **Each Person Owes:**
 - [Name]: $XX.XX
 
-Total: $XXX.XX (must equal sum of all receipt totals)"""
+Total: $XXX.XX"""
 
             import re
             
             # Build image content for all receipts
-            image_content = [{"type": "text", "text": f"Follow the 7 steps exactly. Here are the {receipt_text} to analyze:"}]
+            image_content = [{"type": "text", "text": f"Split this bill. Remember: 'each had 1 drink' means assign ONE specific drink to each person at its actual price - do NOT divide total by number of people. Here are the {receipt_text}:"}]
             
             for i, receipt_image in enumerate(receipt_images):
                 # Clean up base64 string (remove any whitespace or line breaks)
