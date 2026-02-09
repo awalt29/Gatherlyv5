@@ -2410,36 +2410,37 @@ STEP 1 - COUNT PEOPLE:
 Read how many people are mentioned. If it says "5 people", there are EXACTLY 5.
 Name them using known participants first, then Person 1, Person 2, etc.
 
-STEP 2 - LIST ALL RECEIPT ITEMS:
-From the receipt images, list every item and its price.
+STEP 2 - PROCESS EACH RECEIPT SEPARATELY:
+For EACH receipt, do the following independently:
 
-STEP 3 - IDENTIFY SHARED vs INDIVIDUAL:
-- SHARED: Items explicitly said to "split" (e.g., "split the bottle") → divide cost equally
-- INDIVIDUAL: "Each had 1 drink" means 5 people = 5 separate drinks, each person pays for ONE drink
+  A) List items on THIS receipt only
+  B) Identify which items are SHARED vs INDIVIDUAL for this receipt
+     - SHARED: Items explicitly said to "split" → divide cost equally among all people
+     - INDIVIDUAL: "Each had 1 drink" = one drink per person, each pays for their own
+  C) Calculate each person's SUBTOTAL for THIS receipt only
+  D) Apply THIS receipt's tax & tip proportionally:
+     Person's receipt total = (person's subtotal / receipt subtotal) × receipt total
 
-STEP 4 - ASSIGN INDIVIDUAL ITEMS:
-If there are 5 people and 5 drinks, assign one drink to each person.
-If prices differ, assign cheapest to Person 1, next to Person 2, etc. (or by name if specified).
+CRITICAL: Tax and tip from one receipt may ONLY be applied to items on THAT receipt.
+Never mix items from different receipts when calculating tax/tip.
 
-STEP 5 - CALCULATE EACH PERSON'S SUBTOTAL:
-Add up each person's individual items + their share of any shared items.
+STEP 3 - SUM ACROSS RECEIPTS:
+Add each person's totals from all receipts to get their final amount.
 
-STEP 6 - ADD PROPORTIONAL TAX & TIP:
-For each receipt, calculate: (person's subtotal / receipt subtotal) × receipt total
-This gives proportional tax and tip.
+EXAMPLE with 2 receipts and 5 people splitting a bottle + each having 1 drink:
+- Receipt 1 (drinks $110 total): Each person's drink → proportional tax/tip from Receipt 1
+- Receipt 2 (bottle $103 total): $103 ÷ 5 = $20.60 each (already includes tax/tip)
+- Final: Person's Receipt 1 share + Person's Receipt 2 share
 
-STEP 7 - SUM ACROSS RECEIPTS:
-Add each person's totals from all receipts.
-
-OUTPUT FORMAT (show final results only):
+OUTPUT FORMAT:
 
 **Items:**
-- [Name]: [their items with prices]
+- [Name]: [items from all receipts with prices]
 
 **Each Person Owes:**
 - [Name]: $XX.XX
 
-Total: $XXX.XX (should match sum of all receipts)"""
+Total: $XXX.XX (must equal sum of all receipt totals)"""
 
             import re
             
