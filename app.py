@@ -2448,12 +2448,12 @@ Total: $XXX.XX"""
                 })
             
             response = openai.chat.completions.create(
-                model="gpt-4o",  # Need GPT-4o for vision
+                model="gpt-5.1",  # GPT-5.1 for better reasoning
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": image_content}
                 ],
-                max_tokens=1500,
+                max_completion_tokens=1500,
                 temperature=0  # Zero for deterministic math
             )
         

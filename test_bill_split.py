@@ -88,12 +88,12 @@ Total: $XXX.XX"""
     print("=" * 60)
     
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-5.1",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Here are the receipts:\n{receipt_data}"}
         ],
-        max_tokens=1500,
+        max_completion_tokens=1500,
         temperature=0
     )
     
@@ -159,12 +159,12 @@ Total: $XXX.XX"""
     print("=" * 60)
     
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-5.1",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Here is the receipt:\n{receipt_data}"}
         ],
-        max_tokens=1500,
+        max_completion_tokens=1500,
         temperature=0
     )
     
@@ -231,12 +231,12 @@ Total: $XXX.XX"""
     print("=" * 60)
     
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-5.1",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Here is the receipt:\n{receipt_data}"}
         ],
-        max_tokens=1500,
+        max_completion_tokens=1500,
         temperature=0
     )
     
