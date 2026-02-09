@@ -357,9 +357,81 @@ Total: $XXX.XX"""
         print("\n⚠️  UNCLEAR - Check output manually")
 
 
+def test_split_x_ways():
+    """Test: split 5 ways - simple even split"""
+    
+    all_participants = ['Aaron Walters']
+    chat_context = """
+- Aaron Walters: split 5 ways
+"""
+    
+    receipt_data = """
+RECEIPT - All Blues Inc:
+- 1 Bottle DASSAI BLUE: $81.00
+- Subtotal: $81.00
+- Tax: $7.18
+- Tip: $14.58
+- Total: $102.76
+"""
+
+    system_prompt = f"""Split this bill. Known participants: {', '.join(all_participants)}
+
+Instructions: {chat_context}
+
+Rules:
+1. "split X ways" or "X people" = CREATE X people and divide total equally
+   Example: "split 5 ways" with $100 total → output 5 people paying $20 each
+   Use known names first, then Person 1, Person 2, Person 3...
+   
+2. "split [item]" = divide that specific item equally
+3. "each had 1 X" = assign individual items at their actual prices
+
+For proportional tax/tip: person owes = (their items ÷ subtotal) × total
+
+IMPORTANT: If "split 5 ways" is requested, you MUST output exactly 5 people!
+
+Output:
+**Items:**
+- [Name]: [item or share]
+
+**Owes:**
+- [Name]: $XX.XX
+
+Total: $XXX.XX"""
+
+    print("\n" + "=" * 60)
+    print("TEST: Split 5 ways - $102.76 bottle")
+    print("=" * 60)
+    print(f"\nExpected: $102.76 / 5 = $20.55 each")
+    print("=" * 60)
+    
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"Here is the receipt:\n{receipt_data}"}
+        ],
+        max_tokens=1500,
+        temperature=0
+    )
+    
+    result = response.choices[0].message.content
+    print("\nAI RESPONSE:")
+    print(result)
+    print("=" * 60)
+    
+    if "$20" in result and "Person" in result:
+        print("\n✅ PASS - Split 5 ways correctly")
+    elif "$102" in result and result.count("$102") == 1:
+        print("\n❌ FAIL - Assigned whole amount to one person")
+    else:
+        print("\n⚠️  UNCLEAR - Check output manually")
+
+
 if __name__ == "__main__":
     print("\n🧪 BILL SPLIT PROMPT TESTING\n")
     
+    test_split_x_ways()
     test_simple_split()
     test_shared_item()
     test_single_receipt_drinks()

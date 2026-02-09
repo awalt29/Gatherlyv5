@@ -2400,22 +2400,21 @@ def ai_suggest(hangout_id):
             num_receipts = len(receipt_images)
             receipt_text = "receipt" if num_receipts == 1 else f"{num_receipts} receipts"
             
-            system_prompt = f"""Split this bill. Participants: {', '.join(all_participants)}
+            system_prompt = f"""Split this bill. Known participants: {', '.join(all_participants)}
 
 Instructions: {chat_context}
 
 Rules:
-1. "split X ways" or "X people" = divide TOTAL equally among X people
-   Example: $100 total split 5 ways = $20 each for 5 people
-2. "split [item]" = divide that item equally among all people mentioned
-3. "each had 1 X" = assign individual items to each person at actual prices
+1. "split X ways" or "X people" = CREATE X people and divide total equally
+   Example: "split 5 ways" with $100 total → output 5 people paying $20 each
+   Use known names first, then Person 1, Person 2, Person 3...
+   
+2. "split [item]" = divide that specific item equally
+3. "each had 1 X" = assign individual items at their actual prices
 
-For uneven splits with tax/tip:
-- person owes = (their item price ÷ subtotal) × total
+For proportional tax/tip: person owes = (their items ÷ subtotal) × total
 
-Name people: use known names first, then Person 1, Person 2...
-
-VERIFY: All amounts must sum to the receipt total!
+IMPORTANT: If "split 5 ways" is requested, you MUST output exactly 5 people!
 
 Output:
 **Items:**
