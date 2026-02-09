@@ -2400,32 +2400,24 @@ def ai_suggest(hangout_id):
             num_receipts = len(receipt_images)
             receipt_text = "receipt" if num_receipts == 1 else f"{num_receipts} receipts"
             
-            system_prompt = f"""Split this bill. Known participants: {', '.join(all_participants)}
+            system_prompt = f"""Split this bill among the people mentioned.
+
+Known participants: {', '.join(all_participants)}
 {chat_context}
 
-CRITICAL - "EACH HAD 1 DRINK" MEANS:
-If 5 people each had 1 drink and there are 5 drinks on the receipt, assign ONE SPECIFIC DRINK to each person.
-DO NOT divide the total by 5. Each person pays for THEIR drink's actual price.
+ITEM ASSIGNMENT RULES:
+1. "split" or "shared" → Divide that item's cost equally among all people
+2. "each had 1 [item]" → N people means N individual items on receipt. Assign one item to each person at ITS ACTUAL PRICE (items may have different prices)
+3. Specific assignments like "I had the burger" → Honor exactly as stated
 
-Example: 5 drinks priced $4.59, $20.20, $20.20, $20.20, $20.20
-- Person 1 gets the $4.59 drink
-- Person 2 gets a $20.20 drink
-- Person 3 gets a $20.20 drink
-- Person 4 gets a $20.20 drink
-- Person 5 gets a $20.20 drink
-Person 1 pays LESS because their drink cost less.
+TAX & TIP:
+Process each receipt independently. For each person on each receipt:
+  Amount = (person's item subtotal / receipt subtotal) × receipt total
+Then sum each person's amounts across all receipts.
 
-"SPLIT THE BOTTLE" MEANS:
-Divide that item's cost equally among all people.
+Name people using known participants first, then Person 1, Person 2, etc.
 
-TAX & TIP RULE:
-Process each receipt separately. For each receipt:
-Person's total = (their items subtotal / receipt subtotal) × receipt total
-
-FINAL STEP:
-Sum each person's totals from all receipts.
-
-OUTPUT ONLY THIS (no steps, no explanation):
+OUTPUT FORMAT (final results only, no calculations):
 
 **Items:**
 - [Name]: [their items]
@@ -2438,7 +2430,7 @@ Total: $XXX.XX"""
             import re
             
             # Build image content for all receipts
-            image_content = [{"type": "text", "text": f"Split this bill. Remember: 'each had 1 drink' means assign ONE specific drink to each person at its actual price - do NOT divide total by number of people. Here are the {receipt_text}:"}]
+            image_content = [{"type": "text", "text": f"Split this bill based on the instructions. Here are the {receipt_text}:"}]
             
             for i, receipt_image in enumerate(receipt_images):
                 # Clean up base64 string (remove any whitespace or line breaks)
