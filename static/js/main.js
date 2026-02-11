@@ -2838,7 +2838,7 @@ function renderNotifications(notifications, friendRequests = []) {
                     : '';
                 
                 return `
-                    <div class="notification-item ${notif.read ? '' : 'unread'} hangout-invite" data-hangout-id="${notif.hangout_id}">
+                    <div class="notification-item ${notif.read ? '' : 'unread'} hangout-invite clickable" data-hangout-id="${notif.hangout_id}" onclick="openPlanFromNotification(${notif.hangout_id}, event)">
                         <div class="notification-avatar icon-avatar">
                             <img src="/static/icons/event-invite.png" alt="Event invite">
                         </div>
@@ -2855,9 +2855,9 @@ function renderNotifications(notifications, friendRequests = []) {
                                 </div>
                             ` : `
                                 <div class="friend-request-actions hangout-actions">
-                                    <button class="btn-accept" onclick="respondToHangout(${notif.hangout_id}, 'accepted')">Accept</button>
-                                    <button class="btn-maybe" onclick="respondToHangout(${notif.hangout_id}, 'maybe')">Maybe</button>
-                                    <button class="btn-reject" onclick="respondToHangout(${notif.hangout_id}, 'declined')">Decline</button>
+                                    <button class="btn-accept" onclick="event.stopPropagation(); respondToHangout(${notif.hangout_id}, 'accepted')">Accept</button>
+                                    <button class="btn-maybe" onclick="event.stopPropagation(); respondToHangout(${notif.hangout_id}, 'maybe')">Maybe</button>
+                                    <button class="btn-reject" onclick="event.stopPropagation(); respondToHangout(${notif.hangout_id}, 'declined')">Decline</button>
                                 </div>
                             `}
                         </div>
@@ -2869,7 +2869,7 @@ function renderNotifications(notifications, friendRequests = []) {
             if (notif.notification_type === 'hangout_response') {
                 const isAccepted = notif.message.includes('accepted');
                 return `
-                    <div class="notification-item ${notif.read ? '' : 'unread'} hangout-response">
+                    <div class="notification-item ${notif.read ? '' : 'unread'} hangout-response clickable" ${notif.hangout_id ? `data-hangout-id="${notif.hangout_id}" onclick="openPlanFromNotification(${notif.hangout_id}, event)"` : `onclick="openPlansFromNotification()"`}>
                         <div class="notification-avatar icon-avatar ${isAccepted ? 'accepted' : 'declined'}">
                             <img src="/static/icons/event-invite.png" alt="Event response">
                         </div>
@@ -2897,8 +2897,14 @@ function renderNotifications(notifications, friendRequests = []) {
                     iconSrc = '/static/icons/invite.png';
                 }
                 
+                // Check if this is a plan-related notification
+                const isPlanRelated = notif.message.toLowerCase().includes('hangout') || 
+                                     notif.message.toLowerCase().includes('plan') ||
+                                     notif.message.toLowerCase().includes('invite') ||
+                                     notif.message.toLowerCase().includes('cancelled');
+                
                 return `
-                    <div class="notification-item ${notif.read ? '' : 'unread'}">
+                    <div class="notification-item ${notif.read ? '' : 'unread'} ${isPlanRelated ? 'clickable' : ''}" ${isPlanRelated ? (notif.hangout_id ? `onclick="openPlanFromNotification(${notif.hangout_id}, event)"` : `onclick="openPlansFromNotification()"`) : ''}>
                         <div class="notification-avatar icon-avatar">
                             <img src="${iconSrc}" alt="Notification">
                         </div>
@@ -2932,6 +2938,29 @@ function renderNotifications(notifications, friendRequests = []) {
     } catch (error) {
         console.error('Error rendering notifications:', error);
     }
+}
+
+// Open plan from notification click
+function openPlanFromNotification(hangoutId, event) {
+    // Don't navigate if clicking on buttons
+    if (event.target.tagName === 'BUTTON') return;
+    
+    // Close notifications modal
+    document.getElementById('notificationsModal').classList.remove('active');
+    document.querySelector('.bottom-nav').style.display = '';
+    
+    // Open the plan detail
+    openPlanDetail(hangoutId);
+}
+
+// Open plans page from notification click
+function openPlansFromNotification() {
+    // Close notifications modal
+    document.getElementById('notificationsModal').classList.remove('active');
+    document.querySelector('.bottom-nav').style.display = '';
+    
+    // Open plans modal
+    openPlansModal();
 }
 
 // Respond to a hangout invite

@@ -182,10 +182,23 @@ body {
     background: rgba(255, 255, 255, 0.03);
     border-radius: 8px;
     align-items: center;
+    transition: background 0.2s ease;
+}
+
+.notification-item.clickable {
+    cursor: pointer;
+}
+
+.notification-item.clickable:active {
+    background: rgba(127, 231, 220, 0.15);
 }
 
 .notification-item.unread {
     background: rgba(91, 163, 255, 0.1);
+}
+
+.notification-item.unread.clickable:active {
+    background: rgba(127, 231, 220, 0.2);
 }
 
 .notification-avatar {
