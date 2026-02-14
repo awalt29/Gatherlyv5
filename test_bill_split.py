@@ -42,37 +42,39 @@ Tax: $14.47
 Tip: $32.60
 Total: $210.07"""
 
-system_prompt = f"""Split this bill. Participants: {', '.join(participants)}
+system_prompt = f"""Extract bill split data from this receipt. Participants: {', '.join(participants)}
 
 Instructions from chat: {chat_context}
 
-EXAMPLE CALCULATION:
-Receipt: Burger $15, Salad $12, Fries $8 (split 2 ways). Subtotal $35, Total $42.
-- Alice had burger, Bob had salad, both split fries.
-- Alice subtotal: $15 + $4 = $19
-- Bob subtotal: $12 + $4 = $16
-- Multiplier: $42 / $35 = 1.20
-- Alice owes: $19 × 1.20 = $22.80
-- Bob owes: $16 × 1.20 = $19.20
+YOUR TASK:
+1. Read the receipt to find: subtotal, tax, tip, and total
+2. Match each person's items from the chat to items on the receipt
+3. Look up the EXACT price of each item from the receipt
+4. If an item is "split X ways", divide its price by X for each person's share
 
-YOUR TASK (calculate internally, only output the final result):
-1. For each person, find their items on the receipt and note the EXACT price
-2. If item is shared, divide its price by number of people sharing
-3. Sum each person's item prices = their subtotal
-4. Multiplier = receipt_total / receipt_subtotal
-5. Each person's final = their_subtotal × multiplier
-6. Verify all finals sum to receipt total
+OUTPUT ONLY VALID JSON in this exact format:
+{{
+  "receipt": {{
+    "subtotal": 0.00,
+    "tax": 0.00,
+    "tip": 0.00,
+    "total": 0.00
+  }},
+  "people": [
+    {{
+      "name": "Person Name",
+      "items": [
+        {{"name": "Item Name", "price": 0.00}}
+      ]
+    }}
+  ]
+}}
 
-CRITICAL: The person with more expensive items MUST owe more money!
-
-OUTPUT FORMAT (no math shown):
-**Items:**
-- [Name]: [item1], [item2]...
-
-**Owes:**
-- [Name]: $XX.XX
-
-Total: $XXX.XX"""
+RULES:
+- Use EXACT prices from the receipt
+- For split items, use the divided price (e.g., $16 split 3 ways = $5.33 per person)
+- Include the split item for EACH person who shared it
+- Output ONLY the JSON, no other text"""
 
 print("=" * 60)
 print("TESTING BILL SPLIT PROMPT")
@@ -97,7 +99,7 @@ Total: $210.07
 """)
 
 print("=" * 60)
-print("AI RESPONSE:")
+print("AI RESPONSE (RAW JSON):")
 print("=" * 60)
 
 response = client.chat.completions.create(
@@ -110,26 +112,99 @@ response = client.chat.completions.create(
     temperature=0
 )
 
-ai_response = response.choices[0].message.content
-print(ai_response)
+raw_response = response.choices[0].message.content
+print(raw_response)
 
 print("\n" + "=" * 60)
-print("VERIFICATION:")
+print("PYTHON CALCULATION FROM JSON:")
 print("=" * 60)
 
-# Check if the amounts are roughly correct
-import re
-amounts = re.findall(r'\$(\d+\.\d{2})', ai_response)
-if amounts:
-    # Filter to likely "owes" amounts (between $50-$100 for this scenario)
-    owes_amounts = [float(a) for a in amounts if 50 < float(a) < 100]
-    if len(owes_amounts) == 3:
-        total = sum(owes_amounts)
-        print(f"Individual amounts found: {owes_amounts}")
-        print(f"Sum: ${total:.2f}")
-        print(f"Expected: $210.07")
-        print(f"Difference: ${abs(total - 210.07):.2f}")
+import json
+
+# Extract JSON from response (handle markdown code blocks)
+json_str = raw_response
+if '```json' in json_str:
+    json_str = json_str.split('```json')[1].split('```')[0].strip()
+elif '```' in json_str:
+    json_str = json_str.split('```')[1].split('```')[0].strip()
+
+try:
+    data = json.loads(json_str)
+    
+    # Extract receipt totals
+    receipt = data.get('receipt', {})
+    subtotal = float(receipt.get('subtotal', 0))
+    tax = float(receipt.get('tax', 0))
+    tip = float(receipt.get('tip', 0))
+    total = float(receipt.get('total', 0))
+    
+    print(f"Receipt: subtotal=${subtotal}, tax=${tax}, tip=${tip}, total=${total}")
+    print()
+    
+    # Calculate each person's share
+    results = []
+    for person in data.get('people', []):
+        name = person.get('name', 'Unknown')
+        items = person.get('items', [])
         
-        # Check if Gina > Aaron (she had the $30 item)
-        # This assumes the order in output matches participant order
-        print(f"\nGina should owe MORE than Aaron (she had the $30 Goong Muk Prik Klua)")
+        # Sum their item prices
+        person_subtotal = sum(float(item.get('price', 0)) for item in items)
+        item_names = [f"{item.get('name', '')} (${item.get('price', 0)})" for item in items]
+        
+        # Calculate their percentage of the subtotal
+        if subtotal > 0:
+            percentage = person_subtotal / subtotal
+        else:
+            percentage = 0
+        
+        # Apply percentage to tax and tip
+        person_tax = percentage * tax
+        person_tip = percentage * tip
+        person_total = person_subtotal + person_tax + person_tip
+        
+        print(f"{name}:")
+        print(f"  Items: {', '.join(item_names)}")
+        print(f"  Subtotal: ${person_subtotal:.2f} ({percentage*100:.1f}% of bill)")
+        print(f"  Tax share: ${person_tax:.2f}")
+        print(f"  Tip share: ${person_tip:.2f}")
+        print(f"  TOTAL: ${person_total:.2f}")
+        print()
+        
+        results.append({
+            'name': name,
+            'items': [item.get('name', '') for item in items],
+            'total': round(person_total, 2)
+        })
+    
+    # Final output
+    print("=" * 60)
+    print("FINAL OUTPUT:")
+    print("=" * 60)
+    items_section = "\n".join([f"- {r['name']}: {', '.join(r['items'])}" for r in results])
+    owes_section = "\n".join([f"- {r['name']}: ${r['total']:.2f}" for r in results])
+    calculated_total = sum(r['total'] for r in results)
+    
+    print(f"**Items:**\n{items_section}\n")
+    print(f"**Owes:**\n{owes_section}\n")
+    print(f"Total: ${calculated_total:.2f}")
+    
+    print("\n" + "=" * 60)
+    print("VERIFICATION:")
+    print("=" * 60)
+    print(f"Calculated total: ${calculated_total:.2f}")
+    print(f"Expected total: $210.07")
+    print(f"Difference: ${abs(calculated_total - 210.07):.2f}")
+    
+    # Find Aaron and Gina's totals
+    aaron_total = next((r['total'] for r in results if 'Aaron' in r['name']), 0)
+    gina_total = next((r['total'] for r in results if 'Gina' in r['name']), 0)
+    print(f"\nAaron owes: ${aaron_total:.2f}")
+    print(f"Gina owes: ${gina_total:.2f}")
+    if gina_total > aaron_total:
+        print("✅ CORRECT: Gina owes more than Aaron (she had the $30 item)")
+    else:
+        print("❌ WRONG: Gina should owe more than Aaron!")
+        
+except json.JSONDecodeError as e:
+    print(f"JSON parse error: {e}")
+    print(f"Attempted to parse: {json_str}")
