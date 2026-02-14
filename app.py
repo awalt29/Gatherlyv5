@@ -2400,25 +2400,27 @@ def ai_suggest(hangout_id):
             num_receipts = len(receipt_images)
             receipt_text = "receipt" if num_receipts == 1 else f"{num_receipts} receipts"
             
-            system_prompt = f"""Split this bill. Known participants: {', '.join(all_participants)}
+            system_prompt = f"""Split this bill. Participants: {', '.join(all_participants)}
 
-Instructions: {chat_context}
+Instructions from chat: {chat_context}
 
-Rules:
-1. "split X ways" or "X people" = CREATE X people and divide total equally
-   Example: "split 5 ways" with $100 total → output 5 people paying $20 each
-   Use known names first, then Person 1, Person 2, Person 3...
-   
-2. "split [item]" = divide that specific item equally
-3. "each had 1 X" = assign individual items at their actual prices
+CALCULATION PROCESS (do this internally, don't show your work):
+1. Read the receipt - note subtotal, tax, tip, and total
+2. For EACH person mentioned, find their items and look up the EXACT price of each item on the receipt
+3. If an item is split, divide that item's price by the number of people sharing it
+4. Sum each person's items to get their individual subtotal
+5. Calculate the multiplier: receipt_total ÷ receipt_subtotal (this accounts for tax and tip)
+6. For each person: their_final = their_subtotal × multiplier
+7. VERIFY: sum of all final amounts should equal receipt total (adjust for rounding if needed)
 
-For proportional tax/tip: person owes = (their items ÷ subtotal) × total
+RULES:
+- "split X ways" with no item details = divide total equally among X people (use names, then Person 1, Person 2...)
+- "split [item] X ways" = divide that specific item's price by X, give each person their share
+- Match item names carefully - use the exact names from the receipt
 
-IMPORTANT: If "split 5 ways" is requested, you MUST output exactly 5 people!
-
-Output:
+OUTPUT ONLY THIS (no calculations shown):
 **Items:**
-- [Name]: [item or share]
+- [Name]: [item1], [item2]...
 
 **Owes:**
 - [Name]: $XX.XX
