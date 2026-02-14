@@ -2404,21 +2404,26 @@ def ai_suggest(hangout_id):
 
 Instructions from chat: {chat_context}
 
-CALCULATION PROCESS (do this internally, don't show your work):
-1. Read the receipt - note subtotal, tax, tip, and total
-2. For EACH person mentioned, find their items and look up the EXACT price of each item on the receipt
-3. If an item is split, divide that item's price by the number of people sharing it
-4. Sum each person's items to get their individual subtotal
-5. Calculate the multiplier: receipt_total ÷ receipt_subtotal (this accounts for tax and tip)
-6. For each person: their_final = their_subtotal × multiplier
-7. VERIFY: sum of all final amounts should equal receipt total (adjust for rounding if needed)
+EXAMPLE CALCULATION:
+Receipt: Burger $15, Salad $12, Fries $8 (split 2 ways). Subtotal $35, Total $42.
+- Alice had burger, Bob had salad, both split fries.
+- Alice subtotal: $15 + $4 = $19
+- Bob subtotal: $12 + $4 = $16
+- Multiplier: $42 / $35 = 1.20
+- Alice owes: $19 × 1.20 = $22.80
+- Bob owes: $16 × 1.20 = $19.20
 
-RULES:
-- "split X ways" with no item details = divide total equally among X people (use names, then Person 1, Person 2...)
-- "split [item] X ways" = divide that specific item's price by X, give each person their share
-- Match item names carefully - use the exact names from the receipt
+YOUR TASK (calculate internally, only output the final result):
+1. For each person, find their items on the receipt and note the EXACT price
+2. If item is shared, divide its price by number of people sharing
+3. Sum each person's item prices = their subtotal
+4. Multiplier = receipt_total / receipt_subtotal
+5. Each person's final = their_subtotal × multiplier
+6. Verify all finals sum to receipt total
 
-OUTPUT ONLY THIS (no calculations shown):
+CRITICAL: The person with more expensive items MUST owe more money!
+
+OUTPUT FORMAT (no math shown):
 **Items:**
 - [Name]: [item1], [item2]...
 

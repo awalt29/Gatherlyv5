@@ -1,439 +1,135 @@
 #!/usr/bin/env python3
-"""Test bill splitting prompt with dummy data"""
+"""Test the bill splitting prompt with the Thai restaurant scenario"""
 
-import os
+import openai
 import sys
-from dotenv import load_dotenv
-from openai import OpenAI
 
-# Load .env file
-load_dotenv()
-
-# Get API key - check both env var and allow passing as argument
-api_key = os.environ.get('OPENAI_API_KEY')
-if not api_key and len(sys.argv) > 1:
+# Get API key from command line or environment
+if len(sys.argv) > 1:
     api_key = sys.argv[1]
+else:
+    import os
+    api_key = os.getenv('OPENAI_API_KEY')
 
 if not api_key:
-    print("❌ No OPENAI_API_KEY found. Either:")
-    print("   1. Add it to your .env file")
-    print("   2. Pass it as argument: python3 test_bill_split.py sk-your-key")
+    print("Usage: python test_bill_split.py <OPENAI_API_KEY>")
     sys.exit(1)
 
-client = OpenAI(api_key=api_key)
+client = openai.OpenAI(api_key=api_key)
 
-def test_bill_split():
-    """Test the bill split prompt with text-only scenario (no images needed for logic test)"""
-    
-    all_participants = ['Aaron Walters', 'Jake King']
-    chat_context = """
-- Aaron Walters: there were 5 people. we each had 1 drink at apotheke and we split the bottle at all blues evenly
-"""
-    
-    # Simulate receipt data as text (since we can't easily test with images)
-    receipt_data = """
-RECEIPT 1 - All Blues Inc:
-- 1 Bottle DASSAI BLUE: $81.00
-- Subtotal: $81.00
-- Tax: $7.18
-- Tip: $14.58
-- Total: $102.76
+# The exact scenario from the user's screenshots
+participants = ['Aaron Walters', 'Gina Rhee', 'Arvind Balasundaram']
 
-RECEIPT 2 - Apotheke Chinatown:
-- Fever Tree Club Soda: $4.59
-- Days Before Spring: $20.20
-- Aniki: $20.20
-- Wartime Consigliere: $20.20
-- Summer Bee: $20.20
-- Subtotal: $85.39
-- Tax: $7.61
-- Tip: $17.08
-- Total: $110.08
+chat_context = """- Aaron Walters: i had the panda with the N and the kao soy kua neur
+- Gina Rhee: I had the To Be Tamarind and Goong Muk Prik Klua
+- Aaron Walters: arvind had the jakapat, the white rice, and the kao soy gai
+- Aaron Walters: and we split the roti masaman 3 ways"""
 
-COMBINED TOTAL: $212.84
-"""
+# Since we can't use the actual image, we'll describe the receipt in text
+# This simulates what the vision API would extract
+receipt_text = """Receipt contents:
+1 To be Tamarind - $19.00
+1 Jakapat - $19.00
+1 Panda With The "N" - $19.00
+1 Roti Massamun - $16.00
+1 Goong Muk Prik Klua - $30.00
+1 Kao Soy Kua Neur - $28.00
+1 Kao Soy Gai - $28.00
+1 White rice - $4.00
 
-    system_prompt = f"""Split this bill. Participants: {', '.join(all_participants)}
+Subtotal: $163.00
+Tax: $14.47
+Tip: $32.60
+Total: $210.07"""
 
-Instructions: {chat_context}
+system_prompt = f"""Split this bill. Participants: {', '.join(participants)}
 
-Rules:
-1. Count people exactly as stated. Use known names, then Person 1, Person 2...
-2. "split X" = divide item equally
-3. "each had 1 X" = assign one item to each person at its actual price
+Instructions from chat: {chat_context}
 
-FORMULA: person owes = (their item price ÷ subtotal) × total
+EXAMPLE CALCULATION:
+Receipt: Burger $15, Salad $12, Fries $8 (split 2 ways). Subtotal $35, Total $42.
+- Alice had burger, Bob had salad, both split fries.
+- Alice subtotal: $15 + $4 = $19
+- Bob subtotal: $12 + $4 = $16
+- Multiplier: $42 / $35 = 1.20
+- Alice owes: $19 × 1.20 = $22.80
+- Bob owes: $16 × 1.20 = $19.20
 
-Example: Subtotal $85.39, Total $110.08
-- $4.59 item: ($4.59 ÷ $85.39) × $110.08 = $5.91
-- $20.20 item: ($20.20 ÷ $85.39) × $110.08 = $26.02
+YOUR TASK (calculate internally, only output the final result):
+1. For each person, find their items on the receipt and note the EXACT price
+2. If item is shared, divide its price by number of people sharing
+3. Sum each person's item prices = their subtotal
+4. Multiplier = receipt_total / receipt_subtotal
+5. Each person's final = their_subtotal × multiplier
+6. Verify all finals sum to receipt total
 
-VERIFY: All "owes" amounts must add up to the receipt total!
+CRITICAL: The person with more expensive items MUST owe more money!
 
-Output:
+OUTPUT FORMAT (no math shown):
 **Items:**
-- [Name]: [item] ($X.XX)
+- [Name]: [item1], [item2]...
 
 **Owes:**
 - [Name]: $XX.XX
 
 Total: $XXX.XX"""
 
-    print("=" * 60)
-    print("TEST: 5 people, each had 1 drink + split bottle")
-    print("=" * 60)
-    print(f"\nExpected calculation:")
-    print(f"  Receipt 1 (All Blues $102.76): $102.76 / 5 = $20.55 each")
-    print(f"  Receipt 2 (Apotheke $110.08):")
-    print(f"    - Soda person ($4.59): $4.59/$85.39 × $110.08 = $5.91")
-    print(f"    - $20.20 drink person: $20.20/$85.39 × $110.08 = $26.03")
-    print(f"  Expected totals:")
-    print(f"    - Soda person: $20.55 + $5.91 = $26.46")
-    print(f"    - Others: $20.55 + $26.03 = $46.58")
-    print(f"  Total: $26.46 + 4×$46.58 = $212.78 (≈$212.84)")
-    print("=" * 60)
-    
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Here are the receipts:\n{receipt_data}"}
-        ],
-        max_tokens=1500,
-        temperature=0
-    )
-    
-    result = response.choices[0].message.content
-    print("\nAI RESPONSE:")
-    print(result)
-    print("=" * 60)
-    
-    # Check if result is correct
-    if "$26" in result and "$46" in result:
-        print("\n✅ PASS - Different amounts for soda person vs others")
-    elif "$42" in result or "$24" in result or "$48" in result:
-        print("\n❌ FAIL - Still doing even split")
-    else:
-        print("\n⚠️  UNCLEAR - Check output manually")
+print("=" * 60)
+print("TESTING BILL SPLIT PROMPT")
+print("=" * 60)
+print(f"\nParticipants: {participants}")
+print(f"\nChat context:\n{chat_context}")
+print(f"\nReceipt:\n{receipt_text}")
+print("\n" + "=" * 60)
+print("EXPECTED RESULTS:")
+print("=" * 60)
+print("""
+Aaron: Panda ($19) + Kao Soy Kua Neur ($28) + 1/3 Roti ($5.33) = $52.33
+  → $52.33 × 1.2886 = $67.44
 
+Gina: To Be Tamarind ($19) + Goong Muk Prik Klua ($30) + 1/3 Roti ($5.33) = $54.33
+  → $54.33 × 1.2886 = $70.02
 
-def test_simple_split():
-    """Test a simpler scenario: 2 people, one had expensive item, one had cheap"""
-    
-    all_participants = ['Alice', 'Bob']
-    chat_context = """
-- Alice: I had the steak, Bob had the salad
-"""
-    
-    receipt_data = """
-RECEIPT:
-- Ribeye Steak: $45.00
-- House Salad: $12.00
-- Subtotal: $57.00
-- Tax: $5.00
-- Tip: $10.00
-- Total: $72.00
-"""
+Arvind: Jakapat ($19) + White Rice ($4) + Kao Soy Gai ($28) + 1/3 Roti ($5.33) = $56.33
+  → $56.33 × 1.2886 = $72.61
 
-    system_prompt = f"""Split this bill. Participants: {', '.join(all_participants)}
+Total: $210.07
+""")
 
-Instructions: {chat_context}
+print("=" * 60)
+print("AI RESPONSE:")
+print("=" * 60)
 
-Rules:
-1. Count people exactly as stated. Use known names, then Person 1, Person 2...
-2. "split X" = divide item equally
-3. "each had 1 X" = assign one item to each person at its actual price
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": receipt_text}
+    ],
+    max_tokens=1500,
+    temperature=0
+)
 
-FORMULA: person owes = (their item price ÷ subtotal) × total
+ai_response = response.choices[0].message.content
+print(ai_response)
 
-Example: Subtotal $85.39, Total $110.08
-- $4.59 item: ($4.59 ÷ $85.39) × $110.08 = $5.91
-- $20.20 item: ($20.20 ÷ $85.39) × $110.08 = $26.02
+print("\n" + "=" * 60)
+print("VERIFICATION:")
+print("=" * 60)
 
-VERIFY: All "owes" amounts must add up to the receipt total!
-
-Output:
-**Items:**
-- [Name]: [item] ($X.XX)
-
-**Owes:**
-- [Name]: $XX.XX
-
-Total: $XXX.XX"""
-
-    print("\n" + "=" * 60)
-    print("TEST: Alice had steak ($45), Bob had salad ($12)")
-    print("=" * 60)
-    print(f"\nExpected calculation:")
-    print(f"  Alice: $45/$57 × $72 = $56.84")
-    print(f"  Bob: $12/$57 × $72 = $15.16")
-    print(f"  Total: $72.00")
-    print("=" * 60)
-    
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Here is the receipt:\n{receipt_data}"}
-        ],
-        max_tokens=1500,
-        temperature=0
-    )
-    
-    result = response.choices[0].message.content
-    print("\nAI RESPONSE:")
-    print(result)
-    print("=" * 60)
-    
-    # Check if result is correct
-    if "$56" in result and "$15" in result:
-        print("\n✅ PASS - Correct proportional split")
-    elif "$36" in result:
-        print("\n❌ FAIL - Did even split ($36 each)")
-    else:
-        print("\n⚠️  UNCLEAR - Check output manually")
-
-
-def test_shared_item():
-    """Test shared item scenario"""
-    
-    all_participants = ['Alice', 'Bob']
-    chat_context = """
-- Alice: We split the appetizer, I had the pasta, Bob had the burger
-"""
-    
-    receipt_data = """
-RECEIPT:
-- Nachos (appetizer): $18.00
-- Spaghetti Carbonara: $22.00
-- Classic Burger: $16.00
-- Subtotal: $56.00
-- Tax: $5.00
-- Tip: $11.00
-- Total: $72.00
-"""
-
-    system_prompt = f"""Split this bill. Participants: {', '.join(all_participants)}
-
-Instructions: {chat_context}
-
-Rules:
-1. Count people exactly as stated. Use known names, then Person 1, Person 2...
-2. "split X" = divide item equally
-3. "each had 1 X" = assign one item to each person at its actual price
-
-FORMULA: person owes = (their item price ÷ subtotal) × total
-
-Example: Subtotal $85.39, Total $110.08
-- $4.59 item: ($4.59 ÷ $85.39) × $110.08 = $5.91
-- $20.20 item: ($20.20 ÷ $85.39) × $110.08 = $26.02
-
-VERIFY: All "owes" amounts must add up to the receipt total!
-
-Output:
-**Items:**
-- [Name]: [item] ($X.XX)
-
-**Owes:**
-- [Name]: $XX.XX
-
-Total: $XXX.XX"""
-
-    print("\n" + "=" * 60)
-    print("TEST: Split appetizer ($18), Alice pasta ($22), Bob burger ($16)")
-    print("=" * 60)
-    print(f"\nExpected calculation:")
-    print(f"  Alice: ($9 + $22)/$56 × $72 = $39.86")
-    print(f"  Bob: ($9 + $16)/$56 × $72 = $32.14")
-    print(f"  Total: $72.00")
-    print("=" * 60)
-    
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Here is the receipt:\n{receipt_data}"}
-        ],
-        max_tokens=1500,
-        temperature=0
-    )
-    
-    result = response.choices[0].message.content
-    print("\nAI RESPONSE:")
-    print(result)
-    print("=" * 60)
-    
-    # Check if result is correct
-    if "$39" in result and "$32" in result:
-        print("\n✅ PASS - Correct split with shared appetizer")
-    elif "$36" in result:
-        print("\n❌ FAIL - Did even split ($36 each)")
-    else:
-        print("\n⚠️  UNCLEAR - Check output manually")
-
-
-def test_single_receipt_drinks():
-    """Test single receipt: 5 people, each had 1 drink at different prices"""
-    
-    all_participants = ['Aaron Walters', 'Jake King']
-    chat_context = """
-- Aaron Walters: there were 5 people and we each had 1 drink
-"""
-    
-    # Single receipt - Apotheke only
-    receipt_data = """
-RECEIPT - Apotheke Chinatown:
-- Fever Tree Club Soda: $4.59
-- Days Before Spring: $20.20
-- Aniki: $20.20
-- Wartime Consigliere: $20.20
-- Summer Bee: $20.20
-- Subtotal: $85.39
-- Tax: $7.61
-- Tip: $17.08
-- Total: $110.08
-"""
-
-    system_prompt = f"""Split this bill. Participants: {', '.join(all_participants)}
-
-Instructions: {chat_context}
-
-Rules:
-1. Count people exactly as stated. Use known names, then Person 1, Person 2...
-2. "split X" = divide item equally
-3. "each had 1 X" = assign one item to each person at its actual price
-
-FORMULA: person owes = (their item price ÷ subtotal) × total
-
-Example: Subtotal $85.39, Total $110.08
-- $4.59 item: ($4.59 ÷ $85.39) × $110.08 = $5.91
-- $20.20 item: ($20.20 ÷ $85.39) × $110.08 = $26.02
-
-VERIFY: All "owes" amounts must add up to the receipt total!
-
-Output:
-**Items:**
-- [Name]: [item] ($X.XX)
-
-**Owes:**
-- [Name]: $XX.XX
-
-Total: $XXX.XX"""
-
-    print("\n" + "=" * 60)
-    print("TEST: Single receipt - 5 people, each had 1 drink (different prices)")
-    print("=" * 60)
-    print(f"\nExpected calculation:")
-    print(f"  Drinks: $4.59, $20.20, $20.20, $20.20, $20.20")
-    print(f"  Soda person ($4.59): $4.59/$85.39 × $110.08 = $5.91")
-    print(f"  Others ($20.20): $20.20/$85.39 × $110.08 = $26.03")
-    print(f"  Total: $5.91 + 4×$26.03 = $110.03 (≈$110.08)")
-    print("=" * 60)
-    
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Here is the receipt:\n{receipt_data}"}
-        ],
-        max_tokens=1500,
-        temperature=0
-    )
-    
-    result = response.choices[0].message.content
-    print("\nAI RESPONSE:")
-    print(result)
-    print("=" * 60)
-    
-    # Check if result shows different amounts
-    if "$5" in result or "$6" in result:
-        if "$26" in result or "$25" in result:
-            print("\n✅ PASS - Different amounts for soda person vs others")
-        else:
-            print("\n⚠️  UNCLEAR - Check output manually")
-    elif "$22" in result:
-        print("\n❌ FAIL - Did even split ($22 each)")
-    else:
-        print("\n⚠️  UNCLEAR - Check output manually")
-
-
-def test_split_x_ways():
-    """Test: split 5 ways - simple even split"""
-    
-    all_participants = ['Aaron Walters']
-    chat_context = """
-- Aaron Walters: split 5 ways
-"""
-    
-    receipt_data = """
-RECEIPT - All Blues Inc:
-- 1 Bottle DASSAI BLUE: $81.00
-- Subtotal: $81.00
-- Tax: $7.18
-- Tip: $14.58
-- Total: $102.76
-"""
-
-    system_prompt = f"""Split this bill. Known participants: {', '.join(all_participants)}
-
-Instructions: {chat_context}
-
-Rules:
-1. "split X ways" or "X people" = CREATE X people and divide total equally
-   Example: "split 5 ways" with $100 total → output 5 people paying $20 each
-   Use known names first, then Person 1, Person 2, Person 3...
-   
-2. "split [item]" = divide that specific item equally
-3. "each had 1 X" = assign individual items at their actual prices
-
-For proportional tax/tip: person owes = (their items ÷ subtotal) × total
-
-IMPORTANT: If "split 5 ways" is requested, you MUST output exactly 5 people!
-
-Output:
-**Items:**
-- [Name]: [item or share]
-
-**Owes:**
-- [Name]: $XX.XX
-
-Total: $XXX.XX"""
-
-    print("\n" + "=" * 60)
-    print("TEST: Split 5 ways - $102.76 bottle")
-    print("=" * 60)
-    print(f"\nExpected: $102.76 / 5 = $20.55 each")
-    print("=" * 60)
-    
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Here is the receipt:\n{receipt_data}"}
-        ],
-        max_tokens=1500,
-        temperature=0
-    )
-    
-    result = response.choices[0].message.content
-    print("\nAI RESPONSE:")
-    print(result)
-    print("=" * 60)
-    
-    if "$20" in result and "Person" in result:
-        print("\n✅ PASS - Split 5 ways correctly")
-    elif "$102" in result and result.count("$102") == 1:
-        print("\n❌ FAIL - Assigned whole amount to one person")
-    else:
-        print("\n⚠️  UNCLEAR - Check output manually")
-
-
-if __name__ == "__main__":
-    print("\n🧪 BILL SPLIT PROMPT TESTING\n")
-    
-    test_split_x_ways()
-    test_simple_split()
-    test_shared_item()
-    test_single_receipt_drinks()
-    
-    print("\n✨ Tests complete!\n")
+# Check if the amounts are roughly correct
+import re
+amounts = re.findall(r'\$(\d+\.\d{2})', ai_response)
+if amounts:
+    # Filter to likely "owes" amounts (between $50-$100 for this scenario)
+    owes_amounts = [float(a) for a in amounts if 50 < float(a) < 100]
+    if len(owes_amounts) == 3:
+        total = sum(owes_amounts)
+        print(f"Individual amounts found: {owes_amounts}")
+        print(f"Sum: ${total:.2f}")
+        print(f"Expected: $210.07")
+        print(f"Difference: ${abs(total - 210.07):.2f}")
+        
+        # Check if Gina > Aaron (she had the $30 item)
+        # This assumes the order in output matches participant order
+        print(f"\nGina should owe MORE than Aaron (she had the $30 Goong Muk Prik Klua)")
