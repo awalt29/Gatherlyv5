@@ -110,7 +110,10 @@ if OPENAI_API_KEY:
 
 sendgrid_client = None
 if SENDGRID_API_KEY:
-    sendgrid_client = SendGridAPIClient(SENDGRID_API_KEY)
+    # Strip any whitespace/newlines from the key
+    clean_key = SENDGRID_API_KEY.strip()
+    print(f"[SENDGRID] Key length: {len(clean_key)}, original length: {len(SENDGRID_API_KEY)}")
+    sendgrid_client = SendGridAPIClient(clean_key)
 
 
 # Helper functions
@@ -202,6 +205,41 @@ def send_password_reset_email(email, reset_token):
         import traceback
         print(f"[SENDGRID ERROR] Traceback: {traceback.format_exc()}")
         return {'status': 'error', 'message': str(e)}
+
+
+# Test endpoint for SendGrid
+@app.route('/api/test-sendgrid')
+def test_sendgrid():
+    """Debug endpoint to test SendGrid configuration"""
+    if not sendgrid_client:
+        return jsonify({'error': 'SendGrid client not configured'}), 500
+    
+    try:
+        from sendgrid.helpers.mail import Mail, Email, To
+        
+        test_email = request.args.get('email', 'test@example.com')
+        
+        message = Mail(
+            from_email=Email(SENDGRID_FROM_EMAIL),
+            to_emails=To(test_email),
+            subject='SendGrid Test - Gatherly',
+            html_content='<p>This is a test email from Gatherly.</p>'
+        )
+        
+        response = sendgrid_client.send(message)
+        return jsonify({
+            'status': 'success',
+            'status_code': response.status_code,
+            'body': response.body.decode() if response.body else None
+        })
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'type': type(e).__name__,
+            'traceback': traceback.format_exc()
+        }), 500
 
 
 # Routes - Main App
