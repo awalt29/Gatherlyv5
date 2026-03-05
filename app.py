@@ -96,6 +96,7 @@ if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
 # SendGrid setup
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
 SENDGRID_FROM_EMAIL = os.getenv('SENDGRID_FROM_EMAIL', os.getenv('MAIL_USERNAME'))
+print(f"[SENDGRID] API key configured: {bool(SENDGRID_API_KEY)}, starts with: {SENDGRID_API_KEY[:5] if SENDGRID_API_KEY else 'None'}...")
 
 # VAPID setup for web push notifications
 VAPID_PUBLIC_KEY = os.getenv('VAPID_PUBLIC_KEY')
