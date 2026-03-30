@@ -299,6 +299,11 @@ def reset_password_page():
     return render_template('reset_password.html')
 
 
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+
 @app.route('/api/auth/signup', methods=['POST'])
 def auth_signup():
     data = request.json

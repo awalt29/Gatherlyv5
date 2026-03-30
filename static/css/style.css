@@ -2156,6 +2156,81 @@ body:has(.guest-info) .container {
     text-decoration: underline;
 }
 
+/* Legal / policy pages */
+.container.legal-page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding-bottom: 48px;
+}
+
+.legal-content {
+    padding: 8px 20px 32px;
+    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.legal-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-light);
+    text-align: center;
+    margin: 0 0 6px;
+}
+
+.legal-updated {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0 0 28px;
+}
+
+.legal-content h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-light);
+    margin: 28px 0 12px;
+}
+
+.legal-content p {
+    margin: 0 0 14px;
+}
+
+.legal-content ul {
+    margin: 0 0 14px;
+    padding-left: 1.25rem;
+}
+
+.legal-content li {
+    margin-bottom: 10px;
+}
+
+.legal-content a {
+    color: var(--accent-mint);
+    text-decoration: none;
+}
+
+.legal-content a:hover {
+    text-decoration: underline;
+}
+
+.legal-footer {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-muted);
+    padding: 0 20px;
+}
+
+.legal-footer a {
+    color: var(--accent-mint);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.legal-footer a:hover {
+    text-decoration: underline;
+}
+
 /* Slot Popup Menu */
 .slot-popup {
     display: none;
