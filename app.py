@@ -304,6 +304,11 @@ def privacy():
     return render_template('privacy.html')
 
 
+@app.route('/support')
+def support():
+    return render_template('support.html')
+
+
 @app.route('/api/auth/signup', methods=['POST'])
 def auth_signup():
     data = request.json
